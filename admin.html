@@ -106,6 +106,9 @@
         .metro-badge { display: inline-flex; align-items: center; gap: 5px; background: #ffffff; color: #1e293b; font-size: 0.74rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
         .metro-icon-svg { width: 14px; height: 11px; flex-shrink: 0; }
 
+        .card-photos { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 8px; margin-top: 4px; }
+        .card-photo-thumb { height: 65px; width: auto; max-width: 120px; border-radius: 6px; object-fit: cover; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.08); }
+
         .card-actions-row { display: flex; gap: 6px; }
         .edit-btn, .delete-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 6px 8px; font-size: 0.75rem; font-weight: 500; border-radius: 8px; cursor: pointer; border: 1px solid #cbd5e1; }
         .edit-btn { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
@@ -162,7 +165,7 @@
             .show-list #sidebar { display: flex; }
             body:not(.show-list) #sidebar { display: none; }
             body:not(.show-list) #map-container { display: block; }
-            .mobile-toggle-bar { display: flex; position: fixed; bottom: max(calc(env(safe-area-inset-bottom) + 12px), 20px); left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); padding: 4px; border-radius: 9999px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 1000; gap: 4px; }
+            .mobile-toggle-bar { display: flex; position: fixed; bottom: max(calc(env(safe-area-inset-bottom) + 12px), 20px); left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 4px; border-radius: 9999px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 1000; gap: 4px; }
             .toggle-btn { padding: 9px 18px; border-radius: 9999px; border: none; background: transparent; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: #64748b; }
             .toggle-btn.active { background: #0f172a; color: #fff; }
         }
@@ -280,7 +283,6 @@
         </div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ -->
     <div id="editModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -389,7 +391,6 @@
             return CATEGORY_COLORS[category] || "#0F172A";
         }
 
-        // БАЗА ДАННЫХ ВСЕХ СТАНЦИЙ МЕТРО МОСКВЫ И МЦК
         const MOSCOW_METRO_DATA = [
             {
                 id: "line-1", name: "Сокольническая", color: "#EF161E",
@@ -482,15 +483,13 @@
                 id: "line-4", name: "Филёвская", color: "#00BFFF",
                 stations: [
                     { name: "Александровский сад", lat: 55.7523, lng: 37.6086 },
-                    { name: "Арбатская (ФЛ)", lat: 55.7520, lng: 37.6000 },
-                    { name: "Смоленская (ФЛ)", lat: 55.7490, lng: 37.5820 },
-                    { name: "Киевская (ФЛ)", lat: 55.7445, lng: 37.5665 },
                     { name: "Студенческая", lat: 55.7388, lng: 37.5484 },
                     { name: "Кутузовская", lat: 55.7408, lng: 37.5342 },
                     { name: "Фили", lat: 55.7461, lng: 37.5146 },
                     { name: "Багратионовская", lat: 55.7436, lng: 37.4981 },
                     { name: "Филёвский парк", lat: 55.7397, lng: 37.4839 },
                     { name: "Пионерская", lat: 55.7361, lng: 37.4678 },
+                    { name: "Кунцевская (ФЛ)", lat: 55.7306, lng: 37.4464 },
                     { name: "Выставочная", lat: 55.7503, lng: 37.5434 },
                     { name: "Международная", lat: 55.7483, lng: 37.5332 }
                 ]
@@ -1204,10 +1203,18 @@
                         if (!e.target.closest('button')) selectLocationOnMap(loc, placemark);
                     };
 
+                    let photosHtml = '';
+                    if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {
+                        photosHtml = `<div class="card-photos">
+                            ${loc.images.map(imgUrl => `<img src="${imgUrl}" class="card-photo-thumb">`).join('')}
+                        </div>`;
+                    }
+
                     cardEl.innerHTML = `
                         <div class="card-title">${loc.title}</div>
                         ${loc.address ? `<div class="card-address">📍 ${loc.address}</div>` : ''}
                         ${renderMetroBadges(loc.metro)}
+                        ${photosHtml}
                         <div class="card-actions-row">
                             <button class="edit-btn" onclick="openEditModal('${loc.id}', event)">✏️ Редактировать</button>
                             <button class="delete-btn" onclick="deleteLocation('${loc.id}', event)">🗑️ Удалить</button>
