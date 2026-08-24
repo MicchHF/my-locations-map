@@ -49,6 +49,60 @@
             border-radius: 3px;
         }
 
+        /* Поиск и списки в админке */
+        .admin-search-box {
+            padding: 10px 15px;
+            background: #ffffff;
+            border-bottom: 1px solid #eee;
+        }
+
+        .admin-search-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .admin-cat-group {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .admin-cat-header {
+            padding: 10px 15px;
+            background: #f1f5f9;
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .admin-cat-count {
+            background: #cbd5e1;
+            color: #1e293b;
+            padding: 1px 7px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+        }
+
+        .admin-loc-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+        }
+
+        .admin-loc-item:last-child {
+            border-bottom: none;
+        }
+
         /* Модальное окно редактирования */
         .modal-overlay {
             display: none;
@@ -133,20 +187,22 @@
                 <input type="file" id="locFiles" multiple accept="image/*" onchange="handleNewFilesSelect(event)">
             </div>
 
-            <!-- Сетка изменения порядка новых фото -->
             <div id="newPhotoPreview" class="photo-preview-grid"></div>
             
             <button id="saveBtn" class="btn" onclick="saveLocation()">Сохранить на карту</button>
         </div>
 
+        <!-- Поиск и Группировка меток в Админке -->
         <div id="list-section">
+            <div class="admin-search-box">
+                <input type="text" id="adminSearchInput" class="admin-search-input" placeholder="🔍 Быстрый поиск метки..." oninput="renderAdminList()">
+            </div>
             <div id="admin-locations-list"></div>
         </div>
     </div>
 
     <div id="map"></div>
 
-    <!-- Модальное окно редактирования метки -->
     <div id="editModal" class="modal-overlay">
         <div class="modal-box">
             <h3>Редактировать место</h3>
@@ -203,8 +259,8 @@
     <script src="js/supabase.js"></script>
     <script>
         let myMap, currentCoords = null, tempPlacemark = null;
-        let selectedFiles = []; // Массив файлов для создания новой точки
-        let editCurrentImages = []; // Массив ссылок фото для редактирования
+        let selectedFiles = [];
+        let editCurrentImages = [];
         let allAdminLocations = [];
 
         window.onload = async () => {
@@ -253,7 +309,6 @@
             myMap.geoObjects.add(tempPlacemark);
         }
 
-        // ===== Работа с новыми файлами при создании =====
         function handleNewFilesSelect(e) {
             selectedFiles = Array.from(e.target.files);
             renderNewPhotoPreview();
@@ -294,7 +349,6 @@
             renderNewPhotoPreview();
         }
 
-        // ===== Сохранение новой метки =====
         async function saveLocation() {
             if (!currentCoords) return alert('Укажите координаты!');
             
@@ -341,15 +395,14 @@
             }
         }
 
-        // ===== Загрузка и редактирование меток =====
         async function loadAdminLocations() {
             const { data: locations } = await supabaseClient.from('Location').select('*');
-            const listEl = document.getElementById('admin-locations-list');
             if (!locations) return;
 
             allAdminLocations = locations;
-            listEl.innerHTML = '';
 
+            // Отрисовка меток на карте в админке с точным круговым хитбоксом
+            myMap.geoObjects.removeAll();
             locations.forEach(loc => {
                 const categoryIcon = loc.category ? loc.category.split(' ')[0] : '📍';
                 
@@ -360,24 +413,83 @@
                 const placemark = new ymaps.Placemark([loc.lat, loc.lng], { 
                     balloonContent: `<b>${categoryIcon} ${loc.title}</b><br><small>${loc.address || ''}</small>` 
                 }, {
-                    iconLayout: layout, iconOffset: [-17, -17]
+                    iconLayout: layout,
+                    iconOffset: [-17, -17],
+                    iconShape: {
+                        type: 'Circle',
+                        coordinates: [0, 0],
+                        radius: 17
+                    },
+                    cursor: 'pointer'
                 });
-                myMap.geoObjects.add(placemark);
 
-                const item = document.createElement('div');
-                item.style.cssText = 'padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;';
-                item.innerHTML = `
-                    <div><strong>${categoryIcon} ${loc.title}</strong><br><small style="color:#666">${loc.address || ''}</small></div>
-                    <div style="display:flex; gap:6px;">
-                        <button onclick="openEditModal('${loc.id}')">✏️</button>
-                        <button style="color:red;" onclick="deleteLocation('${loc.id}')">🗑️</button>
+                myMap.geoObjects.add(placemark);
+            });
+
+            renderAdminList();
+        }
+
+        // Отрисовка списка админки с группировкой по категориям и фильтрацией поиска
+        function renderAdminList() {
+            const listEl = document.getElementById('admin-locations-list');
+            const searchVal = (document.getElementById('adminSearchInput').value || '').toLowerCase().trim();
+
+            listEl.innerHTML = '';
+
+            const filtered = allAdminLocations.filter(loc => {
+                return (loc.title || '').toLowerCase().includes(searchVal) ||
+                       (loc.address || '').toLowerCase().includes(searchVal);
+            });
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = '<div style="padding:15px; color:#888; text-align:center;">Ничего не найдено</div>';
+                return;
+            }
+
+            const grouped = {};
+            filtered.forEach(loc => {
+                const cat = loc.category || '📍 Другое';
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push(loc);
+            });
+
+            Object.keys(grouped).forEach(catName => {
+                const groupContainer = document.createElement('div');
+                groupContainer.className = 'admin-cat-group';
+
+                const itemsCount = grouped[catName].length;
+
+                groupContainer.innerHTML = `
+                    <div class="admin-cat-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                        <span>${catName}</span>
+                        <span class="admin-cat-count">${itemsCount}</span>
                     </div>
+                    <div class="admin-cat-items"></div>
                 `;
-                listEl.appendChild(item);
+
+                const itemsContainer = groupContainer.querySelector('.admin-cat-items');
+
+                grouped[catName].forEach(loc => {
+                    const categoryIcon = loc.category ? loc.category.split(' ')[0] : '📍';
+                    const item = document.createElement('div');
+                    item.className = 'admin-loc-item';
+                    item.innerHTML = `
+                        <div style="flex:1; padding-right:10px;">
+                            <strong>${categoryIcon} ${loc.title}</strong><br>
+                            <small style="color:#666;">${loc.address || 'Без адреса'}</small>
+                        </div>
+                        <div style="display:flex; gap:6px;">
+                            <button onclick="openEditModal('${loc.id}')">✏️</button>
+                            <button style="color:red;" onclick="deleteLocation('${loc.id}')">🗑️</button>
+                        </div>
+                    `;
+                    itemsContainer.appendChild(item);
+                });
+
+                listEl.appendChild(groupContainer);
             });
         }
 
-        // Редактирование сущности
         function openEditModal(id) {
             const loc = allAdminLocations.find(l => l.id === id);
             if (!loc) return;
@@ -441,7 +553,6 @@
 
             const updatedImages = [...editCurrentImages];
 
-            // Загружаем новые добавленные снимки
             for (let file of newFiles) {
                 const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
                 const filePath = `public/${Date.now()}_${cleanName}`;
