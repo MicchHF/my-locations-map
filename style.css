@@ -43,28 +43,51 @@ input[type="text"], input[type="email"], input[type="password"], textarea, selec
 .balloon-photos img { height: 60px; border-radius: 4px; object-fit: cover; }
 .route-btn { display: block; background: #09090b; color: #fff; text-decoration: none; padding: 8px; border-radius: 6px; text-align: center; font-size: 0.8rem; }
 
-/* Адаптация для мобильных экранов */
+/* Плавающий переключатель на мобильных */
+.mobile-toggle-bar {
+    display: none;
+}
+
+/* Мобильная адаптация */
 @media (max-width: 768px) {
-    body {
-        flex-direction: column-reverse; /* Карта сверху, список/форма снизу */
+    .mobile-toggle-bar {
+        display: flex;
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        background: #09090b;
+        padding: 4px;
+        border-radius: 30px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+        border: 1px solid rgba(255,255,255,0.15);
     }
 
-    #sidebar {
-        width: 100%;
-        height: 45vh; /* Нижняя шторка с метками */
-        box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+    .toggle-btn {
+        background: transparent;
+        color: #a1a1aa;
+        border: none;
+        padding: 8px 18px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
     }
 
-    #map {
-        width: 100%;
-        height: 55vh; /* Карта занимает верхнюю часть */
+    .toggle-btn.active {
+        background: #ffffff;
+        color: #09090b;
     }
 
-    .header {
-        padding: 12px 16px;
-    }
+    /* По умолчанию показываем карту */
+    body:not(.show-list) #sidebar { display: none !important; }
+    body:not(.show-list) #map { display: block !important; width: 100vw; height: 100dvh; }
 
-    #list-section {
-        padding: 12px 16px;
+    /* При переключении на список */
+    body.show-list #map { display: none !important; }
+    body.show-list #sidebar { display: flex !important; width: 100vw; height: 100dvh; }
+}
     }
 }
