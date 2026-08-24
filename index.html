@@ -34,7 +34,7 @@
         }
 
         .sidebar-header {
-            padding: 20px;
+            padding: 20px 20px 14px 20px;
             background: #ffffff;
             border-bottom: 1px solid #f0f0f0;
         }
@@ -49,7 +49,41 @@
         .sidebar-header p {
             font-size: 0.82rem;
             color: #6b7280;
-            margin-top: 4px;
+            margin-top: 2px;
+            margin-bottom: 12px;
+        }
+
+        /* Поле поиска */
+        .search-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 9px 12px 9px 34px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            outline: none;
+            background: #f9fafb;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            background: #ffffff;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.85rem;
+            color: #9ca3af;
+            pointer-events: none;
         }
 
         #locations-list {
@@ -203,7 +237,6 @@
             white-space: pre-line;
         }
 
-        /* Пропорциональные миниатюры фото */
         .card-photos {
             display: flex;
             gap: 8px;
@@ -234,7 +267,7 @@
             height: 100%;
         }
 
-        /* Темные метки на карте для высокой контрастности */
+        /* Идеально сбалансированная круглая метка */
         .custom-map-pin {
             width: 38px;
             height: 38px;
@@ -248,6 +281,7 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.35);
             border: 2px solid #ffffff;
             cursor: pointer;
+            user-select: none;
             transition: transform 0.2s;
         }
 
@@ -255,14 +289,10 @@
             transform: scale(1.15);
         }
 
-        /* Полноэкранный просмотрщик */
         .lightbox-modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0, 0, 0, 0.92);
             z-index: 9999;
             justify-content: center;
@@ -270,9 +300,7 @@
             backdrop-filter: blur(5px);
         }
 
-        .lightbox-modal.active {
-            display: flex;
-        }
+        .lightbox-modal.active { display: flex; }
 
         .lightbox-img {
             max-width: 90vw;
@@ -284,46 +312,21 @@
 
         .lightbox-close {
             position: absolute;
-            top: 20px;
-            right: 25px;
-            color: #ffffff;
-            font-size: 32px;
-            cursor: pointer;
-            opacity: 0.8;
-            transition: opacity 0.2s;
-            user-select: none;
+            top: 20px; right: 25px;
+            color: #ffffff; font-size: 32px;
+            cursor: pointer; opacity: 0.8;
         }
 
         .lightbox-nav {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #ffffff;
-            font-size: 40px;
-            cursor: pointer;
-            padding: 16px;
-            user-select: none;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-        }
-
-        .lightbox-nav:hover, .lightbox-close:hover {
-            opacity: 1;
+            position: absolute; top: 50%; transform: translateY(-50%);
+            color: #ffffff; font-size: 40px; cursor: pointer; padding: 16px; opacity: 0.7;
         }
 
         .lightbox-prev { left: 15px; }
         .lightbox-next { right: 15px; }
+        .lightbox-counter { position: absolute; bottom: 20px; color: rgba(255,255,255,0.8); font-size: 14px; }
 
-        .lightbox-counter {
-            position: absolute;
-            bottom: 20px;
-            color: rgba(255,255,255,0.8);
-            font-size: 14px;
-        }
-
-        .mobile-toggle-bar {
-            display: none;
-        }
+        .mobile-toggle-bar { display: none; }
 
         @media (max-width: 768px) {
             body { flex-direction: column; }
@@ -360,10 +363,7 @@
                 color: #4b5563;
             }
 
-            .toggle-btn.active {
-                background: #2563eb;
-                color: #ffffff;
-            }
+            .toggle-btn.active { background: #2563eb; color: #ffffff; }
         }
     </style>
 </head>
@@ -373,6 +373,10 @@
         <div class="sidebar-header">
             <h1>Локации</h1>
             <p>Карта интересных мест и заведений</p>
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию или адресу..." oninput="handleSearch()">
+            </div>
         </div>
         <div id="locations-list"></div>
     </div>
@@ -422,15 +426,26 @@
             }
 
             allLocations = data || [];
-            renderInterface();
+            renderInterface(allLocations);
         }
 
-        function renderInterface() {
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filtered = allLocations.filter(loc => {
+                const titleMatch = (loc.title || '').toLowerCase().includes(query);
+                const addressMatch = (loc.address || '').toLowerCase().includes(query);
+                const descMatch = (loc.description || '').toLowerCase().includes(query);
+                return titleMatch || addressMatch || descMatch;
+            });
+            renderInterface(filtered);
+        }
+
+        function renderInterface(locationsToRender) {
             const listEl = document.getElementById('locations-list');
             listEl.innerHTML = '';
 
             const grouped = {};
-            allLocations.forEach(loc => {
+            locationsToRender.forEach(loc => {
                 const cat = loc.category || '📍 Другое';
                 if (!grouped[cat]) grouped[cat] = [];
                 grouped[cat].push(loc);
@@ -438,6 +453,11 @@
 
             Object.values(categoryCollections).forEach(coll => myMap.geoObjects.remove(coll));
             categoryCollections = {};
+
+            if (locationsToRender.length === 0) {
+                listEl.innerHTML = '<div style="text-align:center; padding:30px; color:#9ca3af; font-size:0.9rem;">Ничего не найдено 🔍</div>';
+                return;
+            }
 
             Object.keys(grouped).forEach(catName => {
                 if (categoryVisibility[catName] === undefined) {
@@ -481,6 +501,7 @@
                         `<div class="custom-map-pin"><span>${categoryIcon}</span></div>`
                     );
 
+                    // Исправление хитбокса нажатия на метку (круг [0,0] радиусом 19px)
                     const placemark = new ymaps.Placemark([loc.lat, loc.lng], {
                         hintContent: loc.title,
                         balloonContent: createBalloonHTML(loc)
@@ -488,8 +509,9 @@
                         iconLayout: layout,
                         iconOffset: [-19, -19],
                         iconShape: {
-                            type: 'Rectangle',
-                            coordinates: [[-19, -19], [19, 19]]
+                            type: 'Circle',
+                            coordinates: [0, 0],
+                            radius: 19
                         },
                         cursor: 'pointer'
                     });
@@ -535,7 +557,6 @@
             });
         }
 
-        // Четкое переключение видимости без перезагрузки интерфейса
         function toggleCategoryMap(catName, btnEl, event) {
             event.stopPropagation();
             event.preventDefault();
