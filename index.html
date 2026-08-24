@@ -18,6 +18,12 @@
     </div>
     <div id="map"></div>
 
+    <!-- Мобильный переключатель -->
+    <div class="mobile-toggle-bar">
+        <button id="btn-map-view" class="toggle-btn active" onclick="switchMobileView('map')">🗺️ Карта</button>
+        <button id="btn-list-view" class="toggle-btn" onclick="switchMobileView('list')">📋 Список</button>
+    </div>
+
     <script src="js/supabase.js"></script>
     <script>
         let myMap;
@@ -35,17 +41,19 @@
 
             listEl.innerHTML = '';
             locations.forEach(loc => {
+                const categoryIcon = loc.category || '📍';
                 let photosHtml = (loc.images || []).map(url => `<img src="${url}">`).join('');
                 let balloonContent = `
                     <div class="balloon-content">
-                        <h3>${loc.title}</h3>
-                        <p>${loc.description || ''}</p>
+                        <h3>${categoryIcon} ${loc.title}</h3>
+                        ${loc.address ? `<p style="font-size:0.8rem; color:#666; margin:4px 0;">📍 ${loc.address}</p>` : ''}
+                        <p style="font-size:0.85rem; margin:6px 0;">${loc.description || ''}</p>
                         ${photosHtml ? `<div class="balloon-photos">${photosHtml}</div>` : ''}
                         <a href="https://yandex.ru/maps/?rtext=~${loc.lat},${loc.lng}" target="_blank" class="route-btn">Маршрут ↗</a>
                     </div>`;
 
                 const layout = ymaps.templateLayoutFactory.createClass(
-                    `<div class="custom-map-pin"><span>📍</span></div>`
+                    `<div class="custom-map-pin"><span>${categoryIcon}</span></div>`
                 );
 
                 const placemark = new ymaps.Placemark([loc.lat, loc.lng], { balloonContent }, {
@@ -55,15 +63,33 @@
                 myMap.geoObjects.add(placemark);
 
                 const item = document.createElement('div');
-                item.style.cssText = 'padding: 10px; border-bottom: 1px solid #eee; cursor: pointer;';
-                item.innerHTML = `<strong>${loc.title}</strong><br><small>${loc.description || ''}</small>`;
+                item.style.cssText = 'padding: 12px; border-bottom: 1px solid #eee; cursor: pointer;';
+                item.innerHTML = `<strong>${categoryIcon} ${loc.title}</strong><br>` +
+                                 `${loc.address ? `<small style="color:#71717a;">📍 ${loc.address}</small><br>` : ''}` +
+                                 `<small style="color:#3f3f46;">${loc.description || ''}</small>`;
                 item.onclick = () => {
                     myMap.setCenter([loc.lat, loc.lng], 15);
                     placemark.balloon.open();
+                    switchMobileView('map');
                 };
                 listEl.appendChild(item);
             });
         });
+
+        function switchMobileView(view) {
+            const btnMap = document.getElementById('btn-map-view');
+            const btnList = document.getElementById('btn-list-view');
+            if (view === 'map') {
+                document.body.classList.remove('show-list');
+                btnMap.classList.add('active');
+                btnList.classList.remove('active');
+                if (myMap) myMap.container.fitToViewport();
+            } else {
+                document.body.classList.add('show-list');
+                btnList.classList.add('active');
+                btnMap.classList.remove('active');
+            }
+        }
     </script>
 </body>
 </html>
