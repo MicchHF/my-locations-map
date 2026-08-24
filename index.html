@@ -253,13 +253,14 @@
         .balloon-photos { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; padding-bottom: 2px; }
         .balloon-photo-img { height: 65px; width: auto; border-radius: 6px; cursor: pointer; object-fit: cover; border: 1px solid rgba(0,0,0,0.08); flex-shrink: 0; }
 
+        /* ВЕРХНЯЯ ПАНЕЛЬ ФИЛЬТРОВ И МЕТРО */
         .top-cat-filter-bar {
             position: absolute;
             top: max(calc(env(safe-area-inset-top) + 14px), 16px);
             left: 50%;
             transform: translateX(-50%);
             width: calc(100% - 24px);
-            max-width: 600px;
+            max-width: 620px;
             display: flex;
             align-items: center;
             gap: 6px;
@@ -271,6 +272,39 @@
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
             z-index: 500;
         }
+
+        .metro-filter-select-wrap {
+            position: relative;
+            flex-shrink: 0;
+        }
+        .metro-filter-select {
+            appearance: none;
+            -webkit-appearance: none;
+            background: #f1f5f9;
+            color: #0f172a;
+            border: 1px solid #e2e8f0;
+            padding: 6px 24px 6px 10px;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+        }
+        .metro-filter-select.active {
+            background: #0f172a;
+            color: #ffffff;
+            border-color: #0f172a;
+        }
+        .metro-select-arrow {
+            position: absolute;
+            right: 9px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.65rem;
+            pointer-events: none;
+            color: #64748b;
+        }
+        .metro-filter-select.active + .metro-select-arrow { color: #fff; }
 
         .toggle-all-btn {
             display: inline-flex;
@@ -413,48 +447,56 @@
     <div id="app-wrapper">
         <div id="sidebar">
             <div class="sidebar-header">
-                <a href="https://t.me/dalazareva" target="_blank" rel="noopener" class="tg-badge">
-                    <span class="tg-badge-text">локации от <strong>@dalazareva</strong></span>
-                    <span class="tg-badge-icon">↗</span>
+                <a href="https://t.me/dalazareva" target="_blank" rel="noopener" class="tg-badge"[cite: 2]>
+                    <span class="tg-badge-text">локации от <strong>@dalazareva</strong></span>[cite: 2]
+                    <span class="tg-badge-icon">↗</span>[cite: 2]
                 </a>
                 <div class="search-container">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, адресу, метро..." oninput="handleSearch()">
+                    <span class="search-icon">🔍</span>[cite: 2]
+                    <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, адресу, метро..." oninput="handleSearch()">[cite: 2]
                 </div>
             </div>
-            <div id="locations-list"></div>
+            <div id="locations-list"></div>[cite: 2]
         </div>
 
         <div id="map-container">
-            <div id="map"></div>
-            <div id="topCatFilterBar" class="top-cat-filter-bar">
-                <button id="toggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
-                <div id="catChipsScroll" class="cat-chips-scroll"></div>
+            <div id="map"></div>[cite: 2]
+            <div id="topCatFilterBar" class="top-cat-filter-bar">[cite: 2]
+                <button id="toggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>[cite: 2]
+                
+                <div class="metro-filter-select-wrap">
+                    <select id="metroFilterSelect" class="metro-filter-select" onchange="handleMetroFilterChange(this.value)">
+                        <option value="">🚇 Метро (Все)</option>
+                    </select>
+                    <span class="metro-select-arrow">▼</span>
+                </div>
+
+                <div id="catChipsScroll" class="cat-chips-scroll"></div>[cite: 2]
             </div>
         </div>
     </div>
 
-    <div id="mobileSearchOverlay" class="mobile-search-overlay">
-        <span>🔍</span>
-        <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="Поиск..." oninput="syncMobileSearch(this.value)">
-        <button class="mobile-search-close" onclick="toggleMobileSearch(false)">✕</button>
+    <div id="mobileSearchOverlay" class="mobile-search-overlay">[cite: 2]
+        <span>🔍</span>[cite: 2]
+        <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="Поиск..." oninput="syncMobileSearch(this.value)">[cite: 2]
+        <button class="mobile-search-close" onclick="toggleMobileSearch(false)">✕</button>[cite: 2]
     </div>
 
-    <div class="mobile-toggle-bar">
-        <button id="btn-search-toggle" class="toggle-btn icon-btn" title="Поиск" onclick="toggleMobileSearch()">🔍</button>
-        <button id="btn-map-view" class="toggle-btn active" onclick="switchMobileView('map')">🗺️ Карта</button>
-        <button id="btn-list-view" class="toggle-btn" onclick="switchMobileView('list')">📋 Список</button>
+    <div class="mobile-toggle-bar">[cite: 2]
+        <button id="btn-search-toggle" class="toggle-btn icon-btn" title="Поиск" onclick="toggleMobileSearch()">🔍</button>[cite: 2]
+        <button id="btn-map-view" class="toggle-btn active" onclick="switchMobileView('map')">🗺️ Карта</button>[cite: 2]
+        <button id="btn-list-view" class="toggle-btn" onclick="switchMobileView('list')">📋 Список</button>[cite: 2]
     </div>
 
-    <div id="lightbox" class="lightbox-modal">
-        <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
-        <span class="lightbox-nav lightbox-prev" onclick="prevImage()">&#10094;</span>
-        <img id="lightbox-img" class="lightbox-img" src="" alt="Фото">
-        <span class="lightbox-nav lightbox-next" onclick="nextImage()">&#10095;</span>
-        <div id="lightbox-counter" class="lightbox-counter"></div>
+    <div id="lightbox" class="lightbox-modal">[cite: 2]
+        <span class="lightbox-close" onclick="closeLightbox()">&times;</span>[cite: 2]
+        <span class="lightbox-nav lightbox-prev" onclick="prevImage()">&#10094;</span>[cite: 2]
+        <img id="lightbox-img" class="lightbox-img" src="" alt="Фото">[cite: 2]
+        <span class="lightbox-nav lightbox-next" onclick="nextImage()">&#10095;</span>[cite: 2]
+        <div id="lightbox-counter" class="lightbox-counter"></div>[cite: 2]
     </div>
 
-    <script src="js/supabase.js"></script>
+    <script src="js/supabase.js"></script>[cite: 2]
     <script>
         let myMap;
         let allLocations = [];
@@ -463,6 +505,7 @@
         let allVisibleState = true;
         let currentGallery = [];
         let currentImageIdx = 0;
+        let selectedMetroFilter = "";
 
         const CATEGORY_COLORS = {
             "☕ Кофейни": "#8B4513",
@@ -488,83 +531,140 @@
             </svg>`;
         }
 
-        ymaps.ready(initMap);
+        ymaps.ready(initMap);[cite: 2]
 
         function initMap() {
             myMap = new ymaps.Map("map", {
                 center: [55.751574, 37.573856],
                 zoom: 12,
                 controls: ['zoomControl', 'geolocationControl']
-            });
+            });[cite: 2]
 
-            loadLocations();
-            window.addEventListener('resize', () => { if (myMap) myMap.container.fitToViewport(); });
+            loadLocations();[cite: 2]
+            window.addEventListener('resize', () => { if (myMap) myMap.container.fitToViewport(); });[cite: 2]
         }
 
         async function loadLocations() {
-            const { data, error } = await supabaseClient.from('Location').select('*');
-            if (error) { console.error("Ошибка загрузки:", error); return; }
-            allLocations = data || [];
-            renderInterface(allLocations);
+            const { data, error } = await supabaseClient.from('Location').select('*');[cite: 2]
+            if (error) { console.error("Ошибка загрузки:", error); return; }[cite: 2]
+            allLocations = data || [];[cite: 2]
+            populateMetroFilterOptions(allLocations);
+            renderInterface(allLocations);[cite: 2]
+        }
+
+        function populateMetroFilterOptions(locations) {
+            const metroSelect = document.getElementById('metroFilterSelect');
+            if (!metroSelect) return;
+
+            const stationsMap = new Map();
+            locations.forEach(loc => {
+                if (loc.metro && Array.isArray(loc.metro)) {
+                    loc.metro.forEach(m => {
+                        if (m.name) {
+                            const count = (stationsMap.get(m.name)?.count || 0) + 1;
+                            stationsMap.set(m.name, { count, color: m.color || '#EF161E' });
+                        }
+                    });
+                }
+            });
+
+            metroSelect.innerHTML = '<option value="">🚇 Все станции метро</option>';
+            const sortedStations = Array.from(stationsMap.keys()).sort((a, b) => a.localeCompare(b));
+
+            sortedStations.forEach(stName => {
+                const info = stationsMap.get(stName);
+                const opt = document.createElement('option');
+                opt.value = stName;
+                opt.innerText = `🚇 ${stName} (${info.count})`;
+                metroSelect.appendChild(opt);
+            });
+        }
+
+        function handleMetroFilterChange(val) {
+            selectedMetroFilter = val;
+            const selectEl = document.getElementById('metroFilterSelect');
+            if (val) selectEl.classList.add('active');
+            else selectEl.classList.remove('active');
+            applyCombinedFilters();
         }
 
         function handleSearch() {
+            applyCombinedFilters();
+        }
+
+        function applyCombinedFilters() {
             const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            
             const filtered = allLocations.filter(loc => {
                 const titleMatch = (loc.title || '').toLowerCase().includes(query);
                 const addressMatch = (loc.address || '').toLowerCase().includes(query);
                 const descMatch = (loc.description || '').toLowerCase().includes(query);
                 const metroMatch = loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => (m.name || '').toLowerCase().includes(query));
-                return titleMatch || addressMatch || descMatch || metroMatch;
+                const textPass = !query || (titleMatch || addressMatch || descMatch || metroMatch);
+
+                const metroPass = !selectedMetroFilter || (loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => m.name === selectedMetroFilter));
+
+                return textPass && metroPass;
             });
+
             renderInterface(filtered);
+
+            // Если выбрали конкретное метро — центрируем карту на найденных точках
+            if (selectedMetroFilter && filtered.length > 0 && myMap) {
+                const coordsList = filtered.map(l => [l.lat, l.lng]);
+                if (coordsList.length === 1) {
+                    myMap.setCenter(coordsList[0], 15, { duration: 300 });
+                } else {
+                    ymaps.geoQuery(myMap.geoObjects).applyBoundsToMap(myMap, { checkZoomRange: true, duration: 300 });
+                }
+            }
         }
 
         function syncMobileSearch(val) {
-            document.getElementById('searchInput').value = val;
-            handleSearch();
+            document.getElementById('searchInput').value = val;[cite: 2]
+            handleSearch();[cite: 2]
         }
 
         function toggleMobileSearch(forceState) {
-            const overlay = document.getElementById('mobileSearchOverlay');
-            const input = document.getElementById('mobileSearchInput');
-            const isCurrentlyActive = overlay.classList.contains('active');
-            const newState = forceState !== undefined ? forceState : !isCurrentlyActive;
+            const overlay = document.getElementById('mobileSearchOverlay');[cite: 2]
+            const input = document.getElementById('mobileSearchInput');[cite: 2]
+            const isCurrentlyActive = overlay.classList.contains('active');[cite: 2]
+            const newState = forceState !== undefined ? forceState : !isCurrentlyActive;[cite: 2]
 
             if (newState) {
-                overlay.classList.add('active');
-                input.focus();
+                overlay.classList.add('active');[cite: 2]
+                input.focus();[cite: 2]
             } else {
-                overlay.classList.remove('active');
-                input.blur();
+                overlay.classList.remove('active');[cite: 2]
+                input.blur();[cite: 2]
             }
         }
 
         function copyAddress(text, event, btnEl) {
-            if (event) { event.stopPropagation(); event.preventDefault(); }
-            if (!text) return;
+            if (event) { event.stopPropagation(); event.preventDefault(); }[cite: 2]
+            if (!text) return;[cite: 2]
 
             const executeCopy = () => {
                 if (btnEl) {
-                    const origHtml = btnEl.innerHTML;
-                    btnEl.innerHTML = '✓ Скопировано';
-                    btnEl.style.color = '#10b981';
-                    setTimeout(() => { btnEl.innerHTML = origHtml; btnEl.style.color = ''; }, 1500);
+                    const origHtml = btnEl.innerHTML;[cite: 2]
+                    btnEl.innerHTML = '✓ Скопировано';[cite: 2]
+                    btnEl.style.color = '#10b981';[cite: 2]
+                    setTimeout(() => { btnEl.innerHTML = origHtml; btnEl.style.color = ''; }, 1500);[cite: 2]
                 }
             };
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(executeCopy).catch(() => fallbackCopy(text, executeCopy));
-            } else fallbackCopy(text, executeCopy);
+                navigator.clipboard.writeText(text).then(executeCopy).catch(() => fallbackCopy(text, executeCopy));[cite: 2]
+            } else fallbackCopy(text, executeCopy);[cite: 2]
         }
 
         function fallbackCopy(text, callback) {
-            const textArea = document.createElement("textarea");
-            textArea.value = text; document.body.appendChild(textArea); textArea.select();
-            document.execCommand('copy'); document.body.removeChild(textArea);
-            if (callback) callback();
+            const textArea = document.createElement("textarea");[cite: 2]
+            textArea.value = text; document.body.appendChild(textArea); textArea.select();[cite: 2]
+            document.execCommand('copy'); document.body.removeChild(textArea);[cite: 2]
+            if (callback) callback();[cite: 2]
         }
 
-        function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+        function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }[cite: 2]
 
         function renderMetroBadges(metroList) {
             if (!metroList || !Array.isArray(metroList) || metroList.length === 0) return '';
@@ -577,38 +677,38 @@
         }
 
         function renderInterface(locationsToRender) {
-            const listEl = document.getElementById('locations-list');
-            listEl.innerHTML = '';
-            const grouped = {};
+            const listEl = document.getElementById('locations-list');[cite: 2]
+            listEl.innerHTML = '';[cite: 2]
+            const grouped = {};[cite: 2]
             
             locationsToRender.forEach(loc => {
-                const cat = loc.category || '📍 Другое';
-                if (!grouped[cat]) grouped[cat] = [];
-                grouped[cat].push(loc);
+                const cat = loc.category || '📍 Другое';[cite: 2]
+                if (!grouped[cat]) grouped[cat] = [];[cite: 2]
+                grouped[cat].push(loc);[cite: 2]
             });
 
-            Object.values(categoryCollections).forEach(coll => myMap.geoObjects.remove(coll));
-            categoryCollections = {};
+            Object.values(categoryCollections).forEach(coll => myMap.geoObjects.remove(coll));[cite: 2]
+            categoryCollections = {};[cite: 2]
 
             if (locationsToRender.length === 0) {
-                listEl.innerHTML = '<div style="text-align:center; padding:30px; color:#9ca3af; font-size:0.9rem;">Ничего не найдено 🔍</div>';
-                renderTopCatFilter([]);
-                return;
+                listEl.innerHTML = '<div style="text-align:center; padding:30px; color:#9ca3af; font-size:0.9rem;">Ничего не найдено 🔍</div>';[cite: 2]
+                renderTopCatFilter([]);[cite: 2]
+                return;[cite: 2]
             }
 
-            const activeCategoriesList = Object.keys(grouped);
-            renderTopCatFilter(activeCategoriesList);
+            const activeCategoriesList = Object.keys(grouped);[cite: 2]
+            renderTopCatFilter(activeCategoriesList);[cite: 2]
 
             activeCategoriesList.forEach(catName => {
-                if (categoryVisibility[catName] === undefined) categoryVisibility[catName] = true;
+                if (categoryVisibility[catName] === undefined) categoryVisibility[catName] = true;[cite: 2]
 
-                const collection = new ymaps.GeoObjectCollection({}, { visible: categoryVisibility[catName] });
-                categoryCollections[catName] = collection;
-                myMap.geoObjects.add(collection);
+                const collection = new ymaps.GeoObjectCollection({}, { visible: categoryVisibility[catName] });[cite: 2]
+                categoryCollections[catName] = collection;[cite: 2]
+                myMap.geoObjects.add(collection);[cite: 2]
 
-                const groupEl = document.createElement('div');
-                groupEl.className = 'category-group';
-                const isVisible = categoryVisibility[catName];
+                const groupEl = document.createElement('div');[cite: 2]
+                groupEl.className = 'category-group';[cite: 2]
+                const isVisible = categoryVisibility[catName];[cite: 2]
                 
                 groupEl.innerHTML = `
                     <div class="category-header">
@@ -624,9 +724,9 @@
                         </div>
                     </div>
                     <div class="category-content"></div>
-                `;
+                `;[cite: 2]
 
-                const contentEl = groupEl.querySelector('.category-content');
+                const contentEl = groupEl.querySelector('.category-content');[cite: 2]
 
                 grouped[catName].forEach(loc => {
                     const categoryIcon = loc.category ? loc.category.split(' ')[0] : '📍';
@@ -644,28 +744,28 @@
                         iconOffset: [-19, -19],
                         iconShape: { type: 'Circle', coordinates: [19, 19], radius: 19 },
                         cursor: 'pointer'
-                    });
+                    });[cite: 2]
 
-                    placemark.events.add('click', () => highlightLocationCard(loc.id));
-                    collection.add(placemark);
+                    placemark.events.add('click', () => highlightLocationCard(loc.id));[cite: 2]
+                    collection.add(placemark);[cite: 2]
 
-                    const cardEl = document.createElement('div');
-                    cardEl.className = 'location-card'; cardEl.id = `card-${loc.id}`;
+                    const cardEl = document.createElement('div');[cite: 2]
+                    cardEl.className = 'location-card'; cardEl.id = `card-${loc.id}`;[cite: 2]
                     cardEl.onclick = (e) => {
-                        if (!e.target.classList.contains('card-photo-thumb') && !e.target.classList.contains('copy-btn') && !e.target.classList.contains('route-btn')) {
-                            selectLocationOnMap(loc, placemark);
+                        if (!e.target.classList.contains('card-photo-thumb') && !e.target.classList.contains('copy-btn') && !e.target.classList.contains('route-btn')) {[cite: 2]
+                            selectLocationOnMap(loc, placemark);[cite: 2]
                         }
                     };
 
-                    let photosHtml = '';
-                    if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {
+                    let photosHtml = '';[cite: 2]
+                    if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {[cite: 2]
                         photosHtml = `<div class="card-photos">
                             ${loc.images.map((imgUrl, index) => `<img src="${imgUrl}" class="card-photo-thumb" onclick="openLightboxByUrl('${loc.id}', ${index}, event)">`).join('')}
-                        </div>`;
+                        </div>`;[cite: 2]
                     }
 
-                    const routeUrl = `https://yandex.ru/maps/?rtext=~${loc.lat},${loc.lng}`;
-                    const safeAddr = escapeQuotes(loc.address);
+                    const routeUrl = `https://yandex.ru/maps/?rtext=~${loc.lat},${loc.lng}`;[cite: 2]
+                    const safeAddr = escapeQuotes(loc.address);[cite: 2]
 
                     cardEl.innerHTML = `
                         <div class="card-title">${loc.title}</div>
@@ -679,22 +779,22 @@
                         ${renderMetroBadges(loc.metro)}
                         ${loc.description ? `<div class="card-desc">${loc.description}</div>` : ''}
                         ${photosHtml}
-                    `;
-                    contentEl.appendChild(cardEl);
+                    `;[cite: 2]
+                    contentEl.appendChild(cardEl);[cite: 2]
                 });
-                listEl.appendChild(groupEl);
+                listEl.appendChild(groupEl);[cite: 2]
             });
         }
 
         function createBalloonHTML(loc) {
-            let photosHtml = '';
-            if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {
+            let photosHtml = '';[cite: 2]
+            if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {[cite: 2]
                 photosHtml = `<div class="balloon-photos">
                     ${loc.images.map((img, idx) => `<img src="${img}" class="balloon-photo-img" onclick="openLightboxByUrl('${loc.id}', ${idx}, event)">`).join('')}
-                </div>`;
+                </div>`;[cite: 2]
             }
-            const routeUrl = `https://yandex.ru/maps/?rtext=~${loc.lat},${loc.lng}`;
-            const safeAddr = escapeQuotes(loc.address);
+            const routeUrl = `https://yandex.ru/maps/?rtext=~${loc.lat},${loc.lng}`;[cite: 2]
+            const safeAddr = escapeQuotes(loc.address);[cite: 2]
 
             let metroHtml = '';
             if (loc.metro && Array.isArray(loc.metro) && loc.metro.length > 0) {
@@ -720,124 +820,124 @@
                     ${loc.description ? `<div class="balloon-desc">${loc.description}</div>` : ''}
                     ${photosHtml}
                 </div>
-            `;
+            `;[cite: 2]
         }
 
         function renderTopCatFilter(categories) {
-            const container = document.getElementById('catChipsScroll');
-            container.innerHTML = '';
-            if (!categories || categories.length === 0) return;
+            const container = document.getElementById('catChipsScroll');[cite: 2]
+            container.innerHTML = '';[cite: 2]
+            if (!categories || categories.length === 0) return;[cite: 2]
 
             categories.forEach(catName => {
-                const isVis = categoryVisibility[catName] !== false;
-                const chip = document.createElement('div');
-                chip.className = `cat-chip ${isVis ? 'active' : 'disabled'}`;
-                chip.innerHTML = `<span>${catName}</span>`;
+                const isVis = categoryVisibility[catName] !== false;[cite: 2]
+                const chip = document.createElement('div');[cite: 2]
+                chip.className = `cat-chip ${isVis ? 'active' : 'disabled'}`;[cite: 2]
+                chip.innerHTML = `<span>${catName}</span>`;[cite: 2]
                 chip.onclick = () => {
-                    categoryVisibility[catName] = !categoryVisibility[catName];
-                    const nextState = categoryVisibility[catName];
-                    if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', nextState);
+                    categoryVisibility[catName] = !categoryVisibility[catName];[cite: 2]
+                    const nextState = categoryVisibility[catName];[cite: 2]
+                    if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', nextState);[cite: 2]
                     
-                    if (nextState) { chip.classList.remove('disabled'); chip.classList.add('active'); }
-                    else { chip.classList.remove('active'); chip.classList.add('disabled'); }
+                    if (nextState) { chip.classList.remove('disabled'); chip.classList.add('active'); }[cite: 2]
+                    else { chip.classList.remove('active'); chip.classList.add('disabled'); }[cite: 2]
                     
                     const listIcon = document.getElementById(`pub-cat-icon-${encodeURIComponent(catName)}`);
                     if (listIcon) listIcon.innerText = nextState ? '👁️' : '🙈';
 
-                    updateToggleAllBtnState();
+                    updateToggleAllBtnState();[cite: 2]
                 };
-                container.appendChild(chip);
+                container.appendChild(chip);[cite: 2]
             });
-            updateToggleAllBtnState();
+            updateToggleAllBtnState();[cite: 2]
         }
 
         function toggleAllCategories() {
-            allVisibleState = !allVisibleState;
+            allVisibleState = !allVisibleState;[cite: 2]
             Object.keys(categoryCollections).forEach(catName => {
-                categoryVisibility[catName] = allVisibleState;
-                if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', allVisibleState);
+                categoryVisibility[catName] = allVisibleState;[cite: 2]
+                if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', allVisibleState);[cite: 2]
 
                 const listIcon = document.getElementById(`pub-cat-icon-${encodeURIComponent(catName)}`);
                 if (listIcon) listIcon.innerText = allVisibleState ? '👁️' : '🙈';
             });
 
             document.querySelectorAll('#catChipsScroll .cat-chip').forEach(chip => {
-                if (allVisibleState) { chip.classList.remove('disabled'); chip.classList.add('active'); }
-                else { chip.classList.remove('active'); chip.classList.add('disabled'); }
+                if (allVisibleState) { chip.classList.remove('disabled'); chip.classList.add('active'); }[cite: 2]
+                else { chip.classList.remove('active'); chip.classList.add('disabled'); }[cite: 2]
             });
-            updateToggleAllBtnState();
+            updateToggleAllBtnState();[cite: 2]
         }
 
         function updateToggleAllBtnState() {
-            const toggleBtn = document.getElementById('toggleAllBtn');
-            const hasActive = Object.values(categoryVisibility).some(v => v === true);
-            if (hasActive) { allVisibleState = true; toggleBtn.classList.remove('off'); toggleBtn.innerText = '👁️ Все'; }
-            else { allVisibleState = false; toggleBtn.classList.add('off'); toggleBtn.innerText = '🙈 Все'; }
+            const toggleBtn = document.getElementById('toggleAllBtn');[cite: 2]
+            const hasActive = Object.values(categoryVisibility).some(v => v === true);[cite: 2]
+            if (hasActive) { allVisibleState = true; toggleBtn.classList.remove('off'); toggleBtn.innerText = '👁️ Все'; }[cite: 2]
+            else { allVisibleState = false; toggleBtn.classList.add('off'); toggleBtn.innerText = '🙈 Все'; }[cite: 2]
         }
 
         function toggleCategoryMap(catName, btnEl, event) {
-            if (event) { event.stopPropagation(); event.preventDefault(); }
-            categoryVisibility[catName] = !categoryVisibility[catName];
-            const isVis = categoryVisibility[catName];
+            if (event) { event.stopPropagation(); event.preventDefault(); }[cite: 2]
+            categoryVisibility[catName] = !categoryVisibility[catName];[cite: 2]
+            const isVis = categoryVisibility[catName];[cite: 2]
             
-            if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', isVis);
+            if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', isVis);[cite: 2]
             
             const listIcon = document.getElementById(`pub-cat-icon-${encodeURIComponent(catName)}`);
             if (listIcon) listIcon.innerText = isVis ? '👁️' : '🙈';
 
-            renderTopCatFilter(Object.keys(categoryCollections));
+            renderTopCatFilter(Object.keys(categoryCollections));[cite: 2]
         }
 
-        function toggleAccordion(element) { element.closest('.category-group').classList.toggle('collapsed'); }
+        function toggleAccordion(element) { element.closest('.category-group').classList.toggle('collapsed'); }[cite: 2]
 
         function selectLocationOnMap(loc, placemark) {
-            myMap.setCenter([loc.lat, loc.lng], 15, { duration: 300 }).then(() => placemark.balloon.open());
-            document.querySelectorAll('.location-card').forEach(c => c.classList.remove('active'));
-            const card = document.getElementById(`card-${loc.id}`);
-            if (card) card.classList.add('active');
-            if (window.innerWidth <= 768) switchMobileView('map');
+            myMap.setCenter([loc.lat, loc.lng], 15, { duration: 300 }).then(() => placemark.balloon.open());[cite: 2]
+            document.querySelectorAll('.location-card').forEach(c => c.classList.remove('active'));[cite: 2]
+            const card = document.getElementById(`card-${loc.id}`);[cite: 2]
+            if (card) card.classList.add('active');[cite: 2]
+            if (window.innerWidth <= 768) switchMobileView('map');[cite: 2]
         }
 
         function highlightLocationCard(locId) {
-            document.querySelectorAll('.location-card').forEach(c => c.classList.remove('active'));
-            const card = document.getElementById(`card-${locId}`);
+            document.querySelectorAll('.location-card').forEach(c => c.classList.remove('active'));[cite: 2]
+            const card = document.getElementById(`card-${locId}`);[cite: 2]
             if (card) {
-                card.classList.add('active');
-                const group = card.closest('.category-group');
-                if (group) group.classList.remove('collapsed');
-                card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                card.classList.add('active');[cite: 2]
+                const group = card.closest('.category-group');[cite: 2]
+                if (group) group.classList.remove('collapsed');[cite: 2]
+                card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });[cite: 2]
             }
         }
 
         function openLightboxByUrl(locId, index, event) {
-            if (event) event.stopPropagation();
-            const loc = allLocations.find(l => l.id === locId);
-            if (!loc || !loc.images) return;
-            currentGallery = loc.images; currentImageIdx = index;
-            updateLightboxImage();
-            document.getElementById('lightbox').classList.add('active');
+            if (event) event.stopPropagation();[cite: 2]
+            const loc = allLocations.find(l => l.id === locId);[cite: 2]
+            if (!loc || !loc.images) return;[cite: 2]
+            currentGallery = loc.images; currentImageIdx = index;[cite: 2]
+            updateLightboxImage();[cite: 2]
+            document.getElementById('lightbox').classList.add('active');[cite: 2]
         }
 
         function updateLightboxImage() {
-            document.getElementById('lightbox-img').src = currentGallery[currentImageIdx];
-            document.getElementById('lightbox-counter').innerText = `${currentImageIdx + 1} из ${currentGallery.length}`;
+            document.getElementById('lightbox-img').src = currentGallery[currentImageIdx];[cite: 2]
+            document.getElementById('lightbox-counter').innerText = `${currentImageIdx + 1} из ${currentGallery.length}`;[cite: 2]
         }
 
-        function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
-        function nextImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx + 1) % currentGallery.length; updateLightboxImage(); }
-        function prevImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx - 1 + currentGallery.length) % currentGallery.length; updateLightboxImage(); }
+        function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }[cite: 2]
+        function nextImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx + 1) % currentGallery.length; updateLightboxImage(); }[cite: 2]
+        function prevImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx - 1 + currentGallery.length) % currentGallery.length; updateLightboxImage(); }[cite: 2]
 
         function switchMobileView(view) {
-            const btnMap = document.getElementById('btn-map-view');
-            const btnList = document.getElementById('btn-list-view');
+            const btnMap = document.getElementById('btn-map-view');[cite: 2]
+            const btnList = document.getElementById('btn-list-view');[cite: 2]
             if (view === 'map') {
-                document.body.classList.remove('show-list');
-                btnMap.classList.add('active'); btnList.classList.remove('active');
+                document.body.classList.remove('show-list');[cite: 2]
+                btnMap.classList.add('active'); btnList.classList.remove('active');[cite: 2]
                 setTimeout(() => { if (myMap) myMap.container.fitToViewport(); }, 50);
             } else {
-                document.body.classList.add('show-list');
-                btnList.classList.add('active'); btnMap.classList.remove('active');
-                toggleMobileSearch(false);
+                document.body.classList.add('show-list');[cite: 2]
+                btnList.classList.add('active'); btnMap.classList.remove('active');[cite: 2]
+                toggleMobileSearch(false);[cite: 2]
             }
         }
     </script>
