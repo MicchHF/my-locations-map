@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#f8fafc">
+    <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>локации от @dalazareva</title>
     <script src="https://api-maps.yandex.ru/2.1/?apikey=7370bad5-a627-4414-a1e8-b2023bda7a61&lang=ru_RU"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -18,28 +18,26 @@
             touch-action: manipulation;
         }
 
-        html, body {
+        html { height: -webkit-fill-available; }
+        body {
             width: 100vw;
-            height: 100%;
-            height: -webkit-fill-available;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
             margin: 0;
             padding: 0;
-            background-color: #f8fafc;
+            background-color: #ffffff;
             color: #1a1a1a;
             -webkit-text-size-adjust: 100%;
-            overflow: hidden;
-            position: fixed;
-            top: 0;
-            left: 0;
         }
 
         #app-wrapper {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            height: 100dvh;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
             display: flex;
             background: #ffffff;
         }
@@ -181,8 +179,10 @@
             border: 1px solid #e2e8f0;
             width: 100%;
         }
+        
         .card-metro-block { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
-        .metro-badge { display: inline-flex; align-items: center; gap: 4px; background: #f1f5f9; color: #334155; font-size: 0.74rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; border: 1px solid #e2e8f0; }
+        .metro-badge { display: inline-flex; align-items: center; gap: 6px; background: #f8fafc; color: #1e293b; font-size: 0.74rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; border: 1px solid #e2e8f0; }
+        .metro-badge-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
         
         .card-actions-row { display: flex; gap: 6px; width: 100%; }
         .copy-btn, .route-btn {
@@ -215,15 +215,15 @@
             border: 1px solid rgba(0,0,0,0.08);
         }
 
-        /* Бесшовное перекрытие под iOS Safari */
+        /* Полноэкранный растяг карты под iOS */
         #map-container {
-            position: absolute;
-            top: -100px;
+            position: fixed;
+            top: 0;
             left: 390px;
             right: 0;
-            bottom: -100px;
+            bottom: 0;
             width: calc(100vw - 390px);
-            height: calc(100% + 200px);
+            height: 100%;
             z-index: 1;
         }
         #map { width: 100%; height: 100%; }
@@ -259,7 +259,7 @@
 
         .top-cat-filter-bar {
             position: absolute;
-            top: max(calc(env(safe-area-inset-top) + 120px), 120px);
+            top: max(calc(env(safe-area-inset-top) + 14px), 16px);
             left: 50%;
             transform: translateX(-50%);
             width: calc(100% - 24px);
@@ -365,10 +365,10 @@
             }
             #map-container {
                 left: 0;
-                top: -100px;
+                top: 0;
                 width: 100vw;
-                height: calc(100% + 200px);
-                position: absolute;
+                height: 100%;
+                position: fixed;
             }
 
             .show-list #map-container { display: none; }
@@ -468,12 +468,35 @@
         let currentGallery = [];
         let currentImageIdx = 0;
 
+        // Карта официальных цветов станций метро Москвы
+        const METRO_LINE_COLORS = {
+            "Охотный Ряд": "#EF161E", "Лубянка": "#EF161E", "Чистые пруды": "#EF161E", "Красные Ворота": "#EF161E", "Комсомольская": "#EF161E", "Библиотека им. Ленина": "#EF161E", "Кропоткинская": "#EF161E", "Парк культуры": "#EF161E", "Фрунзенская": "#EF161E", "Спортивная": "#EF161E",
+            "Театральная": "#2DBE2C", "Тверская": "#2DBE2C", "Маяковская": "#2DBE2C", "Белорусская": "#2DBE2C", "Новокузнецкая": "#2DBE2C", "Павелецкая": "#2DBE2C", "Автозаводская": "#2DBE2C",
+            "Площадь Революции": "#0078BF", "Арбатская": "#0078BF", "Смоленская": "#0078BF", "Киевская": "#0078BF", "Курская": "#0078BF", "Бауманская": "#0078BF", "Электрозаводская": "#0078BF",
+            "Александровский сад": "#00BFFF", "Выставочная": "#00BFFF", "Международная": "#00BFFF",
+            "Добрынинская": "#8D5B2D", "Октябрьская": "#8D5B2D", "Таганская": "#8D5B2D", "Проспект Мира": "#8D5B2D", "Новослободская": "#8D5B2D", "Краснопресненская": "#8D5B2D",
+            "Китай-город": "#ED9121", "Тургеневская": "#ED9121", "Сухаревская": "#ED9121", "Третьяковская": "#ED9121", "Шаболовская": "#ED9121", "Ленинский проспект": "#ED9121",
+            "Кузнецкий Мост": "#800080", "Пушкинская": "#800080", "Баррикадная": "#800080", "Улица 1905 года": "#800080", "Пролетарская": "#800080", "Волгоградский проспект": "#800080",
+            "Марксистская": "#FFD702", "Площадь Ильича": "#FFD702", "Авиамоторная": "#FFD702",
+            "Чеховская": "#A0A0A0", "Боровицкая": "#A0A0A0", "Полянка": "#A0A0A0", "Серпуховская": "#A0A0A0", "Тульская": "#A0A0A0", "Цветной бульвар": "#A0A0A0", "Менделеевская": "#A0A0A0", "Савеловская": "#A0A0A0",
+            "Трубная": "#99CC00", "Сретенский бульвар": "#99CC00", "Чкаловская": "#99CC00", "Римская": "#99CC00", "Крестьянская Застава": "#99CC00", "Дубровка": "#99CC00", "Достоевская": "#99CC00", "Марьина Роща": "#99CC00",
+            "Деловой центр": "#70C9C7", "Шелепиха": "#70C9C7"
+        };
+
+        function getMetroColor(stationName) {
+            if (!stationName) return '#94a3b8';
+            for (let name in METRO_LINE_COLORS) {
+                if (stationName.toLowerCase().includes(name.toLowerCase())) return METRO_LINE_COLORS[name];
+            }
+            return '#0ea5e9';
+        }
+
         ymaps.ready(initMap);
 
         function initMap() {
             myMap = new ymaps.Map("map", {
                 center: [55.751574, 37.573856],
-                zoom: 11,
+                zoom: 12,
                 controls: ['zoomControl', 'geolocationControl']
             });
 
@@ -549,7 +572,10 @@
         function renderMetroBadges(metroList) {
             if (!metroList || !Array.isArray(metroList) || metroList.length === 0) return '';
             return `<div class="card-metro-block">${metroList.map(m => `
-                <span class="metro-badge">🚇 ${m.name} ${m.time ? `<span style="color:#64748b; font-weight:400;">(${m.time} мин)</span>` : ''}</span>
+                <span class="metro-badge">
+                    <span class="metro-badge-dot" style="background: ${m.color || getMetroColor(m.name)};"></span>
+                    ${m.name} ${m.time ? `<span style="color:#64748b; font-weight:400;">(${m.time} мин)</span>` : ''}
+                </span>
             `).join('')}</div>`;
         }
 
@@ -672,7 +698,10 @@
             let metroHtml = '';
             if (loc.metro && Array.isArray(loc.metro) && loc.metro.length > 0) {
                 metroHtml = `<div class="balloon-metro-block">${loc.metro.map(m => `
-                    <span class="metro-badge">🚇 ${m.name} ${m.time ? `<span style="color:#64748b; font-weight:400;">(${m.time} мин)</span>` : ''}</span>
+                    <span class="metro-badge">
+                        <span class="metro-badge-dot" style="background: ${m.color || getMetroColor(m.name)};"></span>
+                        ${m.name} ${m.time ? `<span style="color:#64748b; font-weight:400;">(${m.time} мин)</span>` : ''}
+                    </span>
                 `).join('')}</div>`;
             }
 
