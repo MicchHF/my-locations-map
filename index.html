@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <!-- Запрет масштабирования интерфейса -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover">
     <title>локации от @dalazareva</title>
     <script src="https://api-maps.yandex.ru/2.1/?apikey=17e91f7c-3356-4174-9a25-5ac34ba55d46&lang=ru_RU"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -22,7 +22,7 @@
             height: 100%;
             height: 100dvh;
             overflow: hidden;
-            background-color: #f8f9fa;
+            background-color: #ffffff;
             color: #1a1a1a;
             /* Запрет системных жестов зума */
             -webkit-text-size-adjust: 100%;
@@ -30,21 +30,24 @@
 
         body {
             display: flex;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
         }
 
         #sidebar {
             width: 390px;
-            height: 100%;
+            height: 100dvh;
             background: #ffffff;
             border-right: 1px solid #e5e7eb;
             display: flex;
             flex-direction: column;
             z-index: 10;
             box-shadow: 2px 0 12px rgba(0,0,0,0.04);
+            position: relative;
         }
 
         .sidebar-header {
-            padding: 16px 16px 12px 16px;
+            padding: calc(env(safe-area-inset-top) + 16px) 16px 12px 16px;
             background: #ffffff;
             border-bottom: 1px solid #f0f0f0;
         }
@@ -120,6 +123,7 @@
             flex: 1;
             overflow-y: auto;
             padding: 12px;
+            padding-bottom: calc(env(safe-area-inset-bottom) + 80px);
         }
 
         .category-group {
@@ -129,10 +133,6 @@
             border-radius: 12px;
             overflow: hidden;
             transition: border-color 0.2s;
-        }
-
-        .category-group:hover {
-            border-color: #d1d5db;
         }
 
         .category-header {
@@ -145,336 +145,77 @@
         }
 
         .category-title-wrap {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            flex: 1;
+            display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1;
         }
 
-        .category-title {
-            font-weight: 600;
-            font-size: 0.92rem;
-            color: #1f2937;
-        }
+        .category-title { font-weight: 600; font-size: 0.92rem; color: #1f2937; }
 
         .category-count {
-            font-size: 0.75rem;
-            background: #e5e7eb;
-            color: #4b5563;
-            padding: 2px 7px;
-            border-radius: 10px;
-            font-weight: 600;
+            font-size: 0.75rem; background: #e5e7eb; color: #4b5563; padding: 2px 7px; border-radius: 10px; font-weight: 600;
         }
 
-        .category-controls {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .category-controls { display: flex; align-items: center; gap: 10px; }
 
         .toggle-visibility-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1.1rem;
-            padding: 4px 6px;
-            border-radius: 6px;
-            transition: background 0.2s;
+            background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 4px 6px; border-radius: 6px; transition: background 0.2s;
         }
 
-        .toggle-visibility-btn:hover {
-            background: #e5e7eb;
-        }
-
-        .chevron {
-            font-size: 0.8rem;
-            transition: transform 0.2s;
-            color: #9ca3af;
-            cursor: pointer;
-            padding: 4px;
-        }
-
-        .category-group.collapsed .chevron {
-            transform: rotate(-90deg);
-        }
-
-        .category-group.collapsed .category-content {
-            display: none;
-        }
-
-        .category-content {
-            padding: 8px;
-        }
+        .chevron { font-size: 0.8rem; transition: transform 0.2s; color: #9ca3af; cursor: pointer; padding: 4px; }
+        .category-group.collapsed .chevron { transform: rotate(-90deg); }
+        .category-group.collapsed .category-content { display: none; }
+        .category-content { padding: 8px; }
 
         .location-card {
-            background: #ffffff;
-            border: 1px solid #f3f4f6;
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            background: #ffffff; border: 1px solid #f3f4f6; border-radius: 10px; padding: 12px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s ease;
         }
+        .location-card:last-child { margin-bottom: 0; }
+        .location-card.active { border-color: #0f172a; background-color: #f8fafc; }
 
-        .location-card:last-child {
-            margin-bottom: 0;
-        }
+        .card-title { font-size: 1rem; font-weight: 600; color: #111827; margin-bottom: 8px; line-height: 1.3; }
 
-        .location-card:hover {
-            border-color: #cbd5e1;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            transform: translateY(-1px);
-        }
-
-        .location-card.active {
-            border-color: #0f172a;
-            background-color: #f8fafc;
-        }
-
-        .card-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #111827;
-            margin-bottom: 8px;
-            line-height: 1.3;
-        }
-
-        .card-address-block {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-bottom: 10px;
-            width: 100%;
-        }
-
-        .card-address {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: #f1f5f9;
-            color: #475569;
-            font-size: 0.78rem;
-            font-weight: 500;
-            padding: 6px 10px;
-            border-radius: 8px;
-            word-break: break-word;
-            border: 1px solid #e2e8f0;
-            width: 100%;
-        }
-
-        .card-actions-row {
-            display: flex;
-            gap: 6px;
-            width: 100%;
-        }
-
+        .card-address-block { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; width: 100%; }
+        .card-address { display: flex; align-items: center; gap: 6px; background: #f1f5f9; color: #475569; font-size: 0.78rem; font-weight: 500; padding: 6px 10px; border-radius: 8px; word-break: break-word; border: 1px solid #e2e8f0; width: 100%; }
+        
+        .card-actions-row { display: flex; gap: 6px; width: 100%; }
         .copy-btn, .route-btn {
-            flex: 1;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-            padding: 6px 10px;
-            font-size: 0.78rem;
-            font-weight: 500;
-            border-radius: 8px;
-            text-decoration: none;
-            box-sizing: border-box;
-            cursor: pointer;
-            transition: all 0.15s ease;
+            flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 6px 10px; font-size: 0.78rem; font-weight: 500; border-radius: 8px; text-decoration: none; box-sizing: border-box; cursor: pointer;
         }
+        .copy-btn { background: #ffffff; border: 1px solid #cbd5e1; color: #334155; }
+        .route-btn { background: #0f172a; border: 1px solid #0f172a; color: #ffffff; }
 
-        .copy-btn {
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            color: #334155;
-        }
+        .card-desc { font-size: 0.85rem; color: #4b5563; line-height: 1.4; margin-bottom: 10px; white-space: pre-line; }
 
-        .copy-btn:hover {
-            background: #f8fafc;
-            border-color: #94a3b8;
-        }
-
-        .route-btn {
-            background: #0f172a;
-            border: 1px solid #0f172a;
-            color: #ffffff;
-        }
-
-        .route-btn:hover {
-            background: #1e293b;
-        }
-
-        .card-desc {
-            font-size: 0.85rem;
-            color: #4b5563;
-            line-height: 1.4;
-            margin-bottom: 10px;
-            white-space: pre-line;
-        }
-
-        .card-photos {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding-bottom: 4px;
-            scrollbar-width: thin;
-        }
-
-        .card-photo-thumb {
-            height: 80px;
-            width: auto;
-            max-width: 150px;
-            border-radius: 8px;
-            object-fit: cover;
-            flex-shrink: 0;
-            cursor: pointer;
-            border: 1px solid rgba(0,0,0,0.08);
-            transition: transform 0.15s, opacity 0.15s;
-        }
-
-        .card-photo-thumb:hover {
-            transform: scale(1.03);
-            opacity: 0.9;
-        }
+        .card-photos { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+        .card-photo-thumb { height: 80px; width: auto; max-width: 150px; border-radius: 8px; object-fit: cover; flex-shrink: 0; cursor: pointer; border: 1px solid rgba(0,0,0,0.08); }
 
         /* Карта на максимум экрана */
         #map-container {
             position: absolute;
-            top: 0;
-            left: 390px;
-            right: 0;
-            bottom: 0;
-            width: auto;
-            height: 100%;
+            top: 0; left: 0; width: 100vw; height: 100dvh; z-index: 1;
         }
 
-        #map {
-            width: 100%;
-            height: 100%;
-        }
+        #map { width: 100%; height: 100%; }
 
         .custom-map-pin {
-            width: 38px;
-            height: 38px;
-            background: #0f172a;
-            color: #ffffff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            border: 2px solid #ffffff;
-            cursor: pointer;
-            user-select: none;
-            transition: transform 0.2s;
+            width: 38px; height: 38px; background: #0f172a; color: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 2px solid #ffffff; cursor: pointer; user-select: none; transition: transform 0.2s;
         }
 
-        .custom-map-pin:hover {
-            transform: scale(1.12);
-        }
-
-        .balloon-wrapper {
-            padding: 4px 2px;
-            max-width: 240px;
-        }
-
-        .balloon-title {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: #0f172a;
-            line-height: 1.25;
-            margin-bottom: 6px;
-        }
-
-        .balloon-address-block {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-bottom: 6px;
-            width: 100%;
-        }
-
-        .balloon-address {
-            font-size: 0.78rem;
-            color: #475569;
-            background: #f1f5f9;
-            padding: 5px 8px;
-            border-radius: 6px;
-            line-height: 1.35;
-            word-break: break-word;
-            border: 1px solid #e2e8f0;
-            width: 100%;
-        }
-
-        .balloon-actions-row {
-            display: flex;
-            gap: 6px;
-            width: 100%;
-        }
-
-        .balloon-btn {
-            flex: 1;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            padding: 5px 6px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            border-radius: 6px;
-            text-decoration: none;
-            box-sizing: border-box;
-            cursor: pointer;
-            text-align: center;
-        }
-
-        .balloon-copy-btn {
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            color: #334155;
-        }
-
-        .balloon-route-btn {
-            background: #0f172a;
-            border: 1px solid #0f172a;
-            color: #ffffff;
-        }
-
-        .balloon-desc {
-            font-size: 0.82rem;
-            color: #334155;
-            line-height: 1.4;
-            margin-top: 6px;
-            margin-bottom: 6px;
-            white-space: pre-line;
-            border-top: 1px solid #f1f5f9;
-            padding-top: 6px;
-        }
-
-        .balloon-photos {
-            display: flex;
-            gap: 6px;
-            margin-top: 8px;
-            overflow-x: auto;
-            padding-bottom: 2px;
-        }
-
-        .balloon-photo-img {
-            height: 60px;
-            width: auto;
-            border-radius: 6px;
-            cursor: pointer;
-            object-fit: cover;
-            border: 1px solid rgba(0,0,0,0.08);
-        }
+        .balloon-wrapper { padding: 4px 2px; max-width: 240px; }
+        .balloon-title { font-size: 0.95rem; font-weight: 700; color: #0f172a; line-height: 1.25; margin-bottom: 6px; }
+        .balloon-address-block { display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; width: 100%; }
+        .balloon-address { font-size: 0.78rem; color: #475569; background: #f1f5f9; padding: 5px 8px; border-radius: 6px; line-height: 1.35; word-break: break-word; border: 1px solid #e2e8f0; width: 100%; }
+        .balloon-actions-row { display: flex; gap: 6px; width: 100%; }
+        .balloon-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 5px 6px; font-size: 0.75rem; font-weight: 500; border-radius: 6px; text-decoration: none; box-sizing: border-box; cursor: pointer; text-align: center; }
+        .balloon-copy-btn { background: #ffffff; border: 1px solid #cbd5e1; color: #334155; }
+        .balloon-route-btn { background: #0f172a; border: 1px solid #0f172a; color: #ffffff; }
+        .balloon-desc { font-size: 0.82rem; color: #334155; line-height: 1.4; margin-top: 6px; margin-bottom: 6px; white-space: pre-line; border-top: 1px solid #f1f5f9; padding-top: 6px; }
+        .balloon-photos { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; padding-bottom: 2px; }
+        .balloon-photo-img { height: 60px; width: auto; border-radius: 6px; cursor: pointer; object-fit: cover; border: 1px solid rgba(0,0,0,0.08); }
 
         /* Верхняя панель фильтра категорий */
         .top-cat-filter-bar {
             position: absolute;
-            top: 16px;
+            top: calc(env(safe-area-inset-top) + 12px);
             left: 50%;
             transform: translateX(-50%);
             width: calc(100% - 32px);
@@ -493,216 +234,57 @@
         }
 
         .toggle-all-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 6px 12px;
-            border-radius: 9999px;
-            background: #0f172a;
-            color: #ffffff;
-            font-size: 0.78rem;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            white-space: nowrap;
-            flex-shrink: 0;
-            transition: all 0.2s;
+            display: inline-flex; align-items: center; justify-content: center; padding: 6px 12px; border-radius: 9999px; background: #0f172a; color: #ffffff; font-size: 0.78rem; font-weight: 600; border: none; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: all 0.2s;
         }
+        .toggle-all-btn.off { background: #e2e8f0; color: #64748b; }
 
-        .toggle-all-btn.off {
-            background: #e2e8f0;
-            color: #64748b;
-        }
-
-        .cat-chips-scroll {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            overflow-x: auto;
-            scrollbar-width: none;
-            width: 100%;
-        }
-
+        .cat-chips-scroll { display: flex; align-items: center; gap: 6px; overflow-x: auto; scrollbar-width: none; width: 100%; }
         .cat-chips-scroll::-webkit-scrollbar { display: none; }
-
-        .cat-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 6px 12px;
-            border-radius: 9999px;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            font-size: 0.78rem;
-            font-weight: 500;
-            color: #334155;
-            white-space: nowrap;
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.2s;
-            flex-shrink: 0;
-        }
-
-        .cat-chip.active {
-            background: #0f172a;
-            color: #ffffff;
-            border-color: #0f172a;
-        }
-
-        .cat-chip.disabled {
-            opacity: 0.45;
-            background: #f1f5f9;
-            color: #94a3b8;
-        }
+        .cat-chip { display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 9999px; background: #ffffff; border: 1px solid #e2e8f0; font-size: 0.78rem; font-weight: 500; color: #334155; white-space: nowrap; cursor: pointer; user-select: none; transition: all 0.2s; flex-shrink: 0; }
+        .cat-chip.active { background: #0f172a; color: #ffffff; border-color: #0f172a; }
+        .cat-chip.disabled { opacity: 0.45; background: #f1f5f9; color: #94a3b8; }
 
         /* Лайтбокс */
         .lightbox-modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
-            background: rgba(0, 0, 0, 0.94);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(8px);
-            touch-action: pan-y;
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0, 0, 0, 0.94); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(8px); touch-action: pan-y;
         }
-
         .lightbox-modal.active { display: flex; }
-
-        .lightbox-img {
-            max-width: 92vw;
-            max-height: 85vh;
-            object-fit: contain;
-            border-radius: 8px;
-            box-shadow: 0 10px 35px rgba(0,0,0,0.6);
-            user-select: none;
-        }
-
-        .lightbox-close {
-            position: absolute;
-            top: 20px; right: 20px;
-            color: #ffffff; font-size: 32px;
-            cursor: pointer; opacity: 0.85;
-            padding: 10px;
-            z-index: 10001;
-        }
-
-        .lightbox-nav {
-            position: absolute; top: 50%; transform: translateY(-50%);
-            color: #ffffff; font-size: 36px; cursor: pointer; padding: 16px; opacity: 0.7;
-            z-index: 10001;
-        }
-
-        .lightbox-prev { left: 10px; }
-        .lightbox-next { right: 10px; }
-        .lightbox-counter { position: absolute; bottom: 24px; color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; }
+        .lightbox-img { max-width: 92vw; max-height: 85vh; object-fit: contain; border-radius: 8px; box-shadow: 0 10px 35px rgba(0,0,0,0.6); user-select: none; }
+        .lightbox-close { position: absolute; top: calc(env(safe-area-inset-top) + 20px); right: 20px; color: #ffffff; font-size: 32px; cursor: pointer; opacity: 0.85; padding: 10px; z-index: 10001; }
+        .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); color: #ffffff; font-size: 36px; cursor: pointer; padding: 16px; opacity: 0.7; z-index: 10001; }
+        .lightbox-prev { left: 10px; } .lightbox-next { right: 10px; }
+        .lightbox-counter { position: absolute; bottom: calc(env(safe-area-inset-bottom) + 24px); color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; }
 
         .mobile-toggle-bar { display: none; }
 
         /* Всплывающий поиск над клавиатурой */
         .mobile-search-overlay {
-            display: none;
-            position: fixed;
-            left: 16px;
-            right: 16px;
-            bottom: 84px;
-            z-index: 1001;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 16px;
-            padding: 8px 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            align-items: center;
-            gap: 8px;
-            transition: bottom 0.1s ease-out;
+            display: none; position: fixed; left: 16px; right: 16px; bottom: calc(env(safe-area-inset-bottom) + 84px); z-index: 1001; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 16px; padding: 8px 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); border: 1px solid rgba(0, 0, 0, 0.08); align-items: center; gap: 8px; transition: bottom 0.1s ease-out;
+        }
+        .mobile-search-overlay.active { display: flex; }
+        .mobile-search-input { flex: 1; border: none; background: transparent; font-size: 16px; /* 16px чтоб iOS не зумил инпут */ outline: none; color: #0f172a; }
+        .mobile-search-close { background: none; border: none; font-size: 1.1rem; color: #64748b; cursor: pointer; padding: 4px 8px; }
+
+        /* Адаптив ПК */
+        @media (min-width: 769px) {
+            #map-container { left: 390px; width: calc(100vw - 390px); }
         }
 
-        .mobile-search-overlay.active {
-            display: flex;
-        }
-
-        .mobile-search-input {
-            flex: 1;
-            border: none;
-            background: transparent;
-            font-size: 0.95rem;
-            outline: none;
-            color: #0f172a;
-        }
-
-        .mobile-search-close {
-            background: none;
-            border: none;
-            font-size: 1.1rem;
-            color: #64748b;
-            cursor: pointer;
-            padding: 4px 8px;
-        }
-
+        /* Адаптив Мобильный */
         @media (max-width: 768px) {
-            body { flex-direction: column; }
-            #sidebar { width: 100%; height: 100%; }
-
-            #map-container {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                width: 100vw;
-                height: 100dvh;
-            }
-
+            #sidebar { width: 100vw; height: 100dvh; display: none; }
             .show-list #map-container { display: none; }
             .show-list #sidebar { display: flex; }
-
             body:not(.show-list) #sidebar { display: none; }
             body:not(.show-list) #map-container { display: block; }
 
             .mobile-toggle-bar {
-                display: flex;
-                position: fixed;
-                bottom: 24px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: rgba(255, 255, 255, 0.88);
-                backdrop-filter: blur(20px);
-                -webkit-backdrop-filter: blur(20px);
-                padding: 4px;
-                border-radius: 9999px;
-                border: 1px solid rgba(0, 0, 0, 0.08);
-                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12);
-                z-index: 1000;
-                gap: 4px;
-                align-items: center;
+                display: flex; position: fixed; bottom: calc(env(safe-area-inset-bottom) + 24px); left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 4px; border-radius: 9999px; border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12); z-index: 1000; gap: 4px; align-items: center;
             }
 
-            .toggle-btn {
-                padding: 9px 18px;
-                border-radius: 9999px;
-                border: none;
-                background: transparent;
-                font-size: 0.85rem;
-                font-weight: 600;
-                cursor: pointer;
-                color: #64748b;
-                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-
-            .toggle-btn.icon-btn {
-                padding: 9px 12px;
-                font-size: 0.95rem;
-            }
-
-            .toggle-btn.active {
-                background: #0f172a;
-                color: #ffffff;
-                box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
-            }
-
+            .toggle-btn { padding: 9px 18px; border-radius: 9999px; border: none; background: transparent; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: #64748b; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+            .toggle-btn.icon-btn { padding: 9px 12px; font-size: 0.95rem; }
+            .toggle-btn.active { background: #0f172a; color: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25); }
             .lightbox-nav { display: none; }
         }
     </style>
@@ -725,22 +307,18 @@
 
     <div id="map-container">
         <div id="map"></div>
-
-        <!-- Верхний горизонтальный фильтр категорий -->
         <div id="topCatFilterBar" class="top-cat-filter-bar">
             <button id="toggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
             <div id="catChipsScroll" class="cat-chips-scroll"></div>
         </div>
     </div>
 
-    <!-- Мобильный поиск над клавиатурой -->
     <div id="mobileSearchOverlay" class="mobile-search-overlay">
         <span>🔍</span>
         <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="Поиск..." oninput="syncMobileSearch(this.value)">
         <button class="mobile-search-close" onclick="toggleMobileSearch(false)">✕</button>
     </div>
 
-    <!-- Нижнее плавающее меню -->
     <div class="mobile-toggle-bar">
         <button id="btn-search-toggle" class="toggle-btn icon-btn" title="Поиск" onclick="toggleMobileSearch()">🔍</button>
         <button id="btn-map-view" class="toggle-btn active" onclick="switchMobileView('map')">🗺️ Карта</button>
@@ -774,18 +352,13 @@
                 zoom: 11,
                 controls: ['zoomControl', 'geolocationControl']
             });
-
             await loadLocations();
             setupViewportHandler();
         }
 
         async function loadLocations() {
             const { data, error } = await supabaseClient.from('Location').select('*');
-            if (error) {
-                console.error("Ошибка загрузки:", error);
-                return;
-            }
-
+            if (error) { console.error("Ошибка загрузки:", error); return; }
             allLocations = data || [];
             renderInterface(allLocations);
         }
@@ -809,7 +382,6 @@
         function toggleMobileSearch(forceState) {
             const overlay = document.getElementById('mobileSearchOverlay');
             const input = document.getElementById('mobileSearchInput');
-            
             const isCurrentlyActive = overlay.classList.contains('active');
             const newState = forceState !== undefined ? forceState : !isCurrentlyActive;
 
@@ -832,28 +404,22 @@
         function adjustSearchOverlayPosition() {
             const overlay = document.getElementById('mobileSearchOverlay');
             if (!overlay.classList.contains('active')) return;
-
             const viewport = window.visualViewport;
             const keyboardHeight = window.innerHeight - viewport.height;
 
             if (keyboardHeight > 100) {
                 overlay.style.bottom = `${keyboardHeight + 12}px`;
             } else {
-                overlay.style.bottom = '84px';
+                overlay.style.bottom = `calc(env(safe-area-inset-bottom) + 84px)`;
             }
         }
 
         document.getElementById('mobileSearchInput').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                toggleMobileSearch(false);
-            }
+            if (e.key === 'Enter') toggleMobileSearch(false);
         });
 
         function copyAddress(text, event, btnEl) {
-            if (event) {
-                event.stopPropagation();
-                event.preventDefault();
-            }
+            if (event) { event.stopPropagation(); event.preventDefault(); }
             if (!text) return;
 
             const executeCopy = () => {
@@ -861,39 +427,28 @@
                     const origHtml = btnEl.innerHTML;
                     btnEl.innerHTML = '✓ Скопировано';
                     btnEl.style.color = '#10b981';
-                    setTimeout(() => {
-                        btnEl.innerHTML = origHtml;
-                        btnEl.style.color = '';
-                    }, 1500);
+                    setTimeout(() => { btnEl.innerHTML = origHtml; btnEl.style.color = ''; }, 1500);
                 }
             };
-
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(text).then(executeCopy).catch(() => fallbackCopy(text, executeCopy));
-            } else {
-                fallbackCopy(text, executeCopy);
-            }
+            } else fallbackCopy(text, executeCopy);
         }
 
         function fallbackCopy(text, callback) {
             const textArea = document.createElement("textarea");
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
+            textArea.value = text; document.body.appendChild(textArea); textArea.select();
+            document.execCommand('copy'); document.body.removeChild(textArea);
             if (callback) callback();
         }
 
-        function escapeQuotes(str) {
-            return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        }
+        function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
 
         function renderInterface(locationsToRender) {
             const listEl = document.getElementById('locations-list');
             listEl.innerHTML = '';
-
             const grouped = {};
+            
             locationsToRender.forEach(loc => {
                 const cat = loc.category || '📍 Другое';
                 if (!grouped[cat]) grouped[cat] = [];
@@ -913,30 +468,24 @@
             renderTopCatFilter(activeCategoriesList);
 
             activeCategoriesList.forEach(catName => {
-                if (categoryVisibility[catName] === undefined) {
-                    categoryVisibility[catName] = true;
-                }
+                if (categoryVisibility[catName] === undefined) categoryVisibility[catName] = true;
 
-                const collection = new ymaps.GeoObjectCollection({}, {
-                    visible: categoryVisibility[catName]
-                });
+                const collection = new ymaps.GeoObjectCollection({}, { visible: categoryVisibility[catName] });
                 categoryCollections[catName] = collection;
                 myMap.geoObjects.add(collection);
 
                 const groupEl = document.createElement('div');
                 groupEl.className = 'category-group';
-                
                 const isVisible = categoryVisibility[catName];
-                const itemsCount = grouped[catName].length;
-
+                
                 groupEl.innerHTML = `
                     <div class="category-header">
                         <div class="category-title-wrap" onclick="toggleAccordion(this)">
                             <span class="category-title">${catName}</span>
-                            <span class="category-count">${itemsCount}</span>
+                            <span class="category-count">${grouped[catName].length}</span>
                         </div>
                         <div class="category-controls">
-                            <button class="toggle-visibility-btn" title="Показать/скрыть на карте" onclick="toggleCategoryMap('${catName}', this, event)">
+                            <button class="toggle-visibility-btn" onclick="toggleCategoryMap('${catName}', this, event)">
                                 ${isVisible ? '👁️' : '🙈'}
                             </button>
                             <span class="chevron" onclick="toggleAccordion(this)">▼</span>
@@ -949,38 +498,21 @@
 
                 grouped[catName].forEach(loc => {
                     const categoryIcon = loc.category ? loc.category.split(' ')[0] : '📍';
-                    
-                    const layout = ymaps.templateLayoutFactory.createClass(
-                        `<div class="custom-map-pin"><span>${categoryIcon}</span></div>`
-                    );
+                    const layout = ymaps.templateLayoutFactory.createClass(`<div class="custom-map-pin"><span>${categoryIcon}</span></div>`);
 
                     const placemark = new ymaps.Placemark([loc.lat, loc.lng], {
-                        hintContent: loc.title,
-                        balloonContent: createBalloonHTML(loc)
+                        hintContent: loc.title, balloonContent: createBalloonHTML(loc)
                     }, {
-                        iconLayout: layout,
-                        iconOffset: [-19, -19],
-                        iconShape: {
-                            type: 'Circle',
-                            coordinates: [19, 19],
-                            radius: 19
-                        },
-                        cursor: 'pointer'
+                        iconLayout: layout, iconOffset: [-19, -19], iconShape: { type: 'Circle', coordinates: [19, 19], radius: 19 }, cursor: 'pointer'
                     });
 
-                    placemark.events.add('click', () => {
-                        highlightLocationCard(loc.id);
-                    });
-
+                    placemark.events.add('click', () => highlightLocationCard(loc.id));
                     collection.add(placemark);
 
                     const cardEl = document.createElement('div');
-                    cardEl.className = 'location-card';
-                    cardEl.id = `card-${loc.id}`;
+                    cardEl.className = 'location-card'; cardEl.id = `card-${loc.id}`;
                     cardEl.onclick = (e) => {
-                        if (!e.target.classList.contains('card-photo-thumb') && 
-                            !e.target.classList.contains('copy-btn') && 
-                            !e.target.classList.contains('route-btn')) {
+                        if (!e.target.classList.contains('card-photo-thumb') && !e.target.classList.contains('copy-btn') && !e.target.classList.contains('route-btn')) {
                             selectLocationOnMap(loc, placemark);
                         }
                     };
@@ -988,16 +520,15 @@
                     let photosHtml = '';
                     if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {
                         photosHtml = `<div class="card-photos">
-                            ${loc.images.map((imgUrl, index) => 
-                                `<img src="${imgUrl}" class="card-photo-thumb" onclick="openLightboxByUrl('${loc.id}', ${index}, event)">`
-                            ).join('')}
+                            ${loc.images.map((imgUrl, index) => `<img src="${imgUrl}" class="card-photo-thumb" onclick="openLightboxByUrl('${loc.id}', ${index}, event)">`).join('')}
                         </div>`;
                     }
 
                     const routeUrl = `https://yandex.ru/maps/?rtext=~${loc.lat},${loc.lng}`;
                     const safeAddr = escapeQuotes(loc.address);
 
-                    let addressBlockHtml = `
+                    cardEl.innerHTML = `
+                        <div class="card-title">${loc.title}</div>
                         <div class="card-address-block">
                             ${loc.address ? `<div class="card-address">📍 ${loc.address}</div>` : ''}
                             <div class="card-actions-row">
@@ -1005,20 +536,11 @@
                                 <a href="${routeUrl}" target="_blank" rel="noopener" class="route-btn" onclick="event.stopPropagation();">🧭 Маршрут</a>
                             </div>
                         </div>
-                    `;
-
-                    let descHtml = loc.description ? `<div class="card-desc">${loc.description}</div>` : '';
-
-                    cardEl.innerHTML = `
-                        <div class="card-title">${loc.title}</div>
-                        ${addressBlockHtml}
-                        ${descHtml}
+                        ${loc.description ? `<div class="card-desc">${loc.description}</div>` : ''}
                         ${photosHtml}
                     `;
-
                     contentEl.appendChild(cardEl);
                 });
-
                 listEl.appendChild(groupEl);
             });
         }
@@ -1026,7 +548,6 @@
         function renderTopCatFilter(categories) {
             const container = document.getElementById('catChipsScroll');
             container.innerHTML = '';
-
             if (!categories || categories.length === 0) return;
 
             categories.forEach(catName => {
@@ -1037,23 +558,14 @@
                 chip.onclick = () => {
                     categoryVisibility[catName] = !categoryVisibility[catName];
                     const nextState = categoryVisibility[catName];
+                    if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', nextState);
                     
-                    if (categoryCollections[catName]) {
-                        categoryCollections[catName].options.set('visible', nextState);
-                    }
-
-                    if (nextState) {
-                        chip.classList.remove('disabled');
-                        chip.classList.add('active');
-                    } else {
-                        chip.classList.remove('active');
-                        chip.classList.add('disabled');
-                    }
+                    if (nextState) { chip.classList.remove('disabled'); chip.classList.add('active'); }
+                    else { chip.classList.remove('active'); chip.classList.add('disabled'); }
                     updateToggleAllBtnState();
                 };
                 container.appendChild(chip);
             });
-
             updateToggleAllBtnState();
         }
 
@@ -1063,68 +575,39 @@
 
             Object.keys(categoryCollections).forEach(catName => {
                 categoryVisibility[catName] = allVisibleState;
-                if (categoryCollections[catName]) {
-                    categoryCollections[catName].options.set('visible', allVisibleState);
-                }
+                if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', allVisibleState);
             });
 
             document.querySelectorAll('#catChipsScroll .cat-chip').forEach(chip => {
-                if (allVisibleState) {
-                    chip.classList.remove('disabled');
-                    chip.classList.add('active');
-                } else {
-                    chip.classList.remove('active');
-                    chip.classList.add('disabled');
-                }
+                if (allVisibleState) { chip.classList.remove('disabled'); chip.classList.add('active'); }
+                else { chip.classList.remove('active'); chip.classList.add('disabled'); }
             });
-
             updateToggleAllBtnState();
         }
 
         function updateToggleAllBtnState() {
             const toggleBtn = document.getElementById('toggleAllBtn');
             const hasActive = Object.values(categoryVisibility).some(v => v === true);
-
-            if (hasActive) {
-                allVisibleState = true;
-                toggleBtn.classList.remove('off');
-                toggleBtn.innerText = '👁️ Все';
-            } else {
-                allVisibleState = false;
-                toggleBtn.classList.add('off');
-                toggleBtn.innerText = '🙈 Все';
-            }
+            if (hasActive) { allVisibleState = true; toggleBtn.classList.remove('off'); toggleBtn.innerText = '👁️ Все'; }
+            else { allVisibleState = false; toggleBtn.classList.add('off'); toggleBtn.innerText = '🙈 Все'; }
         }
 
         function toggleCategoryMap(catName, btnEl, event) {
-            event.stopPropagation();
-            event.preventDefault();
-
+            event.stopPropagation(); event.preventDefault();
             categoryVisibility[catName] = !categoryVisibility[catName];
             const isVis = categoryVisibility[catName];
-
-            if (categoryCollections[catName]) {
-                categoryCollections[catName].options.set('visible', isVis);
-            }
-
+            if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', isVis);
             if (btnEl) btnEl.innerText = isVis ? '👁️' : '🙈';
             renderTopCatFilter(Object.keys(categoryCollections));
         }
 
-        function toggleAccordion(element) {
-            const group = element.closest('.category-group');
-            group.classList.toggle('collapsed');
-        }
+        function toggleAccordion(element) { element.closest('.category-group').classList.toggle('collapsed'); }
 
         function selectLocationOnMap(loc, placemark) {
-            myMap.setCenter([loc.lat, loc.lng], 15, { duration: 300 }).then(() => {
-                placemark.balloon.open();
-            });
-
+            myMap.setCenter([loc.lat, loc.lng], 15, { duration: 300 }).then(() => placemark.balloon.open());
             document.querySelectorAll('.location-card').forEach(c => c.classList.remove('active'));
             const card = document.getElementById(`card-${loc.id}`);
             if (card) card.classList.add('active');
-
             if (window.innerWidth <= 768) switchMobileView('map');
         }
 
@@ -1146,10 +629,8 @@
                     ${loc.images.map((img, idx) => `<img src="${img}" class="balloon-photo-img" onclick="openLightboxByUrl('${loc.id}', ${idx}, event)">`).join('')}
                 </div>`;
             }
-
             const routeUrl = `https://yandex.ru/maps/?rtext=~${loc.lat},${loc.lng}`;
             const safeAddr = escapeQuotes(loc.address);
-
             return `
                 <div class="balloon-wrapper">
                     <div class="balloon-title">${loc.title}</div>
@@ -1170,11 +651,8 @@
             if (event) event.stopPropagation();
             const loc = allLocations.find(l => l.id === locId);
             if (!loc || !loc.images) return;
-
-            currentGallery = loc.images;
-            currentImageIdx = index;
+            currentGallery = loc.images; currentImageIdx = index;
             updateLightboxImage();
-
             document.getElementById('lightbox').classList.add('active');
         }
 
@@ -1183,34 +661,13 @@
             document.getElementById('lightbox-counter').innerText = `${currentImageIdx + 1} из ${currentGallery.length}`;
         }
 
-        function closeLightbox() {
-            document.getElementById('lightbox').classList.remove('active');
-        }
+        function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
+        function nextImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx + 1) % currentGallery.length; updateLightboxImage(); }
+        function prevImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx - 1 + currentGallery.length) % currentGallery.length; updateLightboxImage(); }
 
-        function nextImage() {
-            if (!currentGallery.length) return;
-            currentImageIdx = (currentImageIdx + 1) % currentGallery.length;
-            updateLightboxImage();
-        }
-
-        function prevImage() {
-            if (!currentGallery.length) return;
-            currentImageIdx = (currentImageIdx - 1 + currentGallery.length) % currentGallery.length;
-            updateLightboxImage();
-        }
-
-        let touchStartX = 0;
-        let touchEndX = 0;
-        const lightboxEl = document.getElementById('lightbox');
-
-        lightboxEl.addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
-
-        lightboxEl.addEventListener('touchend', (e) => {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        }, { passive: true });
+        let touchStartX = 0; let touchEndX = 0; const lightboxEl = document.getElementById('lightbox');
+        lightboxEl.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+        lightboxEl.addEventListener('touchend', (e) => { touchEndX = e.changedTouches[0].screenX; handleSwipe(); }, { passive: true });
 
         function handleSwipe() {
             const threshold = 40;
@@ -1229,16 +686,13 @@
         function switchMobileView(view) {
             const btnMap = document.getElementById('btn-map-view');
             const btnList = document.getElementById('btn-list-view');
-
             if (view === 'map') {
                 document.body.classList.remove('show-list');
-                btnMap.classList.add('active');
-                btnList.classList.remove('active');
+                btnMap.classList.add('active'); btnList.classList.remove('active');
                 if (myMap) myMap.container.fitToViewport();
             } else {
                 document.body.classList.add('show-list');
-                btnList.classList.add('active');
-                btnMap.classList.remove('active');
+                btnList.classList.add('active'); btnMap.classList.remove('active');
                 toggleMobileSearch(false);
             }
         }
