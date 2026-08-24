@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>локации от @dalazareva</title>
-    <script src="https://api-maps.yandex.ru/2.1/?apikey=17e91f7c-3356-4174-9a25-5ac34ba55d46&lang=ru_RU"></script>
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=7370bad5-a627-4414-a1e8-b2023bda7a61&lang=ru_RU"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -16,8 +16,8 @@
         }
 
         html, body {
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             height: 100dvh;
             margin: 0;
             padding: 0;
@@ -35,7 +35,7 @@
             top: 0;
             left: 0;
             width: 100vw;
-            height: 100vh;
+            height: 100%;
             height: 100dvh;
             display: flex;
             background: #ffffff;
@@ -219,8 +219,7 @@
             right: 0;
             bottom: 0;
             width: calc(100vw - 390px);
-            height: 100vh;
-            height: 100dvh;
+            height: 100%;
             z-index: 1;
         }
         #map { width: 100%; height: 100%; }
@@ -241,7 +240,6 @@
             user-select: none;
         }
 
-        /* BALLOON */
         .balloon-wrapper { min-width: 210px; max-width: 260px; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif; }
         .balloon-title { font-size: 0.95rem; font-weight: 700; color: #0f172a; line-height: 1.25; margin-bottom: 8px; }
         .balloon-address-block { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; width: 100%; }
@@ -312,7 +310,6 @@
         .cat-chip.active { background: #0f172a; color: #ffffff; border-color: #0f172a; }
         .cat-chip.disabled { opacity: 0.45; background: #f1f5f9; color: #94a3b8; }
 
-        /* LIGHTBOX */
         .lightbox-modal {
             display: none;
             position: fixed;
@@ -356,11 +353,10 @@
         .mobile-search-input { flex: 1; border: none; background: transparent; font-size: 16px; outline: none; color: #0f172a; }
         .mobile-search-close { background: none; border: none; font-size: 1.1rem; color: #64748b; cursor: pointer; padding: 4px 8px; }
 
-        /* МОБИЛЬНАЯ ВЕРСИЯ */
         @media (max-width: 768px) {
             #sidebar {
                 width: 100vw;
-                height: 100vh;
+                height: 100%;
                 height: 100dvh;
                 display: none;
             }
@@ -368,8 +364,9 @@
                 left: 0;
                 top: 0;
                 width: 100vw;
-                height: 100vh;
+                height: 100%;
                 height: 100dvh;
+                position: fixed;
             }
 
             .show-list #map-container { display: none; }
