@@ -77,17 +77,13 @@
         .card-address { display: flex; align-items: center; gap: 6px; background: #f1f5f9; color: #475569; font-size: 0.78rem; font-weight: 500; padding: 6px 10px; border-radius: 8px; word-break: break-word; border: 1px solid #e2e8f0; width: 100%; }
         .card-actions-row { display: flex; gap: 6px; width: 100%; flex-wrap: wrap; }
         
-        .copy-btn, .route-btn, .edit-btn, .delete-btn {
+        .edit-btn, .delete-btn {
             flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 6px 8px; font-size: 0.75rem; font-weight: 500; border-radius: 8px; text-decoration: none; cursor: pointer; border: 1px solid #cbd5e1; white-space: nowrap;
         }
-        .copy-btn { background: #ffffff; color: #334155; }
-        .route-btn { background: #0f172a; border-color: #0f172a; color: #ffffff; }
         .edit-btn { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
         .delete-btn { background: #fee2e2; border-color: #ef4444; color: #991b1b; }
 
         .card-desc { font-size: 0.85rem; color: #4b5563; line-height: 1.4; margin-bottom: 10px; white-space: pre-line; }
-        .card-photos { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
-        .card-photo-thumb { height: 80px; width: auto; max-width: 150px; border-radius: 8px; object-fit: cover; flex-shrink: 0; cursor: pointer; border: 1px solid rgba(0,0,0,0.08); }
 
         #map-container { position: absolute; top: 0; left: 420px; right: 0; bottom: 0; height: 100%; z-index: 1; }
         #map { width: 100%; height: 100%; }
@@ -103,9 +99,8 @@
         .balloon-address-block { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; width: 100%; }
         .balloon-address { font-size: 0.78rem; color: #475569; background: #f1f5f9; padding: 6px 8px; border-radius: 6px; line-height: 1.35; word-break: break-word; border: 1px solid #e2e8f0; width: 100%; }
         .balloon-actions-row { display: flex; gap: 6px; width: 100%; }
-        .balloon-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 8px; font-size: 0.75rem; font-weight: 600; border-radius: 6px; text-decoration: none; cursor: pointer; text-align: center; }
-        .balloon-copy-btn { background: #ffffff; border: 1px solid #cbd5e1; color: #334155; }
-        .balloon-route-btn { background: #0f172a; border: 1px solid #0f172a; color: #ffffff; }
+        .balloon-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 8px; font-size: 0.75rem; font-weight: 600; border-radius: 6px; text-decoration: none; cursor: pointer; text-align: center; border: 1px solid transparent; }
+        .balloon-edit-btn { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
         .balloon-desc { font-size: 0.82rem; color: #334155; line-height: 1.4; margin-top: 8px; margin-bottom: 8px; white-space: pre-line; border-top: 1px solid #f1f5f9; padding-top: 6px; }
         .balloon-photos { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; padding-bottom: 2px; }
         .balloon-photo-img { height: 65px; width: auto; border-radius: 6px; cursor: pointer; object-fit: cover; border: 1px solid rgba(0,0,0,0.08); flex-shrink: 0; }
@@ -127,16 +122,6 @@
         .cat-chip { display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 9999px; background: #ffffff; border: 1px solid #e2e8f0; font-size: 0.78rem; font-weight: 500; color: #334155; white-space: nowrap; cursor: pointer; flex-shrink: 0; }
         .cat-chip.active { background: #0f172a; color: #ffffff; border-color: #0f172a; }
         .cat-chip.disabled { opacity: 0.45; background: #f1f5f9; color: #94a3b8; }
-
-        .lightbox-modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh; background: rgba(0, 0, 0, 0.94); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(8px);
-        }
-        .lightbox-modal.active { display: flex; }
-        .lightbox-img { max-width: 92vw; max-height: 85vh; object-fit: contain; border-radius: 8px; box-shadow: 0 10px 35px rgba(0,0,0,0.6); }
-        .lightbox-close { position: absolute; top: max(calc(env(safe-area-inset-top) + 12px), 20px); right: 20px; color: #ffffff; font-size: 32px; cursor: pointer; opacity: 0.85; padding: 10px; z-index: 10001; }
-        .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); color: #ffffff; font-size: 36px; cursor: pointer; padding: 16px; opacity: 0.7; z-index: 10001; }
-        .lightbox-prev { left: 10px; } .lightbox-next { right: 10px; }
-        .lightbox-counter { position: absolute; bottom: max(calc(env(safe-area-inset-bottom) + 16px), 24px); color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; }
 
         .mobile-toggle-bar { display: none; }
         @media (max-width: 768px) {
@@ -163,31 +148,31 @@
                     <span>⚡ Панель Администратора</span>
                 </div>
 
-                <!-- ОБНОВЛЕННАЯ ФОРМА ДОБАВЛЕНИЯ -->
+                <!-- ФОРМА ДОБАВЛЕНИЯ С ВАШИМ СПИСКОМ КАТЕГОРИЙ -->
                 <div class="admin-form-container">
                     <div class="admin-form-title">Добавить новую точку</div>
                     <input type="text" id="addTitle" class="form-input" placeholder="Название точки *">
                     
-                    <!-- Выпадающий список категорий -->
                     <select id="addCategorySelect" class="form-select" onchange="handleCategorySelectChange(this)">
                         <option value="☕ Кофейни">☕ Кофейни</option>
-                        <option value="🍝 Рестораны">🍝 Рестораны</option>
-                        <option value="🍸 Бары">🍸 Бары</option>
-                        <option value="🌳 Парки">🌳 Парки</option>
-                        <option value="🏛️ Культура">🏛️ Культура</option>
-                        <option value="📍 Другое">📍 Другое</option>
+                        <option value="🍽️ Заведения (рестораны)">🍽️ Заведения (рестораны)</option>
+                        <option value="🍸 Бары и тусовки">🍸 Бары и тусовки</option>
+                        <option value="📷 Фотостудии">📷 Фотостудии</option>
+                        <option value="🚪 Двери и архитектура">🚪 Двери и архитектура</option>
+                        <option value="🏞️ Парки и природа">🏞️ Парки и природа</option>
+                        <option value="🏛️ Культура и музеи">🏛️ Культура и музеи</option>
+                        <option value="📸 Инсталокации">📸 Инсталокации</option>
+                        <option value="🛍️ Шопинг">🛍️ Шопинг</option>
+                        <option value="🏨 Отели">🏨 Отели</option>
+                        <option value="📍 Другое" selected>📍 Другое</option>
                         <option value="__NEW__">＋ Создать новую категорию...</option>
                     </select>
                     <input type="text" id="addCustomCategory" class="form-input" placeholder="Введите эмодзи и название категории" style="display: none;">
 
                     <input type="text" id="addAddress" class="form-input" placeholder="Адрес">
-                    
-                    <!-- Координаты через запятую -->
                     <input type="text" id="addCoords" class="form-input" placeholder="Координаты через запятую (например: 55.7515, 37.5738)">
-                    
                     <input type="text" id="addDesc" class="form-input" placeholder="Описание">
                     
-                    <!-- Кнопка загрузки файлов -->
                     <label class="file-upload-label">
                         <span>📷 Выбрать фото...</span>
                         <input type="file" id="addPhotosInput" class="file-upload-input" accept="image/*" multiple onchange="handleFileSelection(this)">
@@ -219,14 +204,6 @@
         <button id="btn-list-view" class="toggle-btn" onclick="switchMobileView('list')">📋 Список</button>
     </div>
 
-    <div id="lightbox" class="lightbox-modal">
-        <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
-        <span class="lightbox-nav lightbox-prev" onclick="prevImage()">&#10094;</span>
-        <img id="lightbox-img" class="lightbox-img" src="" alt="Фото">
-        <span class="lightbox-nav lightbox-next" onclick="nextImage()">&#10095;</span>
-        <div id="lightbox-counter" class="lightbox-counter"></div>
-    </div>
-
     <script src="js/supabase.js"></script>
     <script>
         let myMap;
@@ -235,6 +212,20 @@
         let categoryVisibility = {};
         let allVisibleState = true;
         let selectedFiles = [];
+
+        const defaultCategories = [
+            "☕ Кофейни",
+            "🍽️ Заведения (рестораны)",
+            "🍸 Бары и тусовки",
+            "📷 Фотостудии",
+            "🚪 Двери и архитектура",
+            "🏞️ Парки и природа",
+            "🏛️ Культура и музеи",
+            "📸 Инсталокации",
+            "🛍️ Шопинг",
+            "🏨 Отели",
+            "📍 Другое"
+        ];
 
         ymaps.ready(initMap);
 
@@ -245,7 +236,6 @@
                 controls: ['zoomControl', 'geolocationControl']
             });
 
-            // Кликом по карте автоматически заносим координаты через запятую
             myMap.events.add('click', function (e) {
                 const coords = e.get('coords');
                 document.getElementById('addCoords').value = `${coords[0].toFixed(6)}, ${coords[1].toFixed(6)}`;
@@ -265,17 +255,23 @@
 
         function updateCategorySelectOptions() {
             const select = document.getElementById('addCategorySelect');
-            const categories = Array.from(new Set(allLocations.map(l => l.category).filter(Boolean)));
+            const customCategoriesFromDb = allLocations.map(l => l.category).filter(Boolean);
+            
+            // Объединяем дефолтные и уникальные пользовательские категории
+            const mergedCategories = Array.from(new Set([...defaultCategories, ...customCategoriesFromDb]));
             
             select.innerHTML = '';
-            categories.forEach(cat => {
+            mergedCategories.forEach(cat => {
                 const opt = document.createElement('option');
-                opt.value = cat; opt.innerText = cat;
+                opt.value = cat;
+                opt.innerText = cat;
+                if (cat === "📍 Другое") opt.selected = true;
                 select.appendChild(opt);
             });
 
             const optNew = document.createElement('option');
-            optNew.value = '__NEW__'; optNew.innerText = '＋ Создать новую категорию...';
+            optNew.value = '__NEW__';
+            optNew.innerText = '＋ Создать новую категорию...';
             select.appendChild(optNew);
         }
 
@@ -451,6 +447,7 @@
             });
         }
 
+        /* КНОПКА "РЕАДАКТИРОВАТЬ" В БАЛУНЕ ВМЕСТО "МАРШРУТ" */
         function createBalloonHTML(loc) {
             let photosHtml = '';
             if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {
@@ -458,7 +455,6 @@
                     ${loc.images.map(img => `<img src="${img}" class="balloon-photo-img">`).join('')}
                 </div>`;
             }
-            const routeUrl = `https://yandex.ru/maps/?rtext=~${loc.lat},${loc.lng}`;
 
             return `
                 <div class="balloon-wrapper">
@@ -466,7 +462,7 @@
                     <div class="balloon-address-block">
                         ${loc.address ? `<div class="balloon-address">📍 ${loc.address}</div>` : ''}
                         <div class="balloon-actions-row">
-                            <a href="${routeUrl}" target="_blank" rel="noopener" class="balloon-btn balloon-route-btn">🧭 Маршрут</a>
+                            <button class="balloon-btn balloon-edit-btn" onclick="editLocation('${loc.id}')">✏️ Редактировать</button>
                         </div>
                     </div>
                     ${loc.description ? `<div class="balloon-desc">${loc.description}</div>` : ''}
