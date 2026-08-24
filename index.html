@@ -228,64 +228,71 @@
             font-size: 1rem;
             font-weight: 600;
             color: #111827;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             line-height: 1.3;
         }
 
-        /* Строка адреса и действий */
-        .card-address-row {
+        /* Блок адреса и кнопок действий */
+        .card-address-block {
             display: flex;
-            align-items: center;
-            flex-wrap: wrap;
+            flex-direction: column;
             gap: 6px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            width: 100%;
         }
 
         .card-address {
-            display: inline-flex;
+            display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
             background: #f1f5f9;
             color: #475569;
             font-size: 0.78rem;
             font-weight: 500;
-            padding: 4px 8px;
-            border-radius: 6px;
+            padding: 6px 10px;
+            border-radius: 8px;
             word-break: break-word;
             border: 1px solid #e2e8f0;
+            width: 100%;
         }
 
-        .copy-btn {
-            background: #f1f5f9;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 4px 7px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            color: #475569;
-            transition: all 0.15s;
+        .card-actions-row {
+            display: flex;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .copy-btn, .route-btn {
+            flex: 1;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            gap: 5px;
+            padding: 6px 10px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            border-radius: 8px;
+            text-decoration: none;
+            box-sizing: border-box;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .copy-btn {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #334155;
         }
 
         .copy-btn:hover {
-            background: #e2e8f0;
-            color: #0f172a;
+            background: #f8fafc;
+            border-color: #94a3b8;
         }
 
         .route-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
             background: #0f172a;
+            border: 1px solid #0f172a;
             color: #ffffff;
-            font-size: 0.75rem;
-            font-weight: 500;
-            padding: 4px 10px;
-            border-radius: 6px;
-            text-decoration: none;
-            transition: background 0.15s;
         }
 
         .route-btn:hover {
@@ -330,7 +337,7 @@
             height: 100%;
         }
 
-        /* Иконка метки карты */
+        /* Метка карты */
         .custom-map-pin {
             width: 38px;
             height: 38px;
@@ -352,7 +359,7 @@
             transform: scale(1.12);
         }
 
-        /* Оформление балуна (всплывающей метки на карте) */
+        /* Балун карты */
         .balloon-wrapper {
             padding: 4px 2px;
             max-width: 240px;
@@ -366,60 +373,65 @@
             margin-bottom: 6px;
         }
 
-        .balloon-address-wrap {
+        .balloon-address-block {
             display: flex;
-            align-items: center;
+            flex-direction: column;
             gap: 6px;
             margin-bottom: 6px;
-            flex-wrap: wrap;
+            width: 100%;
         }
 
         .balloon-address {
             font-size: 0.78rem;
             color: #475569;
             background: #f1f5f9;
-            padding: 3px 7px;
+            padding: 5px 8px;
             border-radius: 6px;
             line-height: 1.35;
             word-break: break-word;
             border: 1px solid #e2e8f0;
+            width: 100%;
+        }
+
+        .balloon-actions-row {
+            display: flex;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .balloon-btn {
+            flex: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 5px 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border-radius: 6px;
+            text-decoration: none;
+            box-sizing: border-box;
+            cursor: pointer;
+            text-align: center;
         }
 
         .balloon-copy-btn {
-            background: #f1f5f9;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 3px 6px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            color: #475569;
-        }
-
-        .balloon-actions {
-            margin-bottom: 6px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #334155;
         }
 
         .balloon-route-btn {
-            display: inline-block;
             background: #0f172a;
+            border: 1px solid #0f172a;
             color: #ffffff;
-            font-size: 0.75rem;
-            font-weight: 500;
-            padding: 5px 10px;
-            border-radius: 6px;
-            text-decoration: none;
-            transition: background 0.15s;
-        }
-
-        .balloon-route-btn:hover {
-            background: #1e293b;
         }
 
         .balloon-desc {
             font-size: 0.82rem;
             color: #334155;
             line-height: 1.4;
-            margin-top: 4px;
+            margin-top: 6px;
             margin-bottom: 6px;
             white-space: pre-line;
             border-top: 1px solid #f1f5f9;
@@ -487,8 +499,9 @@
         .lightbox-counter { position: absolute; bottom: 24px; color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; }
 
         .mobile-toggle-bar { display: none; }
+        .mobile-cat-filter-bar { display: none; }
 
-        /* Всплывающий поиск над картой на мобе */
+        /* Всплывающий поиск на карте на мобе */
         .mobile-search-overlay {
             display: none;
             position: fixed;
@@ -540,6 +553,60 @@
 
             body:not(.show-list) #sidebar { display: none; }
             body:not(.show-list) #map { display: block; }
+
+            /* Выпадающее/прокручиваемое меню категорий внизу мобильного экрана */
+            .mobile-cat-filter-bar {
+                display: flex;
+                position: fixed;
+                bottom: 80px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: calc(100% - 32px);
+                max-width: 440px;
+                overflow-x: auto;
+                gap: 6px;
+                padding: 6px 8px;
+                background: rgba(255, 255, 255, 0.88);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border-radius: 9999px;
+                border: 1px solid rgba(0, 0, 0, 0.08);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+                z-index: 999;
+                scrollbar-width: none;
+            }
+
+            .mobile-cat-filter-bar::-webkit-scrollbar { display: none; }
+
+            .cat-chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                padding: 6px 12px;
+                border-radius: 9999px;
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                font-size: 0.78rem;
+                font-weight: 500;
+                color: #334155;
+                white-space: nowrap;
+                cursor: pointer;
+                user-select: none;
+                transition: all 0.2s;
+                flex-shrink: 0;
+            }
+
+            .cat-chip.active {
+                background: #0f172a;
+                color: #ffffff;
+                border-color: #0f172a;
+            }
+
+            .cat-chip.disabled {
+                opacity: 0.45;
+                background: #f1f5f9;
+                color: #94a3b8;
+            }
 
             .mobile-toggle-bar {
                 display: flex;
@@ -610,6 +677,9 @@
         <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="Поиск локации..." oninput="syncMobileSearch(this.value)">
         <button class="mobile-search-close" onclick="toggleMobileSearch(false)">✕</button>
     </div>
+
+    <!-- Быстрый фильтр категорий для мобилок -->
+    <div id="mobileCatFilterBar" class="mobile-cat-filter-bar"></div>
 
     <!-- Нижнее плавающее меню -->
     <div class="mobile-toggle-bar">
@@ -700,7 +770,7 @@
             const executeCopy = () => {
                 if (btnEl) {
                     const origHtml = btnEl.innerHTML;
-                    btnEl.innerHTML = '✓';
+                    btnEl.innerHTML = '✓ Скопировано';
                     btnEl.style.color = '#10b981';
                     setTimeout(() => {
                         btnEl.innerHTML = origHtml;
@@ -746,10 +816,14 @@
 
             if (locationsToRender.length === 0) {
                 listEl.innerHTML = '<div style="text-align:center; padding:30px; color:#9ca3af; font-size:0.9rem;">Ничего не найдено 🔍</div>';
+                renderMobileCatFilter([]);
                 return;
             }
 
-            Object.keys(grouped).forEach(catName => {
+            const activeCategoriesList = Object.keys(grouped);
+            renderMobileCatFilter(activeCategoriesList);
+
+            activeCategoriesList.forEach(catName => {
                 if (categoryVisibility[catName] === undefined) {
                     categoryVisibility[catName] = true;
                 }
@@ -834,13 +908,13 @@
                     const routeUrl = `https://yandex.ru/maps/?rtext=~${loc.lat},${loc.lng}`;
                     const safeAddr = escapeQuotes(loc.address);
 
-                    let addressRowHtml = `
-                        <div class="card-address-row">
-                            ${loc.address ? `
-                                <div class="card-address">📍 ${loc.address}</div>
-                                <button class="copy-btn" title="Скопировать адрес" onclick="copyAddress('${safeAddr}', event, this)">📋</button>
-                            ` : ''}
-                            <a href="${routeUrl}" target="_blank" rel="noopener" class="route-btn" onclick="event.stopPropagation();">🧭 Маршрут</a>
+                    let addressBlockHtml = `
+                        <div class="card-address-block">
+                            ${loc.address ? `<div class="card-address">📍 ${loc.address}</div>` : ''}
+                            <div class="card-actions-row">
+                                ${loc.address ? `<button class="copy-btn" onclick="copyAddress('${safeAddr}', event, this)">📋 Копировать</button>` : ''}
+                                <a href="${routeUrl}" target="_blank" rel="noopener" class="route-btn" onclick="event.stopPropagation();">🧭 Маршрут</a>
+                            </div>
                         </div>
                     `;
 
@@ -848,7 +922,7 @@
 
                     cardEl.innerHTML = `
                         <div class="card-title">${loc.title}</div>
-                        ${addressRowHtml}
+                        ${addressBlockHtml}
                         ${descHtml}
                         ${photosHtml}
                     `;
@@ -857,6 +931,37 @@
                 });
 
                 listEl.appendChild(groupEl);
+            });
+        }
+
+        function renderMobileCatFilter(categories) {
+            const bar = document.getElementById('mobileCatFilterBar');
+            bar.innerHTML = '';
+
+            if (!categories || categories.length === 0) return;
+
+            categories.forEach(catName => {
+                const isVis = categoryVisibility[catName] !== false;
+                const chip = document.createElement('div');
+                chip.className = `cat-chip ${isVis ? 'active' : 'disabled'}`;
+                chip.innerHTML = `<span>${catName}</span>`;
+                chip.onclick = () => {
+                    categoryVisibility[catName] = !categoryVisibility[catName];
+                    const nextState = categoryVisibility[catName];
+                    
+                    if (categoryCollections[catName]) {
+                        categoryCollections[catName].options.set('visible', nextState);
+                    }
+
+                    if (nextState) {
+                        chip.classList.remove('disabled');
+                        chip.classList.add('active');
+                    } else {
+                        chip.classList.remove('active');
+                        chip.classList.add('disabled');
+                    }
+                };
+                bar.appendChild(chip);
             });
         }
 
@@ -871,7 +976,8 @@
                 categoryCollections[catName].options.set('visible', isVis);
             }
 
-            btnEl.innerText = isVis ? '👁️' : '🙈';
+            if (btnEl) btnEl.innerText = isVis ? '👁️' : '🙈';
+            renderMobileCatFilter(Object.keys(categoryCollections));
         }
 
         function toggleAccordion(element) {
@@ -916,14 +1022,12 @@
             return `
                 <div class="balloon-wrapper">
                     <div class="balloon-title">${loc.title}</div>
-                    ${loc.address ? `
-                        <div class="balloon-address-wrap">
-                            <span class="balloon-address">📍 ${loc.address}</span>
-                            <button class="balloon-copy-btn" title="Скопировать адрес" onclick="copyAddress('${safeAddr}', event, this)">📋</button>
+                    <div class="balloon-address-block">
+                        ${loc.address ? `<div class="balloon-address">📍 ${loc.address}</div>` : ''}
+                        <div class="balloon-actions-row">
+                            ${loc.address ? `<button class="balloon-btn balloon-copy-btn" onclick="copyAddress('${safeAddr}', event, this)">📋 Копировать</button>` : ''}
+                            <a href="${routeUrl}" target="_blank" rel="noopener" class="balloon-btn balloon-route-btn">🧭 Маршрут</a>
                         </div>
-                    ` : ''}
-                    <div class="balloon-actions">
-                        <a href="${routeUrl}" target="_blank" rel="noopener" class="balloon-route-btn">🧭 Проложить маршрут</a>
                     </div>
                     ${loc.description ? `<div class="balloon-desc">${loc.description}</div>` : ''}
                     ${photosHtml}
@@ -995,15 +1099,19 @@
         function switchMobileView(view) {
             const btnMap = document.getElementById('btn-map-view');
             const btnList = document.getElementById('btn-list-view');
+            const catFilterBar = document.getElementById('mobileCatFilterBar');
+
             if (view === 'map') {
                 document.body.classList.remove('show-list');
                 btnMap.classList.add('active');
                 btnList.classList.remove('active');
+                if (catFilterBar) catFilterBar.style.display = 'flex';
                 if (myMap) myMap.container.fitToViewport();
             } else {
                 document.body.classList.add('show-list');
                 btnList.classList.add('active');
                 btnMap.classList.remove('active');
+                if (catFilterBar) catFilterBar.style.display = 'none';
                 toggleMobileSearch(false);
             }
         }
