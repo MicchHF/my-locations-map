@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#f8fafc">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>локации от @dalazareva</title>
     <script src="https://api-maps.yandex.ru/2.1/?apikey=7370bad5-a627-4414-a1e8-b2023bda7a61&lang=ru_RU"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -16,9 +19,9 @@
         }
 
         html, body {
-            width: 100%;
+            width: 100vw;
             height: 100%;
-            height: 100dvh;
+            height: -webkit-fill-available;
             margin: 0;
             padding: 0;
             background-color: #f8fafc;
@@ -35,7 +38,7 @@
             top: 0;
             left: 0;
             width: 100vw;
-            height: 100%;
+            height: 100vh;
             height: 100dvh;
             display: flex;
             background: #ffffff;
@@ -212,14 +215,15 @@
             border: 1px solid rgba(0,0,0,0.08);
         }
 
+        /* Бесшовное перекрытие под iOS Safari */
         #map-container {
             position: absolute;
-            top: 0;
+            top: -100px;
             left: 390px;
             right: 0;
-            bottom: 0;
+            bottom: -100px;
             width: calc(100vw - 390px);
-            height: 100%;
+            height: calc(100% + 200px);
             z-index: 1;
         }
         #map { width: 100%; height: 100%; }
@@ -255,7 +259,7 @@
 
         .top-cat-filter-bar {
             position: absolute;
-            top: max(calc(env(safe-area-inset-top) + 8px), 14px);
+            top: max(calc(env(safe-area-inset-top) + 120px), 120px);
             left: 50%;
             transform: translateX(-50%);
             width: calc(100% - 24px);
@@ -357,16 +361,14 @@
             #sidebar {
                 width: 100vw;
                 height: 100%;
-                height: 100dvh;
                 display: none;
             }
             #map-container {
                 left: 0;
-                top: 0;
+                top: -100px;
                 width: 100vw;
-                height: 100%;
-                height: 100dvh;
-                position: fixed;
+                height: calc(100% + 200px);
+                position: absolute;
             }
 
             .show-list #map-container { display: none; }
@@ -377,7 +379,7 @@
             .mobile-toggle-bar {
                 display: flex;
                 position: fixed;
-                bottom: max(calc(env(safe-area-inset-bottom) + 10px), 16px);
+                bottom: max(calc(env(safe-area-inset-bottom) + 12px), 20px);
                 left: 50%;
                 transform: translateX(-50%);
                 background: rgba(255, 255, 255, 0.92);
