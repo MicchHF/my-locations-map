@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>локации от @dalazareva</title>
     <script src="https://api-maps.yandex.ru/2.1/?apikey=17e91f7c-3356-4174-9a25-5ac34ba55d46&lang=ru_RU"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -39,7 +39,6 @@
             border-bottom: 1px solid #f0f0f0;
         }
 
-        /* Премиум плашка ТГ канала */
         .tg-badge {
             display: flex;
             align-items: center;
@@ -75,7 +74,6 @@
             opacity: 0.8;
         }
 
-        /* Поле поиска */
         .search-container {
             position: relative;
             width: 100%;
@@ -232,7 +230,6 @@
             line-height: 1.3;
         }
 
-        /* Блок адреса и кнопок действий */
         .card-address-block {
             display: flex;
             flex-direction: column;
@@ -332,12 +329,17 @@
             opacity: 0.9;
         }
 
-        #map {
+        #map-container {
             flex: 1;
+            height: 100%;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
             height: 100%;
         }
 
-        /* Метка карты */
         .custom-map-pin {
             width: 38px;
             height: 38px;
@@ -359,7 +361,6 @@
             transform: scale(1.12);
         }
 
-        /* Балун карты */
         .balloon-wrapper {
             padding: 4px 2px;
             max-width: 240px;
@@ -455,7 +456,91 @@
             border: 1px solid rgba(0,0,0,0.08);
         }
 
-        /* Лайтбокс просмотрщика фото */
+        /* Верхняя панель фильтра категорий */
+        .top-cat-filter-bar {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 32px);
+            max-width: 600px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 8px;
+            background: rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 9999px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            z-index: 500;
+        }
+
+        .toggle-all-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            background: #0f172a;
+            color: #ffffff;
+            font-size: 0.78rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .toggle-all-btn.off {
+            background: #e2e8f0;
+            color: #64748b;
+        }
+
+        .cat-chips-scroll {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            width: 100%;
+        }
+
+        .cat-chips-scroll::-webkit-scrollbar { display: none; }
+
+        .cat-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: #334155;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .cat-chip.active {
+            background: #0f172a;
+            color: #ffffff;
+            border-color: #0f172a;
+        }
+
+        .cat-chip.disabled {
+            opacity: 0.45;
+            background: #f1f5f9;
+            color: #94a3b8;
+        }
+
+        /* Лайтбокс */
         .lightbox-modal {
             display: none;
             position: fixed;
@@ -499,25 +584,25 @@
         .lightbox-counter { position: absolute; bottom: 24px; color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; }
 
         .mobile-toggle-bar { display: none; }
-        .mobile-cat-filter-bar { display: none; }
 
-        /* Всплывающий поиск на карте на мобе */
+        /* Всплывающий поиск над клавиатурой */
         .mobile-search-overlay {
             display: none;
             position: fixed;
-            top: 16px;
             left: 16px;
             right: 16px;
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.92);
+            bottom: 84px;
+            z-index: 1001;
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-radius: 14px;
+            border-radius: 16px;
             padding: 8px 12px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             border: 1px solid rgba(0, 0, 0, 0.08);
             align-items: center;
             gap: 8px;
+            transition: bottom 0.1s ease-out;
         }
 
         .mobile-search-overlay.active {
@@ -528,7 +613,7 @@
             flex: 1;
             border: none;
             background: transparent;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             outline: none;
             color: #0f172a;
         }
@@ -539,74 +624,19 @@
             font-size: 1.1rem;
             color: #64748b;
             cursor: pointer;
-            padding: 2px 6px;
+            padding: 4px 8px;
         }
 
-        /* Мобильный стиль iOS Floating Island */
         @media (max-width: 768px) {
             body { flex-direction: column; }
             #sidebar { width: 100%; height: 100%; }
-            #map { width: 100%; height: 100%; }
+            #map-container { width: 100%; height: 100%; }
 
-            .show-list #map { display: none; }
+            .show-list #map-container { display: none; }
             .show-list #sidebar { display: flex; }
 
             body:not(.show-list) #sidebar { display: none; }
-            body:not(.show-list) #map { display: block; }
-
-            /* Выпадающее/прокручиваемое меню категорий внизу мобильного экрана */
-            .mobile-cat-filter-bar {
-                display: flex;
-                position: fixed;
-                bottom: 80px;
-                left: 50%;
-                transform: translateX(-50%);
-                width: calc(100% - 32px);
-                max-width: 440px;
-                overflow-x: auto;
-                gap: 6px;
-                padding: 6px 8px;
-                background: rgba(255, 255, 255, 0.88);
-                backdrop-filter: blur(20px);
-                -webkit-backdrop-filter: blur(20px);
-                border-radius: 9999px;
-                border: 1px solid rgba(0, 0, 0, 0.08);
-                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-                z-index: 999;
-                scrollbar-width: none;
-            }
-
-            .mobile-cat-filter-bar::-webkit-scrollbar { display: none; }
-
-            .cat-chip {
-                display: inline-flex;
-                align-items: center;
-                gap: 5px;
-                padding: 6px 12px;
-                border-radius: 9999px;
-                background: #ffffff;
-                border: 1px solid #e2e8f0;
-                font-size: 0.78rem;
-                font-weight: 500;
-                color: #334155;
-                white-space: nowrap;
-                cursor: pointer;
-                user-select: none;
-                transition: all 0.2s;
-                flex-shrink: 0;
-            }
-
-            .cat-chip.active {
-                background: #0f172a;
-                color: #ffffff;
-                border-color: #0f172a;
-            }
-
-            .cat-chip.disabled {
-                opacity: 0.45;
-                background: #f1f5f9;
-                color: #94a3b8;
-            }
+            body:not(.show-list) #map-container { display: block; }
 
             .mobile-toggle-bar {
                 display: flex;
@@ -614,13 +644,13 @@
                 bottom: 24px;
                 left: 50%;
                 transform: translateX(-50%);
-                background: rgba(255, 255, 255, 0.85);
+                background: rgba(255, 255, 255, 0.88);
                 backdrop-filter: blur(20px);
                 -webkit-backdrop-filter: blur(20px);
                 padding: 4px;
                 border-radius: 9999px;
                 border: 1px solid rgba(0, 0, 0, 0.08);
-                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12);
                 z-index: 1000;
                 gap: 4px;
                 align-items: center;
@@ -669,17 +699,22 @@
         <div id="locations-list"></div>
     </div>
 
-    <div id="map"></div>
+    <div id="map-container">
+        <div id="map"></div>
 
-    <!-- Всплывающий поиск на карте в мобильной версии -->
-    <div id="mobileSearchOverlay" class="mobile-search-overlay">
-        <span>🔍</span>
-        <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="Поиск локации..." oninput="syncMobileSearch(this.value)">
-        <button class="mobile-search-close" onclick="toggleMobileSearch(false)">✕</button>
+        <!-- Верхний горизонтальный фильтр категорий -->
+        <div id="topCatFilterBar" class="top-cat-filter-bar">
+            <button id="toggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
+            <div id="catChipsScroll" class="cat-chips-scroll"></div>
+        </div>
     </div>
 
-    <!-- Быстрый фильтр категорий для мобилок -->
-    <div id="mobileCatFilterBar" class="mobile-cat-filter-bar"></div>
+    <!-- Мобильный поиск над клавиатурой -->
+    <div id="mobileSearchOverlay" class="mobile-search-overlay">
+        <span>🔍</span>
+        <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="Поиск..." oninput="syncMobileSearch(this.value)">
+        <button class="mobile-search-close" onclick="toggleMobileSearch(false)">✕</button>
+    </div>
 
     <!-- Нижнее плавающее меню -->
     <div class="mobile-toggle-bar">
@@ -702,6 +737,7 @@
         let allLocations = [];
         let categoryCollections = {};
         let categoryVisibility = {};
+        let allVisibleState = true;
         
         let currentGallery = [];
         let currentImageIdx = 0;
@@ -716,6 +752,7 @@
             });
 
             await loadLocations();
+            setupViewportHandler();
         }
 
         async function loadLocations() {
@@ -757,8 +794,37 @@
                 input.focus();
             } else {
                 overlay.classList.remove('active');
+                input.blur();
             }
         }
+
+        // Позиционирование поиска строго над клавиатурой
+        function setupViewportHandler() {
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', adjustSearchOverlayPosition);
+                window.visualViewport.addEventListener('scroll', adjustSearchOverlayPosition);
+            }
+        }
+
+        function adjustSearchOverlayPosition() {
+            const overlay = document.getElementById('mobileSearchOverlay');
+            if (!overlay.classList.contains('active')) return;
+
+            const viewport = window.visualViewport;
+            const keyboardHeight = window.innerHeight - viewport.height;
+
+            if (keyboardHeight > 100) {
+                overlay.style.bottom = `${keyboardHeight + 12}px`;
+            } else {
+                overlay.style.bottom = '84px';
+            }
+        }
+
+        document.getElementById('mobileSearchInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                toggleMobileSearch(false);
+            }
+        });
 
         function copyAddress(text, event, btnEl) {
             if (event) {
@@ -816,12 +882,12 @@
 
             if (locationsToRender.length === 0) {
                 listEl.innerHTML = '<div style="text-align:center; padding:30px; color:#9ca3af; font-size:0.9rem;">Ничего не найдено 🔍</div>';
-                renderMobileCatFilter([]);
+                renderTopCatFilter([]);
                 return;
             }
 
             const activeCategoriesList = Object.keys(grouped);
-            renderMobileCatFilter(activeCategoriesList);
+            renderTopCatFilter(activeCategoriesList);
 
             activeCategoriesList.forEach(catName => {
                 if (categoryVisibility[catName] === undefined) {
@@ -934,9 +1000,9 @@
             });
         }
 
-        function renderMobileCatFilter(categories) {
-            const bar = document.getElementById('mobileCatFilterBar');
-            bar.innerHTML = '';
+        function renderTopCatFilter(categories) {
+            const container = document.getElementById('catChipsScroll');
+            container.innerHTML = '';
 
             if (!categories || categories.length === 0) return;
 
@@ -960,9 +1026,51 @@
                         chip.classList.remove('active');
                         chip.classList.add('disabled');
                     }
+                    updateToggleAllBtnState();
                 };
-                bar.appendChild(chip);
+                container.appendChild(chip);
             });
+
+            updateToggleAllBtnState();
+        }
+
+        function toggleAllCategories() {
+            allVisibleState = !allVisibleState;
+            const toggleBtn = document.getElementById('toggleAllBtn');
+
+            Object.keys(categoryCollections).forEach(catName => {
+                categoryVisibility[catName] = allVisibleState;
+                if (categoryCollections[catName]) {
+                    categoryCollections[catName].options.set('visible', allVisibleState);
+                }
+            });
+
+            document.querySelectorAll('#catChipsScroll .cat-chip').forEach(chip => {
+                if (allVisibleState) {
+                    chip.classList.remove('disabled');
+                    chip.classList.add('active');
+                } else {
+                    chip.classList.remove('active');
+                    chip.classList.add('disabled');
+                }
+            });
+
+            updateToggleAllBtnState();
+        }
+
+        function updateToggleAllBtnState() {
+            const toggleBtn = document.getElementById('toggleAllBtn');
+            const hasActive = Object.values(categoryVisibility).some(v => v === true);
+
+            if (hasActive) {
+                allVisibleState = true;
+                toggleBtn.classList.remove('off');
+                toggleBtn.innerText = '👁️ Все';
+            } else {
+                allVisibleState = false;
+                toggleBtn.classList.add('off');
+                toggleBtn.innerText = '🙈 Все';
+            }
         }
 
         function toggleCategoryMap(catName, btnEl, event) {
@@ -977,7 +1085,7 @@
             }
 
             if (btnEl) btnEl.innerText = isVis ? '👁️' : '🙈';
-            renderMobileCatFilter(Object.keys(categoryCollections));
+            renderTopCatFilter(Object.keys(categoryCollections));
         }
 
         function toggleAccordion(element) {
@@ -1068,7 +1176,6 @@
             updateLightboxImage();
         }
 
-        // Поддержка свайпов пальцем на мобильных
         let touchStartX = 0;
         let touchEndX = 0;
         const lightboxEl = document.getElementById('lightbox');
@@ -1099,19 +1206,16 @@
         function switchMobileView(view) {
             const btnMap = document.getElementById('btn-map-view');
             const btnList = document.getElementById('btn-list-view');
-            const catFilterBar = document.getElementById('mobileCatFilterBar');
 
             if (view === 'map') {
                 document.body.classList.remove('show-list');
                 btnMap.classList.add('active');
                 btnList.classList.remove('active');
-                if (catFilterBar) catFilterBar.style.display = 'flex';
                 if (myMap) myMap.container.fitToViewport();
             } else {
                 document.body.classList.add('show-list');
                 btnList.classList.add('active');
                 btnMap.classList.remove('active');
-                if (catFilterBar) catFilterBar.style.display = 'none';
                 toggleMobileSearch(false);
             }
         }
