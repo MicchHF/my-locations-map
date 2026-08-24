@@ -31,37 +31,48 @@
         </div>
         <div style="padding:15px; background:#fafafa; border-bottom:1px solid #eee;">
             <h3>Добавить место</h3>
-            <p id="coordsDisplay" style="color:#ef4444; font-size:0.8rem;">Кликните по карте</p>
+            
+            <div class="form-group">
+                <label>Координаты (клик по карте или вставка)</label>
+                <input type="text" id="locCoords" placeholder="Например: 55.751574, 37.573856" oninput="handleManualCoords()">
+            </div>
             
             <div class="form-group">
                 <label>Название</label>
-                <input type="text" id="locTitle" placeholder="Например: Кофейня 'Энтузиаст'">
+                <input type="text" id="locTitle" placeholder="Название точки">
             </div>
+            
             <div class="form-group">
                 <label>Категория</label>
                 <select id="locCategory">
-                    <option value="☕">☕ Еда и кофе</option>
+                    <option value="☕">☕ Кофейни</option>
+                    <option value="🍽️">🍽️ Заведения (рестораны)</option>
                     <option value="🍸">🍸 Бары и тусовки</option>
+                    <option value="🚪">🚪 Двери и архитектура</option>
                     <option value="🏞️">🏞️ Парки и природа</option>
                     <option value="🏛️">🏛️ Культура и музеи</option>
                     <option value="📸">📸 Инсталокации</option>
                     <option value="🛍️">🛍️ Шопинг</option>
-                    <option value="🏨">🏨 Отели и жилье</option>
+                    <option value="🏨">🏨 Отели</option>
                     <option value="📍" selected>📍 Другое</option>
                 </select>
             </div>
+            
             <div class="form-group">
                 <label>Адрес</label>
                 <input type="text" id="locAddress" placeholder="например, ул. Покровка, 16">
             </div>
+            
             <div class="form-group">
                 <label>Описание</label>
                 <textarea id="locDesc" placeholder="Заметки или рекомендации..."></textarea>
             </div>
+            
             <div class="form-group">
                 <label>Фотографии</label>
                 <input type="file" id="locFiles" multiple accept="image/*">
             </div>
+            
             <button class="btn" onclick="saveLocation()">Сохранить на карту</button>
         </div>
         <div id="list-section">
@@ -102,18 +113,34 @@
             myMap = new ymaps.Map("map", { center: [55.751574, 37.573856], zoom: 10 });
             loadAdminLocations();
 
+            // Клик по карте
             myMap.events.add('click', (e) => {
                 currentCoords = e.get('coords');
-                document.getElementById('coordsDisplay').innerText = `Координаты: ${currentCoords[0].toFixed(4)}, ${currentCoords[1].toFixed(4)}`;
-                
-                if (tempPlacemark) myMap.geoObjects.remove(tempPlacemark);
-                tempPlacemark = new ymaps.Placemark(currentCoords, {}, { preset: 'islands#redIcon' });
-                myMap.geoObjects.add(tempPlacemark);
+                document.getElementById('locCoords').value = `${currentCoords[0].toFixed(6)}, ${currentCoords[1].toFixed(6)}`;
+                updateTempMarker(currentCoords);
             });
         });
 
+        // Ручной ввод координат в текстовое поле
+        function handleManualCoords() {
+            const inputVal = document.getElementById('locCoords').value.trim();
+            const parts = inputVal.split(',').map(p => parseFloat(p.trim()));
+
+            if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+                currentCoords = [parts[0], parts[1]];
+                updateTempMarker(currentCoords);
+                myMap.setCenter(currentCoords, 15);
+            }
+        }
+
+        function updateTempMarker(coords) {
+            if (tempPlacemark) myMap.geoObjects.remove(tempPlacemark);
+            tempPlacemark = new ymaps.Placemark(coords, {}, { preset: 'islands#redIcon' });
+            myMap.geoObjects.add(tempPlacemark);
+        }
+
         async function saveLocation() {
-            if (!currentCoords) return alert('Выберите место на карте!');
+            if (!currentCoords) return alert('Укажите координаты или кликните по карте!');
             const title = document.getElementById('locTitle').value;
             const category = document.getElementById('locCategory').value;
             const address = document.getElementById('locAddress').value;
@@ -186,7 +213,5 @@
             }
         }
     </script>
-</body>
-</html>
 </body>
 </html>
