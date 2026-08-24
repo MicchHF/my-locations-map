@@ -10,24 +10,40 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; touch-action: manipulation; }
         html, body { width: 100%; height: 100vh; height: 100dvh; margin: 0; padding: 0; background-color: #000; color: #1a1a1a; overflow: hidden; position: fixed; }
 
+        /* ЭКРАН ВХОДА */
+        .auth-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #09090b; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .auth-box {
+            background: #ffffff; width: 100%; max-width: 360px; padding: 28px; border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 14px;
+        }
+        .auth-title { font-size: 1.15rem; font-weight: 700; color: #0f172a; text-align: center; }
+        .auth-desc { font-size: 0.8rem; color: #64748b; text-align: center; margin-top: -6px; margin-bottom: 4px; }
+        .auth-error { font-size: 0.78rem; color: #ef4444; background: #fee2e2; padding: 8px 10px; border-radius: 8px; display: none; }
+
         #app-wrapper { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; background: #fff; }
 
         #sidebar { width: 420px; height: 100%; background: #fff; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; z-index: 10; flex-shrink: 0; }
-        .sidebar-header { padding: calc(env(safe-area-inset-top) + 16px) 16px 12px 16px; background: #fff; border-bottom: 1px solid #f0f0f0; }
+        .sidebar-header { padding: calc(env(safe-area-inset-top) + 14px) 16px 12px 16px; background: #fff; border-bottom: 1px solid #f0f0f0; }
 
         .admin-badge { display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; padding: 10px 14px; border-radius: 12px; margin-bottom: 12px; font-size: 0.88rem; font-weight: 600; }
+        .logout-btn { background: rgba(255,255,255,0.15); border: none; color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; }
+        
         .admin-form-container { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
         .admin-form-title { font-size: 0.85rem; font-weight: 700; color: #0f172a; }
         
         .form-input, .form-select, .form-textarea { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.82rem; outline: none; background: #fff; }
-        .form-textarea { resize: vertical; min-height: 60px; }
+        .form-textarea { resize: vertical; min-height: 55px; }
 
         .file-upload-label { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border: 1px dashed #0f172a; border-radius: 8px; background: #fff; color: #0f172a; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
         .file-upload-input { display: none; }
         .upload-status { font-size: 0.75rem; color: #64748b; }
 
-        .submit-btn { background: #0f172a; color: #fff; border: none; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+        .submit-btn { background: #0f172a; color: #fff; border: none; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: background 0.2s; }
         .submit-btn:hover { background: #1e293b; }
+        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
         .search-container { position: relative; width: 100%; }
         .search-input { width: 100%; padding: 9px 12px 9px 34px; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 0.88rem; outline: none; background: #f9fafb; }
@@ -88,7 +104,6 @@
         .modal-title { font-weight: 700; font-size: 1.1rem; color: #0f172a; }
         .modal-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #64748b; }
 
-        /* СЕТКА ФОТО В МОДАЛКЕ РЕДАКТИРОВАНИЯ */
         .edit-photos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; }
         .edit-photo-item { position: relative; width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 1px solid #cbd5e1; background: #f8fafc; }
         .edit-photo-item img { width: 100%; height: 100%; object-fit: cover; }
@@ -120,11 +135,24 @@
 </head>
 <body>
 
+    <!-- ОКНО АВТОРИЗАЦИИ АДМИНИСТРАТОРА -->
+    <div id="authOverlay" class="auth-overlay">
+        <div class="auth-box">
+            <div class="auth-title">🔐 Вход в Админ-панель</div>
+            <div class="auth-desc">Доступ только для владельца</div>
+            <div id="authError" class="auth-error"></div>
+            <input type="email" id="authEmail" class="form-input" placeholder="Email">
+            <input type="password" id="authPassword" class="form-input" placeholder="Пароль">
+            <button id="authBtn" class="submit-btn" onclick="handleLogin()">Войти</button>
+        </div>
+    </div>
+
     <div id="app-wrapper">
         <div id="sidebar">
             <div class="sidebar-header">
                 <div class="admin-badge">
                     <span>⚡ Панель Администратора</span>
+                    <button class="logout-btn" onclick="handleLogout()">Выйти</button>
                 </div>
 
                 <div class="admin-form-container">
@@ -147,8 +175,8 @@
                     </select>
                     <input type="text" id="addCustomCategory" class="form-input" placeholder="Введите название категории" style="display: none;">
 
-                    <input type="text" id="addAddress" class="form-input" placeholder="Адрес">
-                    <input type="text" id="addCoords" class="form-input" placeholder="Координаты (например: 55.7515, 37.5738)">
+                    <input type="text" id="addAddress" class="form-input" placeholder="Адрес (или кликните по карте)">
+                    <input type="text" id="addCoords" class="form-input" placeholder="Координаты (кликните по карте)">
                     <textarea id="addDesc" class="form-textarea" placeholder="Описание"></textarea>
                     
                     <label class="file-upload-label">
@@ -157,7 +185,7 @@
                     </label>
                     <div id="uploadStatus" class="upload-status"></div>
 
-                    <button class="submit-btn" onclick="saveNewLocation()">＋ Сохранить локацию</button>
+                    <button id="saveBtn" class="submit-btn" onclick="saveNewLocation()">＋ Сохранить локацию</button>
                 </div>
 
                 <div class="search-container">
@@ -216,7 +244,7 @@
                 </label>
                 <div id="editUploadStatus" class="upload-status"></div>
             </div>
-            <button class="submit-btn" style="margin-top: 10px;" onclick="saveEditedLocation()">💾 Сохранить изменения</button>
+            <button id="editSaveBtn" class="submit-btn" style="margin-top: 10px;" onclick="saveEditedLocation()">💾 Сохранить изменения</button>
         </div>
     </div>
 
@@ -238,6 +266,7 @@
     <script src="js/supabase.js"></script>
     <script>
         let myMap;
+        let tempPlacemark = null;
         let allLocations = [];
         let categoryCollections = {};
         let categoryVisibility = {};
@@ -256,18 +285,148 @@
             "🏛️ Культура и музеи", "📸 Инсталокации", "🛍️ Шопинг", "🏨 Отели", "📍 Другое"
         ];
 
-        ymaps.ready(initMap);
+        /* --- 🔐 АВТОРИЗАЦИЯ SUPABASE --- */
+        async function checkAuth() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            const overlay = document.getElementById('authOverlay');
+            if (session) {
+                overlay.style.display = 'none';
+                ymaps.ready(initMap);
+            } else {
+                overlay.style.display = 'flex';
+            }
+        }
 
+        async function handleLogin() {
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value.trim();
+            const errDiv = document.getElementById('authError');
+            const btn = document.getElementById('authBtn');
+
+            if (!email || !password) {
+                errDiv.innerText = "Введите Email и Пароль!";
+                errDiv.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Проверка...";
+            errDiv.style.display = 'none';
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            btn.disabled = false;
+            btn.innerText = "Войти";
+
+            if (error) {
+                errDiv.innerText = error.message;
+                errDiv.style.display = 'block';
+            } else {
+                document.getElementById('authOverlay').style.display = 'none';
+                ymaps.ready(initMap);
+            }
+        }
+
+        async function handleLogout() {
+            await supabaseClient.auth.signOut();
+            window.location.reload();
+        }
+
+        /* --- 🗜️ СЖАТИЕ ИЗОБРАЖЕНИЙ В WEBP --- */
+        function compressImage(file, maxWidth = 1400, quality = 0.82) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height && width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        } else if (height > maxWidth) {
+                            width = Math.round((width * maxWidth) / height);
+                            height = maxWidth;
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        canvas.toBlob((blob) => {
+                            resolve(blob || file);
+                        }, 'image/webp', quality);
+                    };
+                    img.onerror = () => resolve(file);
+                };
+                reader.onerror = () => resolve(file);
+            });
+        }
+
+        /* --- 📁 ЗАГРУЗКА В SUPABASE ПО ПАПКАМ --- */
+        async function uploadImagesToSupabase(files, folderId) {
+            const uploadedUrls = [];
+            const safeFolder = folderId ? folderId.toString().replace(/[^a-zA-Z0-9_-]/g, '') : 'general';
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const compressedBlob = await compressImage(file);
+                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.webp`;
+                const filePath = `${safeFolder}/${fileName}`;
+
+                const { data, error } = await supabaseClient.storage.from('location-photos').upload(filePath, compressedBlob, {
+                    contentType: 'image/webp'
+                });
+
+                if (!error && data) {
+                    const { data: publicUrlData } = supabaseClient.storage.from('location-photos').getPublicUrl(filePath);
+                    if (publicUrlData) uploadedUrls.push(publicUrlData.publicUrl);
+                } else {
+                    console.error("Ошибка загрузки фото:", error);
+                }
+            }
+            return uploadedUrls;
+        }
+
+        /* --- 🗺️ ИНИЦИАЛИЗАЦИЯ КАРТЫ И ГЕОКОДИНГ --- */
         function initMap() {
+            if (myMap) return;
+
             myMap = new ymaps.Map("map", {
                 center: [55.751574, 37.573856],
                 zoom: 11,
                 controls: ['zoomControl', 'geolocationControl']
             });
 
-            myMap.events.add('click', function (e) {
+            // Клик по карте: установка точки + автоматический геокодинг адреса
+            myMap.events.add('click', async function (e) {
                 const coords = e.get('coords');
                 document.getElementById('addCoords').value = `${coords[0].toFixed(6)}, ${coords[1].toFixed(6)}`;
+                
+                if (tempPlacemark) {
+                    tempPlacemark.geometry.setCoordinates(coords);
+                } else {
+                    tempPlacemark = new ymaps.Placemark(coords, {}, {
+                        preset: 'islands#darkOrangeDotIcon'
+                    });
+                    myMap.geoObjects.add(tempPlacemark);
+                }
+
+                // Автоматическое получение адреса через Yandex Geocoder
+                try {
+                    const res = await ymaps.geocode(coords);
+                    const firstGeoObject = res.geoObjects.get(0);
+                    if (firstGeoObject) {
+                        const resolvedAddress = firstGeoObject.getAddressLine();
+                        document.getElementById('addAddress').value = resolvedAddress;
+                    }
+                } catch (err) {
+                    console.error("Ошибка геокодинга:", err);
+                }
             });
 
             loadLocations();
@@ -310,21 +469,8 @@
             document.getElementById('uploadStatus').innerText = selectedFiles.length > 0 ? `Выбрано файлов: ${selectedFiles.length}` : '';
         }
 
-        async function uploadImagesToSupabase(files) {
-            const uploadedUrls = [];
-            for (const file of files) {
-                const ext = file.name.split('.').pop();
-                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
-                const { data, error } = await supabaseClient.storage.from('location-photos').upload(fileName, file);
-                if (!error && data) {
-                    const { data: publicUrlData } = supabaseClient.storage.from('location-photos').getPublicUrl(fileName);
-                    if (publicUrlData) uploadedUrls.push(publicUrlData.publicUrl);
-                }
-            }
-            return uploadedUrls;
-        }
-
         async function saveNewLocation() {
+            const saveBtn = document.getElementById('saveBtn');
             const title = document.getElementById('addTitle').value.trim();
             const selectCat = document.getElementById('addCategorySelect').value;
             const customCat = document.getElementById('addCustomCategory').value.trim();
@@ -340,12 +486,18 @@
                 alert("Неверные координаты!"); return;
             }
 
-            document.getElementById('uploadStatus').innerText = "Загрузка фото...";
-            let images = selectedFiles.length > 0 ? await uploadImagesToSupabase(selectedFiles) : [];
+            saveBtn.disabled = true;
+            document.getElementById('uploadStatus').innerText = "Оптимизация и загрузка фото...";
+
+            // Генерируем уникальный ID папки для новой точки
+            const locationFolderId = `loc_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+            let images = selectedFiles.length > 0 ? await uploadImagesToSupabase(selectedFiles, locationFolderId) : [];
 
             const { error } = await supabaseClient.from('Location').insert([{
                 title, category: category || "📍 Другое", address, lat: coordsParts[0], lng: coordsParts[1], description, images
             }]);
+
+            saveBtn.disabled = false;
 
             if (error) alert("Ошибка: " + error.message);
             else {
@@ -355,6 +507,7 @@
                 document.getElementById('addDesc').value = '';
                 document.getElementById('addPhotosInput').value = '';
                 document.getElementById('uploadStatus').innerText = '';
+                if (tempPlacemark) { myMap.geoObjects.remove(tempPlacemark); tempPlacemark = null; }
                 selectedFiles = [];
                 loadLocations();
             }
@@ -469,7 +622,6 @@
             `;
         }
 
-        /* УПРАВЛЕНИЕ ОТОБРАЖЕНИЕМ И ЗНАЧКАМИ ГЛАЗКА */
         function renderTopCatFilter(categories) {
             const container = document.getElementById('catChipsScroll');
             container.innerHTML = '';
@@ -495,7 +647,6 @@
                 categoryCollections[catName].options.set('visible', categoryVisibility[catName]);
             }
 
-            // Обновляем иконку в списке
             const listIcon = document.getElementById(`icon-cat-${encodeURIComponent(catName)}`);
             if (listIcon) listIcon.innerText = categoryVisibility[catName] ? '👁️' : '🙈';
 
@@ -515,7 +666,7 @@
             renderTopCatFilter(Object.keys(categoryCollections));
         }
 
-        /* МОДАЛЬНОЕ ОКНО И ПОЛНОЕ РЕДАКТИРОВАНИЕ */
+        /* МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ */
         function openEditModal(id, event) {
             if (event) event.stopPropagation();
             const loc = allLocations.find(l => l.id === id);
@@ -527,7 +678,6 @@
             document.getElementById('editCoords').value = `${loc.lat}, ${loc.lng}`;
             document.getElementById('editDesc').value = loc.description || '';
 
-            // Селект категорий
             const select = document.getElementById('editCategorySelect');
             select.innerHTML = '';
             const customCategoriesFromDb = allLocations.map(l => l.category).filter(Boolean);
@@ -591,6 +741,7 @@
         }
 
         async function saveEditedLocation() {
+            const editBtn = document.getElementById('editSaveBtn');
             const id = document.getElementById('editLocationId').value;
             const title = document.getElementById('editTitle').value.trim();
             const category = document.getElementById('editCategorySelect').value;
@@ -605,15 +756,19 @@
                 alert("Неверный формат координат!"); return;
             }
 
+            editBtn.disabled = true;
+
             if (editNewFiles.length > 0) {
-                document.getElementById('editUploadStatus').innerText = "Загрузка новых фото...";
-                const uploadedUrls = await uploadImagesToSupabase(editNewFiles);
+                document.getElementById('editUploadStatus').innerText = "Оптимизация и загрузка новых фото...";
+                const uploadedUrls = await uploadImagesToSupabase(editNewFiles, id);
                 editingImagesList = [...editingImagesList, ...uploadedUrls];
             }
 
             const { error } = await supabaseClient.from('Location').update({
                 title, category, address, lat: coordsParts[0], lng: coordsParts[1], description, images: editingImagesList
             }).eq('id', id);
+
+            editBtn.disabled = false;
 
             if (error) {
                 alert("Ошибка обновления: " + error.message);
@@ -623,7 +778,6 @@
             }
         }
 
-        /* ПОЛНОЭКРАННАЯ ГАЛЕРЕЯ */
         function openFullscreenGallery(images, startIndex = 0) {
             currentGalleryImages = images;
             currentGalleryIndex = startIndex;
@@ -645,7 +799,6 @@
             updateGalleryImage();
         }
 
-        /* ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ */
         function toggleAccordion(element) { element.closest('.category-group').classList.toggle('collapsed'); }
 
         function selectLocationOnMap(loc, placemark) {
@@ -672,6 +825,9 @@
                 loadLocations();
             }
         }
+
+        // Запуск проверки авторизации
+        checkAuth();
     </script>
 </body>
 </html>
