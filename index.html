@@ -181,8 +181,8 @@
         }
         
         .card-metro-block { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
-        .metro-badge { display: inline-flex; align-items: center; gap: 6px; background: #f8fafc; color: #1e293b; font-size: 0.74rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; border: 1px solid #e2e8f0; }
-        .metro-badge-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .metro-badge { display: inline-flex; align-items: center; gap: 5px; background: #ffffff; color: #1e293b; font-size: 0.74rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+        .metro-icon-svg { width: 14px; height: 11px; flex-shrink: 0; }
         
         .card-actions-row { display: flex; gap: 6px; width: 100%; }
         .copy-btn, .route-btn {
@@ -215,7 +215,6 @@
             border: 1px solid rgba(0,0,0,0.08);
         }
 
-        /* Полноэкранный растяг карты под iOS */
         #map-container {
             position: fixed;
             top: 0;
@@ -270,7 +269,6 @@
             padding: 6px 8px;
             background: rgba(255, 255, 255, 0.92);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border-radius: 9999px;
             border: 1px solid rgba(0, 0, 0, 0.08);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
@@ -345,7 +343,6 @@
             z-index: 1001;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border-radius: 16px;
             padding: 8px 12px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
@@ -358,57 +355,16 @@
         .mobile-search-close { background: none; border: none; font-size: 1.1rem; color: #64748b; cursor: pointer; padding: 4px 8px; }
 
         @media (max-width: 768px) {
-            #sidebar {
-                width: 100vw;
-                height: 100%;
-                display: none;
-            }
-            #map-container {
-                left: 0;
-                top: 0;
-                width: 100vw;
-                height: 100%;
-                position: fixed;
-            }
-
+            #sidebar { width: 100vw; height: 100%; display: none; }
+            #map-container { left: 0; top: 0; width: 100vw; height: 100%; position: fixed; }
             .show-list #map-container { display: none; }
             .show-list #sidebar { display: flex; }
             body:not(.show-list) #sidebar { display: none; }
             body:not(.show-list) #map-container { display: block; }
-
-            .mobile-toggle-bar {
-                display: flex;
-                position: fixed;
-                bottom: max(calc(env(safe-area-inset-bottom) + 12px), 20px);
-                left: 50%;
-                transform: translateX(-50%);
-                background: rgba(255, 255, 255, 0.92);
-                backdrop-filter: blur(20px);
-                -webkit-backdrop-filter: blur(20px);
-                padding: 4px;
-                border-radius: 9999px;
-                border: 1px solid rgba(0, 0, 0, 0.08);
-                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
-                z-index: 1000;
-                gap: 4px;
-                align-items: center;
-            }
-            .toggle-btn {
-                padding: 9px 18px;
-                border-radius: 9999px;
-                border: none;
-                background: transparent;
-                font-size: 0.85rem;
-                font-weight: 600;
-                cursor: pointer;
-                color: #64748b;
-            }
+            .mobile-toggle-bar { display: flex; position: fixed; bottom: max(calc(env(safe-area-inset-bottom) + 12px), 20px); left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); padding: 4px; border-radius: 9999px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 1000; gap: 4px; align-items: center; }
+            .toggle-btn { padding: 9px 18px; border-radius: 9999px; border: none; background: transparent; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: #64748b; }
             .toggle-btn.icon-btn { padding: 9px 12px; font-size: 0.95rem; }
-            .toggle-btn.active {
-                background: #0f172a;
-                color: #ffffff;
-                box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
-            }
+            .toggle-btn.active { background: #0f172a; color: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25); }
         }
     </style>
 </head>
@@ -468,27 +424,10 @@
         let currentGallery = [];
         let currentImageIdx = 0;
 
-        // Карта официальных цветов станций метро Москвы
-        const METRO_LINE_COLORS = {
-            "Охотный Ряд": "#EF161E", "Лубянка": "#EF161E", "Чистые пруды": "#EF161E", "Красные Ворота": "#EF161E", "Комсомольская": "#EF161E", "Библиотека им. Ленина": "#EF161E", "Кропоткинская": "#EF161E", "Парк культуры": "#EF161E", "Фрунзенская": "#EF161E", "Спортивная": "#EF161E",
-            "Театральная": "#2DBE2C", "Тверская": "#2DBE2C", "Маяковская": "#2DBE2C", "Белорусская": "#2DBE2C", "Новокузнецкая": "#2DBE2C", "Павелецкая": "#2DBE2C", "Автозаводская": "#2DBE2C",
-            "Площадь Революции": "#0078BF", "Арбатская": "#0078BF", "Смоленская": "#0078BF", "Киевская": "#0078BF", "Курская": "#0078BF", "Бауманская": "#0078BF", "Электрозаводская": "#0078BF",
-            "Александровский сад": "#00BFFF", "Выставочная": "#00BFFF", "Международная": "#00BFFF",
-            "Добрынинская": "#8D5B2D", "Октябрьская": "#8D5B2D", "Таганская": "#8D5B2D", "Проспект Мира": "#8D5B2D", "Новослободская": "#8D5B2D", "Краснопресненская": "#8D5B2D",
-            "Китай-город": "#ED9121", "Тургеневская": "#ED9121", "Сухаревская": "#ED9121", "Третьяковская": "#ED9121", "Шаболовская": "#ED9121", "Ленинский проспект": "#ED9121",
-            "Кузнецкий Мост": "#800080", "Пушкинская": "#800080", "Баррикадная": "#800080", "Улица 1905 года": "#800080", "Пролетарская": "#800080", "Волгоградский проспект": "#800080",
-            "Марксистская": "#FFD702", "Площадь Ильича": "#FFD702", "Авиамоторная": "#FFD702",
-            "Чеховская": "#A0A0A0", "Боровицкая": "#A0A0A0", "Полянка": "#A0A0A0", "Серпуховская": "#A0A0A0", "Тульская": "#A0A0A0", "Цветной бульвар": "#A0A0A0", "Менделеевская": "#A0A0A0", "Савеловская": "#A0A0A0",
-            "Трубная": "#99CC00", "Сретенский бульвар": "#99CC00", "Чкаловская": "#99CC00", "Римская": "#99CC00", "Крестьянская Застава": "#99CC00", "Дубровка": "#99CC00", "Достоевская": "#99CC00", "Марьина Роща": "#99CC00",
-            "Деловой центр": "#70C9C7", "Шелепиха": "#70C9C7"
-        };
-
-        function getMetroColor(stationName) {
-            if (!stationName) return '#94a3b8';
-            for (let name in METRO_LINE_COLORS) {
-                if (stationName.toLowerCase().includes(name.toLowerCase())) return METRO_LINE_COLORS[name];
-            }
-            return '#0ea5e9';
+        function getMetroSvg(color = "#EF161E") {
+            return `<svg class="metro-icon-svg" viewBox="0 0 24 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0 18L7.5 0L12 9.5L16.5 0L24 18H19L15 8L12 14.5L9 8L5 18H0Z" fill="${color}"/>
+            </svg>`;
         }
 
         ymaps.ready(initMap);
@@ -573,7 +512,7 @@
             if (!metroList || !Array.isArray(metroList) || metroList.length === 0) return '';
             return `<div class="card-metro-block">${metroList.map(m => `
                 <span class="metro-badge">
-                    <span class="metro-badge-dot" style="background: ${m.color || getMetroColor(m.name)};"></span>
+                    ${getMetroSvg(m.color || '#EF161E')}
                     ${m.name} ${m.time ? `<span style="color:#64748b; font-weight:400;">(${m.time} мин)</span>` : ''}
                 </span>
             `).join('')}</div>`;
@@ -699,7 +638,7 @@
             if (loc.metro && Array.isArray(loc.metro) && loc.metro.length > 0) {
                 metroHtml = `<div class="balloon-metro-block">${loc.metro.map(m => `
                     <span class="metro-badge">
-                        <span class="metro-badge-dot" style="background: ${m.color || getMetroColor(m.name)};"></span>
+                        ${getMetroSvg(m.color || '#EF161E')}
                         ${m.name} ${m.time ? `<span style="color:#64748b; font-weight:400;">(${m.time} мин)</span>` : ''}
                     </span>
                 `).join('')}</div>`;
