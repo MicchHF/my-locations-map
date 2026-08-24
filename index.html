@@ -15,7 +15,6 @@
             touch-action: manipulation;
         }
 
-        /* ИСПРАВЛЕНИЕ БЕЛЫХ ПОЛОС НА МОБИЛЬНЫХ: 100dvh + фиксированный overflow */
         html, body {
             width: 100%;
             height: 100vh;
@@ -33,12 +32,8 @@
 
         #app-wrapper {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%; height: 100%;
             display: flex;
             background: #ffffff;
         }
@@ -106,24 +101,26 @@
         .card-address-block { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; width: 100%; }
         .card-address { display: flex; align-items: center; gap: 6px; background: #f1f5f9; color: #475569; font-size: 0.78rem; font-weight: 500; padding: 6px 10px; border-radius: 8px; word-break: break-word; border: 1px solid #e2e8f0; width: 100%; }
         .card-actions-row { display: flex; gap: 6px; width: 100%; }
-        .copy-btn, .route-btn, .edit-btn {
+        
+        .copy-btn, .route-btn, .edit-btn, .delete-btn {
             flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 6px 10px; font-size: 0.78rem; font-weight: 500; border-radius: 8px; text-decoration: none; cursor: pointer; border: 1px solid #cbd5e1;
         }
         .copy-btn { background: #ffffff; color: #334155; }
         .route-btn { background: #0f172a; border-color: #0f172a; color: #ffffff; }
-        .edit-btn { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
+        .edit-btn { background: #fef3c7; border-color: #f59e0b; color: #92400e; display: none; }
+        .delete-btn { background: #fee2e2; border-color: #ef4444; color: #991b1b; display: none; }
+
+        /* Показываем кнопки редактирования только в админ-режиме */
+        body.is-admin .edit-btn, body.is-admin .delete-btn { display: inline-flex; }
+        body.is-admin .admin-add-btn { display: flex; }
 
         .card-desc { font-size: 0.85rem; color: #4b5563; line-height: 1.4; margin-bottom: 10px; white-space: pre-line; }
         .card-photos { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
         .card-photo-thumb { height: 80px; width: auto; max-width: 150px; border-radius: 8px; object-fit: cover; flex-shrink: 0; cursor: pointer; border: 1px solid rgba(0,0,0,0.08); }
 
-        /* ВОССТАНОВЛЕННАЯ ДЕСКТОПНАЯ КАРТА */
         #map-container {
             position: absolute;
-            top: 0;
-            left: 390px;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 390px; right: 0; bottom: 0;
             height: 100%;
             z-index: 1;
         }
@@ -133,18 +130,6 @@
         .custom-map-pin {
             width: 38px; height: 38px; background: #0f172a; color: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 2px solid #ffffff; cursor: pointer; user-select: none;
         }
-
-        .balloon-wrapper { padding: 4px 2px; max-width: 240px; }
-        .balloon-title { font-size: 0.95rem; font-weight: 700; color: #0f172a; line-height: 1.25; margin-bottom: 6px; }
-        .balloon-address-block { display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; width: 100%; }
-        .balloon-address { font-size: 0.78rem; color: #475569; background: #f1f5f9; padding: 5px 8px; border-radius: 6px; line-height: 1.35; word-break: break-word; border: 1px solid #e2e8f0; width: 100%; }
-        .balloon-actions-row { display: flex; gap: 6px; width: 100%; }
-        .balloon-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 5px 6px; font-size: 0.75rem; font-weight: 500; border-radius: 6px; text-decoration: none; cursor: pointer; text-align: center; }
-        .balloon-copy-btn { background: #ffffff; border: 1px solid #cbd5e1; color: #334155; }
-        .balloon-route-btn { background: #0f172a; border: 1px solid #0f172a; color: #ffffff; }
-        .balloon-desc { font-size: 0.82rem; color: #334155; line-height: 1.4; margin-top: 6px; margin-bottom: 6px; white-space: pre-line; border-top: 1px solid #f1f5f9; padding-top: 6px; }
-        .balloon-photos { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; padding-bottom: 2px; }
-        .balloon-photo-img { height: 60px; width: auto; border-radius: 6px; cursor: pointer; object-fit: cover; border: 1px solid rgba(0,0,0,0.08); }
 
         .top-cat-filter-bar {
             position: absolute;
@@ -177,6 +162,25 @@
         .cat-chip.active { background: #0f172a; color: #ffffff; border-color: #0f172a; }
         .cat-chip.disabled { opacity: 0.45; background: #f1f5f9; color: #94a3b8; }
 
+        .admin-add-btn {
+            position: absolute;
+            bottom: calc(env(safe-area-inset-bottom) + 84px);
+            right: 16px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #0f172a;
+            color: #ffffff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+            z-index: 900;
+            border: none;
+            cursor: pointer;
+        }
+
         .lightbox-modal {
             display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh; background: rgba(0, 0, 0, 0.94); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(8px);
         }
@@ -188,33 +192,12 @@
         .lightbox-counter { position: absolute; bottom: max(calc(env(safe-area-inset-bottom) + 16px), 24px); color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; }
 
         .mobile-toggle-bar { display: none; }
-
         .mobile-search-overlay {
             display: none; position: fixed; left: 16px; right: 16px; bottom: calc(env(safe-area-inset-bottom) + 84px); z-index: 1001; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 16px; padding: 8px 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); border: 1px solid rgba(0, 0, 0, 0.08); align-items: center; gap: 8px;
         }
         .mobile-search-overlay.active { display: flex; }
         .mobile-search-input { flex: 1; border: none; background: transparent; font-size: 16px; outline: none; color: #0f172a; }
         .mobile-search-close { background: none; border: none; font-size: 1.1rem; color: #64748b; cursor: pointer; padding: 4px 8px; }
-
-        /* Кнопка быстрого добавления для админа */
-        .admin-add-btn {
-            position: absolute;
-            bottom: calc(env(safe-area-inset-bottom) + 84px);
-            right: 16px;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: #0f172a;
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.3);
-            z-index: 900;
-            border: none;
-            cursor: pointer;
-        }
 
         @media (max-width: 768px) {
             #sidebar { width: 100%; height: 100%; display: none; }
@@ -228,11 +211,9 @@
             .mobile-toggle-bar {
                 display: flex; position: fixed; bottom: max(calc(env(safe-area-inset-bottom) + 12px), 20px); left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 4px; border-radius: 9999px; border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12); z-index: 1000; gap: 4px; align-items: center;
             }
-
-            .toggle-btn { padding: 99px 18px; padding: 9px 18px; border-radius: 9999px; border: none; background: transparent; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: #64748b; }
+            .toggle-btn { padding: 9px 18px; border-radius: 9999px; border: none; background: transparent; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: #64748b; }
             .toggle-btn.icon-btn { padding: 9px 12px; font-size: 0.95rem; }
             .toggle-btn.active { background: #0f172a; color: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25); }
-            .lightbox-nav { display: none; }
         }
     </style>
 </head>
@@ -292,6 +273,14 @@
         let allVisibleState = true;
         let currentGallery = [];
         let currentImageIdx = 0;
+        let isAdmin = false;
+
+        // Проверка наличия режима админа в URL (?admin=true)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('admin') === 'true') {
+            isAdmin = true;
+            document.body.classList.add('is-admin');
+        }
 
         ymaps.ready(initMap);
 
@@ -303,7 +292,6 @@
             });
 
             loadLocations();
-
             window.addEventListener('resize', () => { if (myMap) myMap.container.fitToViewport(); });
         }
 
@@ -439,7 +427,7 @@
                     const cardEl = document.createElement('div');
                     cardEl.className = 'location-card'; cardEl.id = `card-${loc.id}`;
                     cardEl.onclick = (e) => {
-                        if (!e.target.classList.contains('card-photo-thumb') && !e.target.classList.contains('copy-btn') && !e.target.classList.contains('route-btn') && !e.target.classList.contains('edit-btn')) {
+                        if (!e.target.classList.contains('card-photo-thumb') && !e.target.classList.contains('copy-btn') && !e.target.classList.contains('route-btn') && !e.target.classList.contains('edit-btn') && !e.target.classList.contains('delete-btn')) {
                             selectLocationOnMap(loc, placemark);
                         }
                     };
@@ -462,6 +450,7 @@
                                 ${loc.address ? `<button class="copy-btn" onclick="copyAddress('${safeAddr}', event, this)">📋 Копировать</button>` : ''}
                                 <a href="${routeUrl}" target="_blank" rel="noopener" class="route-btn" onclick="event.stopPropagation();">🧭 Маршрут</a>
                                 <button class="edit-btn" onclick="editLocation('${loc.id}', event)">✏️ Редактировать</button>
+                                <button class="delete-btn" onclick="deleteLocation('${loc.id}', event)">🗑️ Удалить</button>
                             </div>
                         </div>
                         ${loc.description ? `<div class="card-desc">${loc.description}</div>` : ''}
@@ -605,31 +594,51 @@
             }
         }
 
-        // Вспомогательные функции редактирования/добавления
+        // Админские методы
         function editLocation(id, event) {
             if (event) event.stopPropagation();
+            if (!isAdmin) return;
             const loc = allLocations.find(l => l.id === id);
             if (!loc) return;
+            
             const newTitle = prompt("Название точки:", loc.title);
             if (newTitle === null) return;
+            const newAddress = prompt("Адрес:", loc.address || "");
+            if (newAddress === null) return;
             const newDesc = prompt("Описание:", loc.description || "");
             if (newDesc === null) return;
             
-            supabaseClient.from('Location').update({ title: newTitle, description: newDesc }).eq('id', id).then(() => {
+            supabaseClient.from('Location').update({
+                title: newTitle,
+                address: newAddress,
+                description: newDesc
+            }).eq('id', id).then(() => {
                 loadLocations();
             });
         }
 
+        function deleteLocation(id, event) {
+            if (event) event.stopPropagation();
+            if (!isAdmin) return;
+            if (confirm("Точно удалить этой локацию?")) {
+                supabaseClient.from('Location').delete().eq('id', id).then(() => {
+                    loadLocations();
+                });
+            }
+        }
+
         function addNewLocationByClick() {
+            if (!isAdmin) return;
             const center = myMap.getCenter();
             const title = prompt("Название новой точки:");
             if (!title) return;
+            const address = prompt("Адрес точки:");
             const category = prompt("Категория (например, ☕ Кофейни):", "📍 Другое");
-            if (!category) return;
             
             supabaseClient.from('Location').insert([{
                 title: title,
-                category: category,
+                address: address,
+                category: category || "📍 Другое",
                 lat: center[0],
                 lng: center[1]
             }]).then(() => {
