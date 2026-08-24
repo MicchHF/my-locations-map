@@ -49,7 +49,6 @@
             border-radius: 3px;
         }
 
-        /* Поиск и списки в админке */
         .admin-search-box {
             padding: 10px 15px;
             background: #ffffff;
@@ -103,7 +102,6 @@
             border-bottom: none;
         }
 
-        /* Модальное окно редактирования */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -192,7 +190,6 @@
             <button id="saveBtn" class="btn" onclick="saveLocation()">Сохранить на карту</button>
         </div>
 
-        <!-- Поиск и Группировка меток в Админке -->
         <div id="list-section">
             <div class="admin-search-box">
                 <input type="text" id="adminSearchInput" class="admin-search-input" placeholder="🔍 Быстрый поиск метки..." oninput="renderAdminList()">
@@ -401,15 +398,15 @@
 
             allAdminLocations = locations;
 
-            // Отрисовка меток на карте в админке с точным круговым хитбоксом
             myMap.geoObjects.removeAll();
             locations.forEach(loc => {
                 const categoryIcon = loc.category ? loc.category.split(' ')[0] : '📍';
                 
                 const layout = ymaps.templateLayoutFactory.createClass(
-                    `<div style="width:34px; height:34px; background:#1e293b; border:2px solid #fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; box-shadow:0 3px 8px rgba(0,0,0,0.3);"><span>${categoryIcon}</span></div>`
+                    `<div style="width:34px; height:34px; background:#0f172a; border:2px solid #fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; box-shadow:0 3px 8px rgba(0,0,0,0.3);"><span>${categoryIcon}</span></div>`
                 );
 
+                // Корректный хитбокс для 34x34px метки: coordinates: [17, 17]
                 const placemark = new ymaps.Placemark([loc.lat, loc.lng], { 
                     balloonContent: `<b>${categoryIcon} ${loc.title}</b><br><small>${loc.address || ''}</small>` 
                 }, {
@@ -417,7 +414,7 @@
                     iconOffset: [-17, -17],
                     iconShape: {
                         type: 'Circle',
-                        coordinates: [0, 0],
+                        coordinates: [17, 17],
                         radius: 17
                     },
                     cursor: 'pointer'
@@ -429,7 +426,6 @@
             renderAdminList();
         }
 
-        // Отрисовка списка админки с группировкой по категориям и фильтрацией поиска
         function renderAdminList() {
             const listEl = document.getElementById('admin-locations-list');
             const searchVal = (document.getElementById('adminSearchInput').value || '').toLowerCase().trim();
