@@ -3,577 +3,424 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель управления меток</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Панель управления — локации от @dalazareva</title>
     <script src="https://api-maps.yandex.ru/2.1/?apikey=17e91f7c-3356-4174-9a25-5ac34ba55d46&lang=ru_RU"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .photo-preview-grid {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding: 8px 0;
-            margin-bottom: 10px;
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: #f8fafc; color: #1e293b; display: flex; height: 100vh; overflow: hidden; }
+        
+        #auth-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.9); z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .auth-card {
+            background: #ffffff; padding: 32px; border-radius: 16px; width: 100%; max-width: 380px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); text-align: center;
+        }
+        .auth-card h2 { margin-bottom: 20px; font-size: 1.25rem; color: #0f172a; }
+        .auth-card input {
+            width: 100%; padding: 10px 14px; margin-bottom: 12px; border: 1px solid #cbd5e1;
+            border-radius: 8px; font-size: 0.9rem; outline: none;
+        }
+        .auth-card button {
+            width: 100%; padding: 10px; background: #0f172a; color: #fff; border: none;
+            border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s;
         }
 
-        .photo-preview-item {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: #fff;
-            padding: 4px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+        #admin-panel { display: flex; width: 100%; height: 100%; }
+        
+        .sidebar-admin {
+            width: 420px; background: #ffffff; border-right: 1px solid #e2e8f0;
+            display: flex; flex-direction: column; height: 100%; z-index: 10;
+        }
+        .admin-header {
+            padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex;
+            align-items: center; justify-content: space-between; background: #ffffff;
+        }
+        .admin-title { font-size: 1.1rem; font-weight: 700; color: #0f172a; }
+        .logout-btn {
+            background: #f1f5f9; color: #64748b; border: none; padding: 6px 12px;
+            border-radius: 6px; font-size: 0.8rem; cursor: pointer; font-weight: 500;
         }
 
-        .photo-preview-item img {
-            height: 70px;
-            width: auto;
-            border-radius: 4px;
-            object-fit: cover;
+        .admin-content { flex: 1; overflow-y: auto; padding: 20px; }
+        
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 4px; }
+        .form-control {
+            width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px;
+            font-size: 0.88rem; outline: none; transition: border-color 0.2s;
+        }
+        .form-control:focus { border-color: #0f172a; }
+        textarea.form-control { resize: vertical; min-height: 70px; }
+
+        .coords-row { display: flex; gap: 10px; }
+        .coords-row .form-group { flex: 1; }
+
+        .btn-submit {
+            width: 100%; padding: 11px; background: #0f172a; color: #ffffff; border: none;
+            border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+            transition: background 0.2s; margin-top: 10px;
+        }
+        .btn-cancel {
+            width: 100%; padding: 9px; background: #f1f5f9; color: #475569; border: none;
+            border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer;
+            margin-top: 6px; display: none;
         }
 
-        .photo-controls {
-            display: flex;
-            gap: 4px;
-            margin-top: 4px;
+        .image-preview-container {
+            display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;
+        }
+        .preview-thumb {
+            position: relative; width: 70px; height: 70px; border-radius: 8px; overflow: hidden;
+            border: 1px solid #cbd5e1;
+        }
+        .preview-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .remove-img-btn {
+            position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.6); color: #fff;
+            border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
 
-        .photo-controls button {
-            padding: 2px 6px;
-            font-size: 11px;
-            cursor: pointer;
-            border: 1px solid #ccc;
-            background: #f0f0f0;
-            border-radius: 3px;
+        .admin-list-title {
+            font-size: 0.9rem; font-weight: 700; color: #0f172a; margin: 24px 0 12px 0;
+            padding-top: 16px; border-top: 1px solid #e2e8f0;
         }
 
-        .admin-search-box {
-            padding: 10px 15px;
-            background: #ffffff;
-            border-bottom: 1px solid #eee;
+        .admin-loc-card {
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;
+            margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;
         }
-
-        .admin-search-input {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            outline: none;
+        .admin-loc-info { flex: 1; padding-right: 10px; }
+        .admin-loc-name { font-size: 0.88rem; font-weight: 600; color: #0f172a; }
+        .admin-loc-cat { font-size: 0.75rem; color: #64748b; }
+        .admin-loc-actions { display: flex; gap: 4px; }
+        .act-btn {
+            background: #ffffff; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 6px;
+            font-size: 0.75rem; cursor: pointer; color: #334155;
         }
+        .act-btn.delete { color: #ef4444; border-color: #fca5a5; }
 
-        .admin-cat-group {
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .admin-cat-header {
-            padding: 10px 15px;
-            background: #f1f5f9;
-            font-weight: 600;
-            font-size: 0.88rem;
-            color: #334155;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .admin-cat-count {
-            background: #cbd5e1;
-            color: #1e293b;
-            padding: 1px 7px;
-            border-radius: 10px;
-            font-size: 0.75rem;
-        }
-
-        .admin-loc-item {
-            padding: 10px 15px;
-            border-bottom: 1px solid #f1f5f9;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #ffffff;
-        }
-
-        .admin-loc-item:last-child {
-            border-bottom: none;
-        }
-
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-overlay.active { display: flex; }
-
-        .modal-box {
-            background: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
+        #admin-map { flex: 1; height: 100%; }
+        .status-msg { font-size: 0.8rem; font-weight: 500; margin-top: 8px; text-align: center; }
+        .status-msg.success { color: #10b981; }
+        .status-msg.error { color: #ef4444; }
     </style>
 </head>
 <body>
-    <div id="authModal" class="auth-overlay">
-        <div class="auth-box">
-            <h2>Вход Администратора</h2>
-            <div class="form-group"><label>Email</label><input type="email" id="authEmail"></div>
-            <div class="form-group"><label>Пароль</label><input type="password" id="authPassword"></div>
-            <button class="btn" onclick="login()">Войти</button>
+
+    <div id="auth-overlay">
+        <div class="auth-card">
+            <h2>Авторизация Admin</h2>
+            <input type="email" id="auth-email" placeholder="Email">
+            <input type="password" id="auth-password" placeholder="Пароль">
+            <button onclick="login()">Войти</button>
+            <div id="auth-error" class="status-msg error"></div>
         </div>
     </div>
 
-    <div id="sidebar">
-        <div class="header">
-            <h1>Админ-панель</h1>
-            <button class="btn" onclick="logout()" style="width:auto; padding:4px 8px; font-size:0.75rem;">Выйти</button>
+    <div id="admin-panel">
+        <div class="sidebar-admin">
+            <div class="admin-header">
+                <span class="admin-title">Управление точками</span>
+                <button class="logout-btn" onclick="logout()">Выйти</button>
+            </div>
+            
+            <div class="admin-content">
+                <form id="location-form" onsubmit="handleFormSubmit(event)">
+                    <input type="hidden" id="edit-id">
+                    
+                    <div class="form-group">
+                        <label>Название точки *</label>
+                        <input type="text" id="loc-title" class="form-control" required placeholder="Например: Кофейня 'Уют'">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Категория *</label>
+                        <select id="loc-category" class="form-control" required>
+                            <option value="📸 Фотостудии">📸 Фотостудии</option>
+                            <option value="☕ Заведения">☕ Заведения</option>
+                            <option value="🏛️ Архитектура">🏛️ Архитектура</option>
+                            <option value="🌳 Парки">🌳 Парки</option>
+                            <option value="🛍️ Магазины">🛍️ Магазины</option>
+                            <option value="📍 Другое">📍 Другое</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Адрес</label>
+                        <input type="text" id="loc-address" class="form-control" placeholder="Кликните на карту или введите">
+                    </div>
+
+                    <div class="coords-row">
+                        <div class="form-group">
+                            <label>Широта (Lat) *</label>
+                            <input type="number" step="any" id="loc-lat" class="form-control" required placeholder="55.751">
+                        </div>
+                        <div class="form-group">
+                            <label>Долгота (Lng) *</label>
+                            <input type="number" step="any" id="loc-lng" class="form-control" required placeholder="37.573">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Описание</label>
+                        <textarea id="loc-desc" class="form-control" placeholder="Описание, советы по съёмке..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Загрузить фото</label>
+                        <input type="file" id="loc-photos-input" class="form-control" multiple accept="image/*" onchange="handleFileSelect(event)">
+                        <div id="image-previews" class="image-preview-container"></div>
+                    </div>
+
+                    <button type="submit" id="submit-btn" class="btn-submit">Сохранить локацию</button>
+                    <button type="button" id="cancel-btn" class="btn-cancel" onclick="resetForm()">Отмена редактирования</button>
+                    <div id="status-msg" class="status-msg"></div>
+                </form>
+
+                <div class="admin-list-title">Все локации (<span id="loc-count">0</span>)</div>
+                <div id="admin-locations-list"></div>
+            </div>
         </div>
 
-        <div style="padding:15px; background:#fafafa; border-bottom:1px solid #eee;">
-            <h3>Добавить место</h3>
-            
-            <div class="form-group">
-                <label>Координаты (клик по карте или вставка)</label>
-                <input type="text" id="locCoords" placeholder="Например: 55.751574, 37.573856" oninput="handleManualCoords()">
-            </div>
-            
-            <div class="form-group">
-                <label>Название</label>
-                <input type="text" id="locTitle" placeholder="Название точки">
-            </div>
-            
-            <div class="form-group">
-                <label>Категория</label>
-                <select id="locCategory">
-                    <option value="☕ Кофейни">☕ Кофейни</option>
-                    <option value="🍽️ Заведения (рестораны)">🍽️ Заведения (рестораны)</option>
-                    <option value="🍸 Бары и тусовки">🍸 Бары и тусовки</option>
-                    <option value="📷 Фотостудии">📷 Фотостудии</option>
-                    <option value="🚪 Двери и архитектура">🚪 Двери и архитектура</option>
-                    <option value="🏞️ Парки и природа">🏞️ Парки и природа</option>
-                    <option value="🏛️ Культура и музеи">🏛️ Культура и музеи</option>
-                    <option value="📸 Инсталокации">📸 Инсталокации</option>
-                    <option value="🛍️ Шопинг">🛍️ Шопинг</option>
-                    <option value="🏨 Отели">🏨 Отели</option>
-                    <option value="📍 Другое" selected>📍 Другое</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>Адрес</label>
-                <input type="text" id="locAddress" placeholder="например, ул. Покровка, 16">
-            </div>
-            
-            <div class="form-group">
-                <label>Описание</label>
-                <textarea id="locDesc" placeholder="Заметки или рекомендации..."></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label>Фотографии</label>
-                <input type="file" id="locFiles" multiple accept="image/*" onchange="handleNewFilesSelect(event)">
-            </div>
-
-            <div id="newPhotoPreview" class="photo-preview-grid"></div>
-            
-            <button id="saveBtn" class="btn" onclick="saveLocation()">Сохранить на карту</button>
-        </div>
-
-        <div id="list-section">
-            <div class="admin-search-box">
-                <input type="text" id="adminSearchInput" class="admin-search-input" placeholder="🔍 Быстрый поиск метки..." oninput="renderAdminList()">
-            </div>
-            <div id="admin-locations-list"></div>
-        </div>
-    </div>
-
-    <div id="map"></div>
-
-    <div id="editModal" class="modal-overlay">
-        <div class="modal-box">
-            <h3>Редактировать место</h3>
-            <input type="hidden" id="editLocId">
-            
-            <div class="form-group">
-                <label>Название</label>
-                <input type="text" id="editTitle">
-            </div>
-            
-            <div class="form-group">
-                <label>Категория</label>
-                <select id="editCategory">
-                    <option value="☕ Кофейни">☕ Кофейни</option>
-                    <option value="🍽️ Заведения (рестораны)">🍽️ Заведения (рестораны)</option>
-                    <option value="🍸 Бары и тусовки">🍸 Бары и тусовки</option>
-                    <option value="📷 Фотостудии">📷 Фотостудии</option>
-                    <option value="🚪 Двери и архитектура">🚪 Двери и архитектура</option>
-                    <option value="🏞️ Парки и природа">🏞️ Парки и природа</option>
-                    <option value="🏛️ Культура и музеи">🏛️ Культура и музеи</option>
-                    <option value="📸 Инсталокации">📸 Инсталокации</option>
-                    <option value="🛍️ Шопинг">🛍️ Шопинг</option>
-                    <option value="🏨 Отели">🏨 Отели</option>
-                    <option value="📍 Другое">📍 Другое</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>Адрес</label>
-                <input type="text" id="editAddress">
-            </div>
-            
-            <div class="form-group">
-                <label>Описание</label>
-                <textarea id="editDesc"></textarea>
-            </div>
-
-            <div class="form-group">
-                <label>Текущие фото (изменение порядка: ← / →)</label>
-                <div id="editPhotoGrid" class="photo-preview-grid"></div>
-            </div>
-
-            <div class="form-group">
-                <label>Добавить еще фото</label>
-                <input type="file" id="editNewFiles" multiple accept="image/*">
-            </div>
-
-            <div style="display:flex; gap:10px; margin-top:15px;">
-                <button class="btn" onclick="updateLocation()">Сохранить изменения</button>
-                <button class="btn" style="background:#888;" onclick="closeEditModal()">Отмена</button>
-            </div>
-        </div>
+        <div id="admin-map"></div>
     </div>
 
     <script src="js/supabase.js"></script>
     <script>
-        let myMap, currentCoords = null, tempPlacemark = null;
-        let selectedFiles = [];
-        let editCurrentImages = [];
+        let adminMap;
+        let tempPlacemark;
         let allAdminLocations = [];
+        let existingImages = [];
+        let newFilesToUpload = [];
 
-        window.onload = async () => {
+        ymaps.ready(initAdminMap);
+
+        async function initAdminMap() {
+            adminMap = new ymaps.Map("admin-map", {
+                center: [55.751574, 37.573856],
+                zoom: 11,
+                controls: ['zoomControl', 'geolocationControl']
+            });
+
+            adminMap.events.add('click', function (e) {
+                const coords = e.get('coords');
+                document.getElementById('loc-lat').value = coords[0].toFixed(6);
+                document.getElementById('loc-lng').value = coords[1].toFixed(6);
+                
+                ymaps.geocode(coords).then(res => {
+                    const firstGeoObject = res.geoObjects.get(0);
+                    if (firstGeoObject) {
+                        document.getElementById('loc-address').value = firstGeoObject.getAddressLine();
+                    }
+                });
+
+                if (tempPlacemark) adminMap.geoObjects.remove(tempPlacemark);
+                tempPlacemark = new ymaps.Placemark(coords, {}, { preset: 'islands#redIcon' });
+                adminMap.geoObjects.add(tempPlacemark);
+            });
+
+            checkAuthStatus();
+        }
+
+        async function checkAuthStatus() {
             const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) document.getElementById('authModal').style.display = 'none';
-        };
+            if (session) {
+                document.getElementById('auth-overlay').style.display = 'none';
+                loadAdminLocations();
+            } else {
+                document.getElementById('auth-overlay').style.display = 'flex';
+            }
+        }
 
         async function login() {
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const errDiv = document.getElementById('auth-error');
+            errDiv.innerText = '';
+
             const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-            if (error) alert(error.message);
-            else document.getElementById('authModal').style.display = 'none';
+            if (error) {
+                errDiv.innerText = 'Ошибка входа: ' + error.message;
+            } else {
+                document.getElementById('auth-overlay').style.display = 'none';
+                loadAdminLocations();
+            }
         }
 
         async function logout() {
             await supabaseClient.auth.signOut();
-            location.reload();
-        }
-
-        ymaps.ready(() => {
-            myMap = new ymaps.Map("map", { center: [55.751574, 37.573856], zoom: 10 });
-            loadAdminLocations();
-
-            myMap.events.add('click', (e) => {
-                currentCoords = e.get('coords');
-                document.getElementById('locCoords').value = `${currentCoords[0].toFixed(6)}, ${currentCoords[1].toFixed(6)}`;
-                updateTempMarker(currentCoords);
-            });
-        });
-
-        function handleManualCoords() {
-            const inputVal = document.getElementById('locCoords').value.trim();
-            const parts = inputVal.split(',').map(p => parseFloat(p.trim()));
-
-            if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-                currentCoords = [parts[0], parts[1]];
-                updateTempMarker(currentCoords);
-                myMap.setCenter(currentCoords, 15);
-            }
-        }
-
-        function updateTempMarker(coords) {
-            if (tempPlacemark) myMap.geoObjects.remove(tempPlacemark);
-            tempPlacemark = new ymaps.Placemark(coords, {}, { preset: 'islands#redIcon' });
-            myMap.geoObjects.add(tempPlacemark);
-        }
-
-        function handleNewFilesSelect(e) {
-            selectedFiles = Array.from(e.target.files);
-            renderNewPhotoPreview();
-        }
-
-        function renderNewPhotoPreview() {
-            const container = document.getElementById('newPhotoPreview');
-            container.innerHTML = '';
-
-            selectedFiles.forEach((file, index) => {
-                const item = document.createElement('div');
-                item.className = 'photo-preview-item';
-                const url = URL.createObjectURL(file);
-
-                item.innerHTML = `
-                    <img src="${url}">
-                    <div class="photo-controls">
-                        <button onclick="moveNewPhoto(${index}, -1)">←</button>
-                        <button onclick="moveNewPhoto(${index}, 1)">→</button>
-                        <button style="color:red;" onclick="removeNewPhoto(${index})">✕</button>
-                    </div>
-                `;
-                container.appendChild(item);
-            });
-        }
-
-        function moveNewPhoto(index, dir) {
-            const newIdx = index + dir;
-            if (newIdx < 0 || newIdx >= selectedFiles.length) return;
-            const temp = selectedFiles[index];
-            selectedFiles[index] = selectedFiles[newIdx];
-            selectedFiles[newIdx] = temp;
-            renderNewPhotoPreview();
-        }
-
-        function removeNewPhoto(index) {
-            selectedFiles.splice(index, 1);
-            renderNewPhotoPreview();
-        }
-
-        async function saveLocation() {
-            if (!currentCoords) return alert('Укажите координаты!');
-            
-            const title = document.getElementById('locTitle').value;
-            const category = document.getElementById('locCategory').value;
-            const address = document.getElementById('locAddress').value;
-            const description = document.getElementById('locDesc').value;
-            const saveBtn = document.getElementById('saveBtn');
-            
-            saveBtn.disabled = true;
-            const images = [];
-
-            try {
-                for (let i = 0; i < selectedFiles.length; i++) {
-                    const file = selectedFiles[i];
-                    saveBtn.innerText = `Загрузка фото ${i + 1}/${selectedFiles.length}...`;
-
-                    const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-                    const filePath = `public/${Date.now()}_${cleanName}`;
-
-                    const { error: uploadError } = await supabaseClient.storage
-                        .from('location-photos')
-                        .upload(filePath, file);
-
-                    if (!uploadError) {
-                        const { data } = supabaseClient.storage.from('location-photos').getPublicUrl(filePath);
-                        images.push(data.publicUrl);
-                    }
-                }
-
-                saveBtn.innerText = 'Сохранение...';
-
-                const { error } = await supabaseClient.from('Location').insert([{
-                    title, category, address, description, lat: currentCoords[0], lng: currentCoords[1], images
-                }]);
-
-                if (error) alert('Ошибка записи: ' + error.message);
-                else { alert('Метка успешно добавлена!'); location.reload(); }
-            } catch (err) {
-                alert('Сбой: ' + err.message);
-            } finally {
-                saveBtn.disabled = false;
-                saveBtn.innerText = 'Сохранить на карту';
-            }
+            document.getElementById('auth-overlay').style.display = 'flex';
         }
 
         async function loadAdminLocations() {
-            const { data: locations } = await supabaseClient.from('Location').select('*');
-            if (!locations) return;
-
-            allAdminLocations = locations;
-
-            myMap.geoObjects.removeAll();
-            locations.forEach(loc => {
-                const categoryIcon = loc.category ? loc.category.split(' ')[0] : '📍';
-                
-                const layout = ymaps.templateLayoutFactory.createClass(
-                    `<div style="width:34px; height:34px; background:#0f172a; border:2px solid #fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; box-shadow:0 3px 8px rgba(0,0,0,0.3);"><span>${categoryIcon}</span></div>`
-                );
-
-                const placemark = new ymaps.Placemark([loc.lat, loc.lng], { 
-                    balloonContent: `<b>${categoryIcon} ${loc.title}</b><br><small>${loc.address || ''}</small>` 
-                }, {
-                    iconLayout: layout,
-                    iconOffset: [-17, -17],
-                    iconShape: {
-                        type: 'Circle',
-                        coordinates: [17, 17],
-                        radius: 17
-                    },
-                    cursor: 'pointer'
-                });
-
-                myMap.geoObjects.add(placemark);
-            });
-
+            const { data, error } = await supabaseClient.from('Location').select('*').order('created_at', { ascending: false });
+            if (error) { console.error(error); return; }
+            allAdminLocations = data || [];
+            document.getElementById('loc-count').innerText = allAdminLocations.length;
             renderAdminList();
+            renderAdminMapPins();
         }
 
         function renderAdminList() {
-            const listEl = document.getElementById('admin-locations-list');
-            const searchVal = (document.getElementById('adminSearchInput').value || '').toLowerCase().trim();
+            const container = document.getElementById('admin-locations-list');
+            container.innerHTML = '';
 
-            listEl.innerHTML = '';
-
-            const filtered = allAdminLocations.filter(loc => {
-                return (loc.title || '').toLowerCase().includes(searchVal) ||
-                       (loc.address || '').toLowerCase().includes(searchVal);
-            });
-
-            if (filtered.length === 0) {
-                listEl.innerHTML = '<div style="padding:15px; color:#888; text-align:center;">Ничего не найдено</div>';
-                return;
-            }
-
-            const grouped = {};
-            filtered.forEach(loc => {
-                const cat = loc.category || '📍 Другое';
-                if (!grouped[cat]) grouped[cat] = [];
-                grouped[cat].push(loc);
-            });
-
-            Object.keys(grouped).forEach(catName => {
-                const groupContainer = document.createElement('div');
-                groupContainer.className = 'admin-cat-group';
-
-                const itemsCount = grouped[catName].length;
-
-                groupContainer.innerHTML = `
-                    <div class="admin-cat-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
-                        <span>${catName}</span>
-                        <span class="admin-cat-count">${itemsCount}</span>
+            allAdminLocations.forEach(loc => {
+                const card = document.createElement('div');
+                card.className = 'admin-loc-card';
+                card.innerHTML = `
+                    <div class="admin-loc-info">
+                        <div class="admin-loc-name">${loc.title}</div>
+                        <div class="admin-loc-cat">${loc.category || 'Без категории'}</div>
                     </div>
-                    <div class="admin-cat-items"></div>
+                    <div class="admin-loc-actions">
+                        <button class="act-btn" onclick="editLocation('${loc.id}')">✏️</button>
+                        <button class="act-btn delete" onclick="deleteLocation('${loc.id}')">🗑️</button>
+                    </div>
                 `;
-
-                const itemsContainer = groupContainer.querySelector('.admin-cat-items');
-
-                grouped[catName].forEach(loc => {
-                    const categoryIcon = loc.category ? loc.category.split(' ')[0] : '📍';
-                    const item = document.createElement('div');
-                    item.className = 'admin-loc-item';
-                    item.innerHTML = `
-                        <div style="flex:1; padding-right:10px;">
-                            <strong>${categoryIcon} ${loc.title}</strong><br>
-                            <small style="color:#666;">${loc.address || 'Без адреса'}</small>
-                        </div>
-                        <div style="display:flex; gap:6px;">
-                            <button onclick="openEditModal('${loc.id}')">✏️</button>
-                            <button style="color:red;" onclick="deleteLocation('${loc.id}')">🗑️</button>
-                        </div>
-                    `;
-                    itemsContainer.appendChild(item);
-                });
-
-                listEl.appendChild(groupContainer);
+                container.appendChild(card);
             });
         }
 
-        function openEditModal(id) {
+        function renderAdminMapPins() {
+            adminMap.geoObjects.removeAll();
+            allAdminLocations.forEach(loc => {
+                const pm = new ymaps.Placemark([loc.lat, loc.lng], { hintContent: loc.title }, { preset: 'islands#blueDotIcon' });
+                pm.events.add('click', () => editLocation(loc.id));
+                adminMap.geoObjects.add(pm);
+            });
+        }
+
+        function handleFileSelect(e) {
+            const files = Array.from(e.target.files);
+            newFilesToUpload = newFilesToUpload.concat(files);
+            renderPreviews();
+        }
+
+        function renderPreviews() {
+            const container = document.getElementById('image-previews');
+            container.innerHTML = '';
+
+            existingImages.forEach((url, idx) => {
+                const div = document.createElement('div'); div.className = 'preview-thumb';
+                div.innerHTML = `<img src="${url}"><button class="remove-img-btn" onclick="removeExistingImg(${idx})">✕</button>`;
+                container.appendChild(div);
+            });
+
+            newFilesToUpload.forEach((file, idx) => {
+                const div = document.createElement('div'); div.className = 'preview-thumb';
+                const url = URL.createObjectURL(file);
+                div.innerHTML = `<img src="${url}"><button class="remove-img-btn" onclick="removeNewFile(${idx})">✕</button>`;
+                container.appendChild(div);
+            });
+        }
+
+        function removeExistingImg(idx) { existingImages.splice(idx, 1); renderPreviews(); }
+        function removeNewFile(idx) { newFilesToUpload.splice(idx, 1); renderPreviews(); }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const statusDiv = document.getElementById('status-msg');
+            statusDiv.className = 'status-msg'; statusDiv.innerText = 'Сохранение...';
+
+            const editId = document.getElementById('edit-id').value;
+            const targetFolderId = editId ? editId : `loc_${Date.now()}`;
+
+            const uploadedUrls = [];
+
+            // Загрузка фото в уникальную папку "location-photos/[ID]/filename.jpg"
+            for (const file of newFilesToUpload) {
+                const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+                const filePath = `${targetFolderId}/${Date.now()}_${cleanName}`;
+                
+                const { data, error } = await supabaseClient.storage.from('location-photos').upload(filePath, file);
+                
+                if (error) {
+                    statusDiv.className = 'status-msg error';
+                    statusDiv.innerText = 'Ошибка загрузки фото: ' + error.message;
+                    return;
+                }
+
+                const { data: { publicUrl } } = supabaseClient.storage.from('location-photos').getPublicUrl(filePath);
+                uploadedUrls.push(publicUrl);
+            }
+
+            const finalImages = existingImages.concat(uploadedUrls);
+
+            const payload = {
+                title: document.getElementById('loc-title').value,
+                category: document.getElementById('loc-category').value,
+                address: document.getElementById('loc-address').value,
+                lat: parseFloat(document.getElementById('loc-lat').value),
+                lng: parseFloat(document.getElementById('loc-lng').value),
+                description: document.getElementById('loc-desc').value,
+                images: finalImages
+            };
+
+            let reqError;
+            if (editId) {
+                const { error } = await supabaseClient.from('Location').update(payload).eq('id', editId);
+                reqError = error;
+            } else {
+                payload.id = targetFolderId;
+                const { error } = await supabaseClient.from('Location').insert([payload]);
+                reqError = error;
+            }
+
+            if (reqError) {
+                statusDiv.className = 'status-msg error';
+                statusDiv.innerText = 'Ошибка БД: ' + reqError.message;
+            } else {
+                statusDiv.className = 'status-msg success';
+                statusDiv.innerText = 'Успешно сохранено!';
+                resetForm();
+                loadAdminLocations();
+            }
+        }
+
+        function editLocation(id) {
             const loc = allAdminLocations.find(l => l.id === id);
             if (!loc) return;
 
-            document.getElementById('editLocId').value = loc.id;
-            document.getElementById('editTitle').value = loc.title || '';
-            document.getElementById('editCategory').value = loc.category || '📍 Другое';
-            document.getElementById('editAddress').value = loc.address || '';
-            document.getElementById('editDesc').value = loc.description || '';
+            document.getElementById('edit-id').value = loc.id;
+            document.getElementById('loc-title').value = loc.title || '';
+            document.getElementById('loc-category').value = loc.category || '📍 Другое';
+            document.getElementById('loc-address').value = loc.address || '';
+            document.getElementById('loc-lat').value = loc.lat;
+            document.getElementById('loc-lng').value = loc.lng;
+            document.getElementById('loc-desc').value = loc.description || '';
 
-            editCurrentImages = Array.isArray(loc.images) ? [...loc.images] : [];
-            renderEditPhotoGrid();
+            existingImages = loc.images || [];
+            newFilesToUpload = [];
+            renderPreviews();
 
-            document.getElementById('editModal').classList.add('active');
-        }
+            document.getElementById('submit-btn').innerText = 'Обновить локацию';
+            document.getElementById('cancel-btn').style.display = 'block';
 
-        function renderEditPhotoGrid() {
-            const grid = document.getElementById('editPhotoGrid');
-            grid.innerHTML = '';
-
-            editCurrentImages.forEach((imgUrl, index) => {
-                const item = document.createElement('div');
-                item.className = 'photo-preview-item';
-                item.innerHTML = `
-                    <img src="${imgUrl}">
-                    <div class="photo-controls">
-                        <button onclick="moveEditPhoto(${index}, -1)">←</button>
-                        <button onclick="moveEditPhoto(${index}, 1)">→</button>
-                        <button style="color:red;" onclick="removeEditPhoto(${index})">✕</button>
-                    </div>
-                `;
-                grid.appendChild(item);
-            });
-        }
-
-        function moveEditPhoto(index, dir) {
-            const newIdx = index + dir;
-            if (newIdx < 0 || newIdx >= editCurrentImages.length) return;
-            const temp = editCurrentImages[index];
-            editCurrentImages[index] = editCurrentImages[newIdx];
-            editCurrentImages[newIdx] = temp;
-            renderEditPhotoGrid();
-        }
-
-        function removeEditPhoto(index) {
-            editCurrentImages.splice(index, 1);
-            renderEditPhotoGrid();
-        }
-
-        function closeEditModal() {
-            document.getElementById('editModal').classList.remove('active');
-        }
-
-        async function updateLocation() {
-            const id = document.getElementById('editLocId').value;
-            const title = document.getElementById('editTitle').value;
-            const category = document.getElementById('editCategory').value;
-            const address = document.getElementById('editAddress').value;
-            const description = document.getElementById('editDesc').value;
-            const newFiles = document.getElementById('editNewFiles').files;
-
-            const updatedImages = [...editCurrentImages];
-
-            for (let file of newFiles) {
-                const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-                const filePath = `public/${Date.now()}_${cleanName}`;
-
-                const { error: uploadError } = await supabaseClient.storage.from('location-photos').upload(filePath, file);
-                if (!uploadError) {
-                    const { data } = supabaseClient.storage.from('location-photos').getPublicUrl(filePath);
-                    updatedImages.push(data.publicUrl);
-                }
-            }
-
-            const { error } = await supabaseClient.from('Location').update({
-                title, category, address, description, images: updatedImages
-            }).eq('id', id);
-
-            if (error) alert('Ошибка обновления: ' + error.message);
-            else { alert('Сохранено!'); location.reload(); }
+            adminMap.setCenter([loc.lat, loc.lng], 15);
         }
 
         async function deleteLocation(id) {
-            if (confirm('Удалить эту метку?')) {
-                await supabaseClient.from('Location').delete().eq('id', id);
-                location.reload();
-            }
+            if (!confirm('Точно удалить эту локацию?')) return;
+            const { error } = await supabaseClient.from('Location').delete().eq('id', id);
+            if (!error) loadAdminLocations();
+            else alert('Ошибка удаления: ' + error.message);
+        }
+
+        function resetForm() {
+            document.getElementById('location-form').reset();
+            document.getElementById('edit-id').value = '';
+            existingImages = [];
+            newFilesToUpload = [];
+            renderPreviews();
+            document.getElementById('submit-btn').innerText = 'Сохранить локацию';
+            document.getElementById('cancel-btn').style.display = 'none';
+            document.getElementById('status-msg').innerText = '';
+            if (tempPlacemark) adminMap.geoObjects.remove(tempPlacemark);
         }
     </script>
 </body>
