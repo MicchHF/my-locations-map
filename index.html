@@ -207,7 +207,7 @@
         .route-btn { background: #0f172a; border-color: #0f172a; color: #ffffff; }
 
         .card-desc { font-size: 0.85rem; color: #4b5563; line-height: 1.4; margin-bottom: 10px; white-space: pre-line; }
-        .card-photos { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+        .card-photos { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-top: 6px; }
         .card-photo-thumb {
             height: 80px;
             width: auto;
@@ -262,7 +262,6 @@
         .balloon-photos { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; padding-bottom: 2px; }
         .balloon-photo-img { height: 65px; width: auto; border-radius: 6px; cursor: pointer; object-fit: cover; border: 1px solid rgba(0,0,0,0.08); flex-shrink: 0; }
 
-        /* ВЕРХНЯЯ ГОРИЗОНТАЛЬНАЯ СТРОКА КАТЕГОРИЙ */
         .top-cat-filter-bar {
             position: fixed;
             top: max(calc(env(safe-area-inset-top) + 12px), 16px);
@@ -352,7 +351,7 @@
         }
         .metro-floating-btn.active .metro-badge-dot { display: inline-block; }
 
-        /* БОКОВАЯ ШТОРКА (МЕНЮ) МЕТРО */
+        /* БОКОВАЯ ШТОРКА МЕТРО */
         .metro-sidebar-overlay {
             position: fixed;
             inset: 0;
@@ -553,13 +552,11 @@
         <div id="map-container">
             <div id="map"></div>[cite: 2]
             
-            <!-- ГОРИЗОНТАЛЬНАЯ ВЕРХНЯЯ СТРОКА С КАТЕГОРИЯМИ -->
             <div id="topCatFilterBar" class="top-cat-filter-bar">
-                <button id="toggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>[cite: 2]
+                <button id="toggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
                 <div id="catChipsScroll" class="cat-chips-scroll"></div>[cite: 2]
             </div>
 
-            <!-- ОТДЕЛЬНАЯ КНОПКА МЕТРО НА КАРТЕ -->
             <button id="metroFloatingBtn" class="metro-floating-btn" onclick="openMetroDrawer()">
                 <span class="metro-badge-dot" id="activeMetroDot"></span>
                 <span id="metroBtnLabel">🚇 Метро</span>
@@ -567,7 +564,6 @@
         </div>
     </div>
 
-    <!-- БОКОВОЕ МЕНЮ ВЫБОРА МЕТРО -->
     <div id="metroSidebarOverlay" class="metro-sidebar-overlay" onclick="closeMetroDrawer(event)">
         <div class="metro-sidebar-drawer" onclick="event.stopPropagation()">
             <div class="metro-drawer-header">
@@ -685,7 +681,6 @@
             renderInterface(allLocations);[cite: 2]
         }
 
-        /* УПРАВЛЕНИЕ ШТОРКОЙ МЕТРО */
         function openMetroDrawer() {
             document.getElementById('metroSidebarOverlay').classList.add('active');
         }
