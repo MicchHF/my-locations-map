@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#09090b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Панель управления | локации от @dalazareva</title>
     <script src="https://api-maps.yandex.ru/2.1/?apikey=7370bad5-a627-4414-a1e8-b2023bda7a61&lang=ru_RU"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -10,8 +13,8 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; touch-action: manipulation; }
         
         html, body { 
-            width: 100%; height: 100%; height: 100dvh; 
-            margin: 0; padding: 0; background-color: #f8fafc; color: #1a1a1a; 
+            width: 100vw; height: 100%; height: -webkit-fill-available;
+            margin: 0; padding: 0; background-color: #09090b; color: #1a1a1a; 
             overflow: hidden; position: fixed; top: 0; left: 0; 
         }
 
@@ -27,7 +30,10 @@
         .auth-desc { font-size: 0.8rem; color: #64748b; text-align: center; margin-top: -6px; margin-bottom: 4px; }
         .auth-error { font-size: 0.78rem; color: #ef4444; background: #fee2e2; padding: 8px 10px; border-radius: 8px; display: none; }
 
-        #app-wrapper { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; background: #fff; }
+        #app-wrapper { 
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
+            display: flex; background: #fff; 
+        }
 
         #sidebar { width: 420px; height: 100%; background: #fff; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; z-index: 10; flex-shrink: 0; }
         .sidebar-header { padding: max(calc(env(safe-area-inset-top) + 12px), 16px) 16px 12px 16px; background: #fff; border-bottom: 1px solid #f0f0f0; }
@@ -82,7 +88,17 @@
         .edit-btn { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
         .delete-btn { background: #fee2e2; border-color: #ef4444; color: #991b1b; }
 
-        #map-container { position: absolute; top: 0; left: 420px; right: 0; bottom: 0; width: calc(100vw - 420px); height: 100%; z-index: 1; }
+        /* Бесшовное перекрытие под iOS Safari */
+        #map-container { 
+            position: absolute; 
+            top: -100px; 
+            left: 420px; 
+            right: 0; 
+            bottom: -100px; 
+            width: calc(100vw - 420px); 
+            height: calc(100% + 200px); 
+            z-index: 1; 
+        }
         #map { width: 100%; height: 100%; }
 
         .custom-map-pin { width: 38px; height: 38px; background: #0f172a; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 2px solid #fff; cursor: pointer; }
@@ -96,7 +112,7 @@
         .balloon-photos { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; }
         .balloon-photo-img { height: 60px; width: 60px; border-radius: 6px; object-fit: cover; cursor: pointer; flex-shrink: 0; }
 
-        .top-cat-filter-bar { position: absolute; top: max(calc(env(safe-area-inset-top) + 8px), 14px); left: 50%; transform: translateX(-50%); width: calc(100% - 32px); max-width: 600px; display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 9999px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 500; }
+        .top-cat-filter-bar { position: absolute; top: max(calc(env(safe-area-inset-top) + 120px), 120px); left: 50%; transform: translateX(-50%); width: calc(100% - 32px); max-width: 600px; display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 9999px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 500; }
         .toggle-all-btn { padding: 6px 12px; border-radius: 9999px; background: #0f172a; color: #fff; font-size: 0.78rem; font-weight: 600; border: none; cursor: pointer; flex-shrink: 0; }
         .toggle-all-btn.off { background: #e2e8f0; color: #64748b; }
         .cat-chips-scroll { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; width: 100%; }
@@ -128,16 +144,16 @@
 
         .mobile-toggle-bar { display: none; }
         @media (max-width: 768px) {
-            #sidebar { width: 100vw; height: 100%; height: 100dvh; display: none; }
+            #sidebar { width: 100vw; height: 100%; display: none; }
             #map-container { 
-                left: 0; top: 0; width: 100vw; height: 100%; height: 100dvh; 
-                position: fixed;
+                left: 0; top: -100px; width: 100vw; height: calc(100% + 200px); 
+                position: absolute;
             }
             .show-list #map-container { display: none; }
             .show-list #sidebar { display: flex; }
             body:not(.show-list) #sidebar { display: none; }
             body:not(.show-list) #map-container { display: block; }
-            .mobile-toggle-bar { display: flex; position: fixed; bottom: max(calc(env(safe-area-inset-bottom) + 10px), 16px); left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 4px; border-radius: 9999px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 1000; gap: 4px; }
+            .mobile-toggle-bar { display: flex; position: fixed; bottom: max(calc(env(safe-area-inset-bottom) + 12px), 20px); left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 4px; border-radius: 9999px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 1000; gap: 4px; }
             .toggle-btn { padding: 9px 18px; border-radius: 9999px; border: none; background: transparent; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: #64748b; }
             .toggle-btn.active { background: #0f172a; color: #fff; }
         }
@@ -184,7 +200,7 @@
                     </select>
                     <input type="text" id="addCustomCategory" class="form-input" placeholder="Введите название категории" style="display: none;">
 
-                    <input type="text" id="addAddress" class="form-input" placeholder="Адрес (или кликните по карте)">
+                    <input type="text" id="addAddress" class="form-input" placeholder="Адрес (кликните по карте)">
                     <input type="text" id="addCoords" class="form-input" placeholder="Координаты (кликните по карте)">
                     
                     <div style="display: flex; flex-direction: column; gap: 4px;">
@@ -429,27 +445,43 @@
             return uploadedUrls;
         }
 
-        async function fetchNearbyMetro(coords) {
+        /* --- 🚇 ПРЯМОЙ НАДЕЖНЫЙ ГЕОКОДИНГ МЕТРО И АДРЕСА ЧЕРЕЗ YMAPS --- */
+        async function fetchAddressAndMetro(coords) {
+            let address = '';
+            let stations = [];
+
+            // 1. Поиск точного адреса дома / объекта
             try {
-                const res = await ymaps.geocode(coords, { kind: 'metro', results: 3 });
-                const stations = [];
-                res.geoObjects.each((geoObject) => {
+                const addrRes = await ymaps.geocode(coords, { results: 1 });
+                const firstObj = addrRes.geoObjects.get(0);
+                if (firstObj) {
+                    address = firstObj.getAddressLine() || '';
+                }
+            } catch (e) {
+                console.error("Ошибка геокодинга адреса:", e);
+            }
+
+            // 2. Поиск ближайших станций метро
+            try {
+                const metroRes = await ymaps.geocode(coords, { kind: 'metro', results: 3 });
+                const seen = new Set();
+                metroRes.geoObjects.each((geoObject) => {
                     let name = geoObject.properties.get('name') || '';
                     name = name.replace(/станция метро|метро/gi, '').trim();
 
-                    const metroCoords = geoObject.geometry.getCoordinates();
-                    const distanceMeters = ymaps.coordSystem.geo.getDistance(coords, metroCoords);
-                    const walkTimeMinutes = Math.max(1, Math.round(distanceMeters / 75));
-
-                    if (name) {
+                    if (name && !seen.has(name)) {
+                        seen.add(name);
+                        const metroCoords = geoObject.geometry.getCoordinates();
+                        const distanceMeters = ymaps.coordSystem.geo.getDistance(coords, metroCoords);
+                        const walkTimeMinutes = Math.max(1, Math.round(distanceMeters / 75)); // 75 м/мин ~ 4.5 км/ч
                         stations.push({ name, time: walkTimeMinutes });
                     }
                 });
-                return stations;
             } catch (e) {
-                console.error("Ошибка метро:", e);
-                return [];
+                console.error("Ошибка геокодинга метро:", e);
             }
+
+            return { address, stations };
         }
 
         function getMetroFromInputs(prefix) {
@@ -490,24 +522,17 @@
                     myMap.geoObjects.add(tempPlacemark);
                 }
 
-                document.getElementById('addAddress').placeholder = "Определяем адрес...";
-                document.getElementById('addMetro1_name').placeholder = "Ищем метро...";
+                document.getElementById('addAddress').value = '';
+                document.getElementById('addAddress').placeholder = "⏳ Определяем адрес...";
+                document.getElementById('addMetro1_name').placeholder = "⏳ Ищем метро...";
 
-                try {
-                    const res = await ymaps.geocode(coords, { results: 1 });
-                    const firstGeoObject = res.geoObjects.get(0);
-                    if (firstGeoObject) {
-                        document.getElementById('addAddress').value = firstGeoObject.getAddressLine() || '';
-                    }
-                } catch (err) {
-                    console.error("Ошибка адреса:", err);
-                }
+                const result = await fetchAddressAndMetro(coords);
 
-                const metroFound = await fetchNearbyMetro(coords);
-                setMetroToInputs('add', metroFound);
-                
-                document.getElementById('addAddress').placeholder = "Адрес (или кликните по карте)";
+                document.getElementById('addAddress').value = result.address;
+                document.getElementById('addAddress').placeholder = "Адрес (кликните по карте)";
                 document.getElementById('addMetro1_name').placeholder = "Станция 1";
+
+                setMetroToInputs('add', result.stations);
             });
 
             loadLocations();
@@ -916,7 +941,6 @@
             if (view === 'map') {
                 document.body.classList.remove('show-list');
                 btnMap.classList.add('active'); btnList.classList.remove('active');
-                if (myMap) myMap.container.fitToViewport();
             } else {
                 document.body.classList.add('show-list');
                 btnList.classList.add('active'); btnMap.classList.remove('active');
