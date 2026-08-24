@@ -1,0 +1,42 @@
+* { box-sizing: border-box; }
+body { 
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif; 
+    margin: 0; padding: 0; display: flex; height: 100vh; color: #18181b; background: #09090b; overflow: hidden; 
+}
+#sidebar { 
+    width: 380px; background: #ffffff; box-shadow: 4px 0 24px rgba(0,0,0,0.15); 
+    z-index: 10; display: flex; flex-direction: column; flex-shrink: 0; 
+}
+.header { background: #09090b; padding: 18px 20px; border-bottom: 1px solid #27272a; color: #fff; }
+.header h1 { margin: 0; font-size: 1.05rem; font-weight: 600; }
+#list-section { padding: 18px 20px; flex-grow: 1; overflow-y: auto; background: #ffffff; }
+#map { flex-grow: 1; height: 100%; width: 100%; }
+
+.form-group { margin-bottom: 12px; }
+label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.8rem; color: #3f3f46; }
+input[type="text"], input[type="email"], input[type="password"], textarea, select { 
+    width: 100%; padding: 9px 12px; border: 1px solid #e4e4e7; border-radius: 8px; font-size: 0.88rem; 
+}
+.btn { 
+    background: #09090b; color: #ffffff; border: none; padding: 12px 16px; 
+    cursor: pointer; border-radius: 8px; font-weight: 600; width: 100%; font-size: 0.88rem; 
+}
+.btn:hover { background: #27272a; }
+
+.auth-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(9,9,11,0.95);
+    z-index: 10000; display: flex; justify-content: center; align-items: center;
+}
+.auth-box { background: #fff; padding: 30px; border-radius: 12px; width: 340px; }
+
+.custom-map-pin {
+    width: 36px; height: 36px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    border: 2px solid #ffffff; background: #18181b; color: #fff; cursor: pointer;
+}
+.custom-map-pin span { transform: rotate(45deg); font-size: 17px; }
+
+.balloon-content { max-width: 240px; }
+.balloon-photos { display: flex; gap: 6px; overflow-x: auto; margin: 8px 0; }
+.balloon-photos img { height: 60px; border-radius: 4px; object-fit: cover; }
+.route-btn { display: block; background: #09090b; color: #fff; text-decoration: none; padding: 8px; border-radius: 6px; text-align: center; font-size: 0.8rem; }

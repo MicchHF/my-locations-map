@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель управления меток</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=17e91f7c-3356-4174-9a25-5ac34ba55d46&lang=ru_RU"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div id="authModal" class="auth-overlay">
+        <div class="auth-box">
+            <h2>Вход Администратора</h2>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="authEmail">
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" id="authPassword">
+            </div>
+            <button class="btn" onclick="login()">Войти</button>
+        </div>
+    </div>
+
+    <div id="sidebar">
+        <div class="header">
+            <h1>Админ-панель</h1>
+            <button class="btn" onclick="logout()" style="width:auto; padding:4px 8px; font-size:0.75rem;">Выйти</button>
+        </div>
+        <div style="padding:15px; background:#fafafa; border-bottom:1px solid #eee;">
+            <h3>Добавить место</h3>
+            <p id="coordsDisplay" style="color:#ef4444; font-size:0.8rem;">Кликните по карте</p>
+            <div class="form-group">
+                <label>Название</label>
+                <input type="text" id="locTitle">
+            </div>
+            <div class="form-group">
+                <label>Описание</label>
+                <textarea id="locDesc"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Фотографии</label>
+                <input type="file" id="locFiles" multiple accept="image/*">
+            </div>
+            <button class="btn" onclick="saveLocation()">Сохранить на карту</button>
+        </div>
+        <div id="list-section">
+            <div id="admin-locations-list"></div>
+        </div>
+    </div>
+    <div id="map"></div>
+
+    <script src="js/supabase.js"></script>
+    <script>
+        let myMap, currentCoords = null, tempPlacemark = null;
+
+        window.onload = async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) document.getElementById('authModal').style.display = 'none';
+        };
+
+        async function login() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) alert(error.message);
+            else document.getElementById('authModal').style.display = 'none';
+        }
+
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            location.reload();
+        }
+
+        ymaps.ready(() => {
+            myMap = new ymaps.Map("map", { center: [55.751574, 37.573856], zoom: 10 });
+            loadAdminLocations();
+
+            myMap.events.add('click', (e) => {
+                currentCoords = e.get('coords');
+                document.getElementById('coordsDisplay').innerText = `Координаты: ${currentCoords[0].toFixed(4)}, ${currentCoords[1].toFixed(4)}`;
+                
+                if (tempPlacemark) myMap.geoObjects.remove(tempPlacemark);
+                tempPlacemark = new ymaps.Placemark(currentCoords, {}, { preset: 'islands#redIcon' });
+                myMap.geoObjects.add(tempPlacemark);
+            });
+        });
+
+        async function saveLocation() {
+            if (!currentCoords) return alert('Выберите место на карте!');
+            const title = document.getElementById('locTitle').value;
+            const description = document.getElementById('locDesc').value;
+            const files = document.getElementById('locFiles').files;
+            const images = [];
+
+            for (const file of files) {
+                const filePath = `public/${Date.now()}_${file.name}`;
+                const { error: uploadError } = await supabaseClient.storage.from('location-photos').upload(filePath, file);
+                if (!uploadError) {
+                    const { data } = supabaseClient.storage.from('location-photos').getPublicUrl(filePath);
+                    images.push(data.publicUrl);
+                }
+            }
+
+            const { error } = await supabaseClient.from('Location').insert([{
+                title, description, lat: currentCoords[0], lng: currentCoords[1], images
+            }]);
+
+            if (error) alert(error.message);
+            else { alert('Сохранено!'); location.reload(); }
+        }
+
+        async function loadAdminLocations() {
+            const { data: locations } = await supabaseClient.from('Location').select('*');
+            const listEl = document.getElementById('admin-locations-list');
+            if (!locations) return;
+
+            listEl.innerHTML = '';
+            locations.forEach(loc => {
+                const placemark = new ymaps.Placemark([loc.lat, loc.lng], { balloonContent: loc.title });
+                myMap.geoObjects.add(placemark);
+
+                const item = document.createElement('div');
+                item.style.cssText = 'padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;';
+                item.innerHTML = `<span>${loc.title}</span> <button style="color:red;" onclick="deleteLocation('${loc.id}')">Удалить</button>`;
+                listEl.appendChild(item);
+            });
+        }
+
+        async function deleteLocation(id) {
+            if (confirm('Удалить эту метку?')) {
+                await supabaseClient.from('Location').delete().eq('id', id);
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
