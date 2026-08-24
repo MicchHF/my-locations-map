@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>локации от @dalazareva</title>
     <script src="https://api-maps.yandex.ru/2.1/?apikey=7370bad5-a627-4414-a1e8-b2023bda7a61&lang=ru_RU"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -18,26 +18,23 @@
             touch-action: manipulation;
         }
 
-        html { height: -webkit-fill-available; }
-        body {
-            width: 100vw;
-            min-height: 100vh;
+        html, body {
+            width: 100%;
+            min-height: 100%;
             min-height: -webkit-fill-available;
             margin: 0;
             padding: 0;
-            background-color: #ffffff;
+            background-color: #0f172a;
             color: #1a1a1a;
             -webkit-text-size-adjust: 100%;
         }
 
         #app-wrapper {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            position: absolute;
+            inset: 0;
             width: 100%;
             height: 100%;
+            min-height: -webkit-fill-available;
             display: flex;
             background: #ffffff;
         }
@@ -215,12 +212,10 @@
             border: 1px solid rgba(0,0,0,0.08);
         }
 
+        /* Полноэкранный растяг карты */
         #map-container {
-            position: fixed;
-            top: 0;
-            left: 390px;
-            right: 0;
-            bottom: 0;
+            position: absolute;
+            inset: 0 0 0 390px;
             width: calc(100vw - 390px);
             height: 100%;
             z-index: 1;
@@ -230,18 +225,19 @@
         .custom-map-pin {
             width: 38px;
             height: 38px;
-            background: #0f172a;
-            color: #ffffff;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 18px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.35);
             border: 2px solid #ffffff;
             cursor: pointer;
             user-select: none;
+            color: #fff;
+            transition: transform 0.2s;
         }
+        .custom-map-pin:hover { transform: scale(1.1); }
 
         .balloon-wrapper { min-width: 210px; max-width: 260px; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif; }
         .balloon-title { font-size: 0.95rem; font-weight: 700; color: #0f172a; line-height: 1.25; margin-bottom: 8px; }
@@ -315,11 +311,9 @@
         .lightbox-modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
+            inset: 0;
             width: 100vw;
-            height: 100vh;
-            height: 100dvh;
+            height: 100%;
             background: rgba(0, 0, 0, 0.94);
             z-index: 9999;
             justify-content: center;
@@ -356,7 +350,7 @@
 
         @media (max-width: 768px) {
             #sidebar { width: 100vw; height: 100%; display: none; }
-            #map-container { left: 0; top: 0; width: 100vw; height: 100%; position: fixed; }
+            #map-container { inset: 0; width: 100vw; height: 100%; position: absolute; }
             .show-list #map-container { display: none; }
             .show-list #sidebar { display: flex; }
             body:not(.show-list) #sidebar { display: none; }
@@ -373,7 +367,7 @@
     <div id="app-wrapper">
         <div id="sidebar">
             <div class="sidebar-header">
-                <a href="https://t.me/dalazareva" target="_blank" rel="noopener" class="tg-badge">
+                <a href="https://t.me/dalazareva" target="_blank" rel="noopener" class="tg-badge"[cite: 2]>
                     <span class="tg-badge-text">локации от <strong>@dalazareva</strong></span>
                     <span class="tg-badge-icon">↗</span>
                 </a>
@@ -423,6 +417,24 @@
         let allVisibleState = true;
         let currentGallery = [];
         let currentImageIdx = 0;
+
+        const CATEGORY_COLORS = {
+            "☕ Кофейни": "#8B4513",
+            "🍽️ Заведения (рестораны)": "#059669",
+            "🍸 Бары и тусовки": "#7C3AED",
+            "📷 Фотостудии": "#EC4899",
+            "🚪 Двери и архитектура": "#EA580C",
+            "🏞️ Парки и природа": "#16A34A",
+            "🏛️ Культура и музеи": "#4F46E5",
+            "📸 Инсталокации": "#E11D48",
+            "🛍️ Шопинг": "#D97706",
+            "🏨 Отели": "#0284C7",
+            "📍 Другое": "#0F172A"
+        };
+
+        function getCategoryPinColor(category) {
+            return CATEGORY_COLORS[category] || "#0F172A";
+        }
 
         function getMetroSvg(color = "#EF161E") {
             return `<svg class="metro-icon-svg" viewBox="0 0 24 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -572,7 +584,11 @@
 
                 grouped[catName].forEach(loc => {
                     const categoryIcon = loc.category ? loc.category.split(' ')[0] : '📍';
-                    const layout = ymaps.templateLayoutFactory.createClass(`<div class="custom-map-pin"><span>${categoryIcon}</span></div>`);
+                    const pinColor = getCategoryPinColor(loc.category);
+
+                    const layout = ymaps.templateLayoutFactory.createClass(
+                        `<div class="custom-map-pin" style="background: ${pinColor};"><span>${categoryIcon}</span></div>`
+                    );
 
                     const placemark = new ymaps.Placemark([loc.lat, loc.lng], {
                         hintContent: loc.title,
