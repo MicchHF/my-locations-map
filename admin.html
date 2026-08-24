@@ -160,6 +160,7 @@
                     <option value="☕ Кофейни">☕ Кофейни</option>
                     <option value="🍽️ Заведения (рестораны)">🍽️ Заведения (рестораны)</option>
                     <option value="🍸 Бары и тусовки">🍸 Бары и тусовки</option>
+                    <option value="📷 Фотостудии">📷 Фотостудии</option>
                     <option value="🚪 Двери и архитектура">🚪 Двери и архитектура</option>
                     <option value="🏞️ Парки и природа">🏞️ Парки и природа</option>
                     <option value="🏛️ Культура и музеи">🏛️ Культура и музеи</option>
@@ -216,6 +217,7 @@
                     <option value="☕ Кофейни">☕ Кофейни</option>
                     <option value="🍽️ Заведения (рестораны)">🍽️ Заведения (рестораны)</option>
                     <option value="🍸 Бары и тусовки">🍸 Бары и тусовки</option>
+                    <option value="📷 Фотостудии">📷 Фотостудии</option>
                     <option value="🚪 Двери и архитектура">🚪 Двери и архитектура</option>
                     <option value="🏞️ Парки и природа">🏞️ Парки и природа</option>
                     <option value="🏛️ Культура и музеи">🏛️ Культура и музеи</option>
@@ -406,7 +408,6 @@
                     `<div style="width:34px; height:34px; background:#0f172a; border:2px solid #fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; box-shadow:0 3px 8px rgba(0,0,0,0.3);"><span>${categoryIcon}</span></div>`
                 );
 
-                // Корректный хитбокс для 34x34px метки: coordinates: [17, 17]
                 const placemark = new ymaps.Placemark([loc.lat, loc.lng], { 
                     balloonContent: `<b>${categoryIcon} ${loc.title}</b><br><small>${loc.address || ''}</small>` 
                 }, {
