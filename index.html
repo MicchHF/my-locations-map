@@ -262,6 +262,7 @@
         .balloon-photos { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; padding-bottom: 2px; }
         .balloon-photo-img { height: 65px; width: auto; border-radius: 6px; cursor: pointer; object-fit: cover; border: 1px solid rgba(0,0,0,0.08); flex-shrink: 0; }
 
+        /* ВЕРХНЯЯ ГОРИЗОНТАЛЬНАЯ СТРОКА КАТЕГОРИЙ */
         .top-cat-filter-bar {
             position: fixed;
             top: max(calc(env(safe-area-inset-top) + 12px), 16px);
@@ -281,39 +282,6 @@
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
             z-index: 1000;
         }
-
-        .metro-filter-select-wrap {
-            position: relative;
-            flex-shrink: 0;
-        }
-        .metro-filter-select {
-            appearance: none;
-            -webkit-appearance: none;
-            background: #f1f5f9;
-            color: #0f172a;
-            border: 1px solid #e2e8f0;
-            padding: 6px 22px 6px 10px;
-            border-radius: 9999px;
-            font-size: 0.78rem;
-            font-weight: 600;
-            outline: none;
-            cursor: pointer;
-        }
-        .metro-filter-select.active {
-            background: #0f172a;
-            color: #ffffff;
-            border-color: #0f172a;
-        }
-        .metro-select-arrow {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 0.65rem;
-            pointer-events: none;
-            color: #64748b;
-        }
-        .metro-filter-select.active + .metro-select-arrow { color: #fff; }
 
         .toggle-all-btn {
             display: inline-flex;
@@ -351,6 +319,114 @@
         }
         .cat-chip.active { background: #0f172a; color: #ffffff; border-color: #0f172a; }
         .cat-chip.disabled { opacity: 0.45; background: #f1f5f9; color: #94a3b8; }
+
+        /* ОТДЕЛЬНАЯ КНОПКА МЕТРО НА КАРТЕ */
+        .metro-floating-btn {
+            position: fixed;
+            top: max(calc(env(safe-area-inset-top) + 72px), 76px);
+            left: max(calc(env(safe-area-inset-left) + 16px), 16px);
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 9999px;
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #0f172a;
+            transition: all 0.2s ease;
+        }
+        .metro-floating-btn.active {
+            background: #0f172a;
+            color: #ffffff;
+            border-color: #0f172a;
+        }
+        .metro-floating-btn .metro-badge-dot {
+            width: 8px; height: 8px; border-radius: 50%; display: none;
+        }
+        .metro-floating-btn.active .metro-badge-dot { display: inline-block; }
+
+        /* БОКОВАЯ ШТОРКА (МЕНЮ) МЕТРО */
+        .metro-sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: none;
+            align-items: flex-start;
+            justify-content: flex-start;
+        }
+        .metro-sidebar-overlay.active { display: flex; }
+        
+        .metro-sidebar-drawer {
+            background: #ffffff;
+            width: 340px;
+            max-width: 90vw;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 10px 0 25px rgba(0,0,0,0.15);
+            animation: slideIn 0.25s ease-out;
+            padding-top: max(calc(env(safe-area-inset-top) + 10px), 16px);
+            padding-bottom: max(calc(env(safe-area-inset-bottom) + 10px), 16px);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+
+        .metro-drawer-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .metro-drawer-title { font-weight: 700; font-size: 1.05rem; color: #0f172a; display: flex; align-items: center; gap: 6px; }
+        .metro-drawer-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #64748b; padding: 4px; }
+        
+        .metro-drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .metro-step-label { font-size: 0.8rem; font-weight: 600; color: #64748b; }
+        .metro-select-box {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            background: #fff;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .metro-reset-btn {
+            background: #f1f5f9;
+            color: #ef4444;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-align: center;
+            margin-top: 6px;
+        }
 
         .lightbox-modal {
             display: none;
@@ -411,9 +487,15 @@
             .show-list #map-container { display: none !important; }
             .show-list #sidebar { display: flex !important; }
             .show-list .top-cat-filter-bar { display: none !important; }
+            .show-list .metro-floating-btn { display: none !important; }
             
             body:not(.show-list) #sidebar { display: none !important; }
             body:not(.show-list) #map-container { display: block !important; }
+
+            .metro-floating-btn {
+                left: 12px;
+                top: max(calc(env(safe-area-inset-top) + 68px), 72px);
+            }
 
             .mobile-toggle-bar {
                 display: flex;
@@ -456,56 +538,83 @@
     <div id="app-wrapper">
         <div id="sidebar">
             <div class="sidebar-header">
-                <a href="https://t.me/dalazareva" target="_blank" rel="noopener" class="tg-badge">
-                    <span class="tg-badge-text">локации от <strong>@dalazareva</strong></span>
-                    <span class="tg-badge-icon">↗</span>
+                <a href="https://t.me/dalazareva" target="_blank" rel="noopener" class="tg-badge"[cite: 2]>
+                    <span class="tg-badge-text">локации от <strong>@dalazareva</strong></span>[cite: 2]
+                    <span class="tg-badge-icon">↗</span>[cite: 2]
                 </a>
                 <div class="search-container">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, адресу, метро..." oninput="handleSearch()">
+                    <span class="search-icon">🔍</span>[cite: 2]
+                    <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, адресу, метро..." oninput="handleSearch()">[cite: 2]
                 </div>
             </div>
-            <div id="locations-list"></div>
+            <div id="locations-list"></div>[cite: 2]
         </div>
 
         <div id="map-container">
-            <div id="map"></div>
+            <div id="map"></div>[cite: 2]
+            
+            <!-- ГОРИЗОНТАЛЬНАЯ ВЕРХНЯЯ СТРОКА С КАТЕГОРИЯМИ -->
             <div id="topCatFilterBar" class="top-cat-filter-bar">
-                <button id="toggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
-                
-                <div class="metro-filter-select-wrap">
-                    <select id="metroFilterSelect" class="metro-filter-select" onchange="handleMetroFilterChange(this.value)">
-                        <option value="">🚇 Метро (Все)</option>
-                    </select>
-                    <span class="metro-select-arrow">▼</span>
-                </div>
+                <button id="toggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>[cite: 2]
+                <div id="catChipsScroll" class="cat-chips-scroll"></div>[cite: 2]
+            </div>
 
-                <div id="catChipsScroll" class="cat-chips-scroll"></div>
+            <!-- ОТДЕЛЬНАЯ КНОПКА МЕТРО НА КАРТЕ -->
+            <button id="metroFloatingBtn" class="metro-floating-btn" onclick="openMetroDrawer()">
+                <span class="metro-badge-dot" id="activeMetroDot"></span>
+                <span id="metroBtnLabel">🚇 Метро</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- БОКОВОЕ МЕНЮ ВЫБОРА МЕТРО -->
+    <div id="metroSidebarOverlay" class="metro-sidebar-overlay" onclick="closeMetroDrawer(event)">
+        <div class="metro-sidebar-drawer" onclick="event.stopPropagation()">
+            <div class="metro-drawer-header">
+                <div class="metro-drawer-title">
+                    <span>🚇 Фильтр по метро</span>
+                </div>
+                <button class="metro-drawer-close" onclick="closeMetroDrawer()">✕</button>
+            </div>
+            <div class="metro-drawer-body">
+                <div>
+                    <div class="metro-step-label">Шаг 1: Выберите ветку метро</div>
+                    <select id="drawerMetroLine" class="metro-select-box" onchange="onDrawerLineChange(this.value)">
+                        <option value="">-- Все линии --</option>
+                    </select>
+                </div>
+                <div>
+                    <div class="metro-step-label">Шаг 2: Выберите станцию</div>
+                    <select id="drawerMetroStation" class="metro-select-box" onchange="onDrawerStationChange(this.value)">
+                        <option value="">-- Станция --</option>
+                    </select>
+                </div>
+                <button class="metro-reset-btn" onclick="resetMetroFilter()">✕ Сбросить фильтр метро</button>
             </div>
         </div>
     </div>
 
-    <div id="mobileSearchOverlay" class="mobile-search-overlay">
-        <span>🔍</span>
-        <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="Поиск..." oninput="syncMobileSearch(this.value)">
-        <button class="mobile-search-close" onclick="toggleMobileSearch(false)">✕</button>
+    <div id="mobileSearchOverlay" class="mobile-search-overlay">[cite: 2]
+        <span>🔍</span>[cite: 2]
+        <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="Поиск..." oninput="syncMobileSearch(this.value)">[cite: 2]
+        <button class="mobile-search-close" onclick="toggleMobileSearch(false)">✕</button>[cite: 2]
     </div>
 
-    <div class="mobile-toggle-bar">
-        <button id="btn-search-toggle" class="toggle-btn icon-btn" title="Поиск" onclick="toggleMobileSearch()">🔍</button>
-        <button id="btn-map-view" class="toggle-btn active" onclick="switchMobileView('map')">🗺️ Карта</button>
-        <button id="btn-list-view" class="toggle-btn" onclick="switchMobileView('list')">📋 Список</button>
+    <div class="mobile-toggle-bar">[cite: 2]
+        <button id="btn-search-toggle" class="toggle-btn icon-btn" title="Поиск" onclick="toggleMobileSearch()">🔍</button>[cite: 2]
+        <button id="btn-map-view" class="toggle-btn active" onclick="switchMobileView('map')">🗺️ Карта</button>[cite: 2]
+        <button id="btn-list-view" class="toggle-btn" onclick="switchMobileView('list')">📋 Список</button>[cite: 2]
     </div>
 
-    <div id="lightbox" class="lightbox-modal">
-        <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
-        <span class="lightbox-nav lightbox-prev" onclick="prevImage()">&#10094;</span>
-        <img id="lightbox-img" class="lightbox-img" src="" alt="Фото">
-        <span class="lightbox-nav lightbox-next" onclick="nextImage()">&#10095;</span>
-        <div id="lightbox-counter" class="lightbox-counter"></div>
+    <div id="lightbox" class="lightbox-modal">[cite: 2]
+        <span class="lightbox-close" onclick="closeLightbox()">&times;</span>[cite: 2]
+        <span class="lightbox-nav lightbox-prev" onclick="prevImage()">&#10094;</span>[cite: 2]
+        <img id="lightbox-img" class="lightbox-img" src="" alt="Фото">[cite: 2]
+        <span class="lightbox-nav lightbox-next" onclick="nextImage()">&#10095;</span>[cite: 2]
+        <div id="lightbox-counter" class="lightbox-counter"></div>[cite: 2]
     </div>
 
-    <script src="js/supabase.js"></script>
+    <script src="js/supabase.js"></script>[cite: 2]
     <script>
         let myMap;
         let allLocations = [];
@@ -530,6 +639,21 @@
             "📍 Другое": "#0F172A"
         };
 
+        const MOSCOW_METRO_DATA = [
+            { id: "line-1", name: "Сокольническая", color: "#EF161E" },
+            { id: "line-2", name: "Замоскворецкая", color: "#2DBE2C" },
+            { id: "line-3", name: "Арбатско-Покровская", color: "#0078BF" },
+            { id: "line-4", name: "Филёвская", color: "#00BFFF" },
+            { id: "line-5", name: "Кольцевая", color: "#8D5B2D" },
+            { id: "line-6", name: "Калужско-Рижская", color: "#ED9121" },
+            { id: "line-7", name: "Таганско-Краснопресненская", color: "#800080" },
+            { id: "line-8", name: "Калининская / Солнцевская", color: "#FFD702" },
+            { id: "line-9", name: "Серпуховско-Тимирязевская", color: "#A0A0A0" },
+            { id: "line-10", name: "Люблинско-Дмитровская", color: "#99CC00" },
+            { id: "line-11", name: "Большая кольцевая (БКЛ)", color: "#70C9C7" },
+            { id: "line-14", name: "МЦК", color: "#E11D48" }
+        ];
+
         function getCategoryPinColor(category) {
             return CATEGORY_COLORS[category] || "#0F172A";
         }
@@ -540,36 +664,65 @@
             </svg>`;
         }
 
-        ymaps.ready(initMap);
+        ymaps.ready(initMap);[cite: 2]
 
         function initMap() {
             myMap = new ymaps.Map("map", {
                 center: [55.751574, 37.573856],
                 zoom: 12,
                 controls: ['zoomControl', 'geolocationControl']
-            });
+            });[cite: 2]
 
-            loadLocations();
-            window.addEventListener('resize', () => { if (myMap) myMap.container.fitToViewport(); });
+            loadLocations();[cite: 2]
+            window.addEventListener('resize', () => { if (myMap) myMap.container.fitToViewport(); });[cite: 2]
         }
 
         async function loadLocations() {
-            const { data, error } = await supabaseClient.from('Location').select('*');
-            if (error) { console.error("Ошибка загрузки:", error); return; }
-            allLocations = data || [];
-            populateMetroFilterOptions(allLocations);
-            renderInterface(allLocations);
+            const { data, error } = await supabaseClient.from('Location').select('*');[cite: 2]
+            if (error) { console.error("Ошибка загрузки:", error); return; }[cite: 2]
+            allLocations = data || [];[cite: 2]
+            initMetroDrawerData();
+            renderInterface(allLocations);[cite: 2]
         }
 
-        function populateMetroFilterOptions(locations) {
-            const metroSelect = document.getElementById('metroFilterSelect');
-            if (!metroSelect) return;
+        /* УПРАВЛЕНИЕ ШТОРКОЙ МЕТРО */
+        function openMetroDrawer() {
+            document.getElementById('metroSidebarOverlay').classList.add('active');
+        }
+
+        function closeMetroDrawer(e) {
+            if (e && e.target !== e.currentTarget && !e.target.classList.contains('metro-drawer-close')) return;
+            document.getElementById('metroSidebarOverlay').classList.remove('active');
+        }
+
+        function initMetroDrawerData() {
+            const lineSelect = document.getElementById('drawerMetroLine');
+            lineSelect.innerHTML = '<option value="">-- Все линии --</option>';
+
+            MOSCOW_METRO_DATA.forEach(line => {
+                const opt = document.createElement('option');
+                opt.value = line.name;
+                opt.innerText = `● ${line.name}`;
+                opt.style.color = line.color;
+                lineSelect.appendChild(opt);
+            });
+
+            populateStationSelect("");
+        }
+
+        function onDrawerLineChange(selectedLineName) {
+            populateStationSelect(selectedLineName);
+        }
+
+        function populateStationSelect(lineName) {
+            const stationSelect = document.getElementById('drawerMetroStation');
+            stationSelect.innerHTML = '<option value="">-- Выберите станцию --</option>';
 
             const stationsMap = new Map();
-            locations.forEach(loc => {
+            allLocations.forEach(loc => {
                 if (loc.metro && Array.isArray(loc.metro)) {
                     loc.metro.forEach(m => {
-                        if (m.name) {
+                        if (m.name && (!lineName || (m.line && m.line.includes(lineName)))) {
                             const count = (stationsMap.get(m.name)?.count || 0) + 1;
                             stationsMap.set(m.name, { count, color: m.color || '#EF161E' });
                         }
@@ -577,24 +730,53 @@
                 }
             });
 
-            metroSelect.innerHTML = '<option value="">🚇 Все станции метро</option>';
-            const sortedStations = Array.from(stationsMap.keys()).sort((a, b) => a.localeCompare(b));
-
-            sortedStations.forEach(stName => {
+            const sorted = Array.from(stationsMap.keys()).sort((a, b) => a.localeCompare(b));
+            sorted.forEach(stName => {
                 const info = stationsMap.get(stName);
                 const opt = document.createElement('option');
                 opt.value = stName;
-                opt.innerText = `🚇 ${stName} (${info.count})`;
-                metroSelect.appendChild(opt);
+                opt.innerText = `${stName} (${info.count})`;
+                stationSelect.appendChild(opt);
             });
         }
 
-        function handleMetroFilterChange(val) {
-            selectedMetroFilter = val;
-            const selectEl = document.getElementById('metroFilterSelect');
-            if (val) selectEl.classList.add('active');
-            else selectEl.classList.remove('active');
+        function onDrawerStationChange(stationName) {
+            selectedMetroFilter = stationName;
+            updateMetroButtonUI();
             applyCombinedFilters();
+            if (stationName) closeMetroDrawer();
+        }
+
+        function resetMetroFilter() {
+            selectedMetroFilter = "";
+            document.getElementById('drawerMetroLine').value = "";
+            populateStationSelect("");
+            updateMetroButtonUI();
+            applyCombinedFilters();
+            closeMetroDrawer();
+        }
+
+        function updateMetroButtonUI() {
+            const btn = document.getElementById('metroFloatingBtn');
+            const label = document.getElementById('metroBtnLabel');
+            const dot = document.getElementById('activeMetroDot');
+
+            if (selectedMetroFilter) {
+                btn.classList.add('active');
+                label.innerText = `🚇 ${selectedMetroFilter}`;
+                
+                let foundColor = "#EF161E";
+                allLocations.forEach(loc => {
+                    if (loc.metro && Array.isArray(loc.metro)) {
+                        const m = loc.metro.find(item => item.name === selectedMetroFilter);
+                        if (m && m.color) foundColor = m.color;
+                    }
+                });
+                dot.style.background = foundColor;
+            } else {
+                btn.classList.remove('active');
+                label.innerText = "🚇 Метро";
+            }
         }
 
         function handleSearch() {
@@ -629,50 +811,50 @@
         }
 
         function syncMobileSearch(val) {
-            document.getElementById('searchInput').value = val;
-            handleSearch();
+            document.getElementById('searchInput').value = val;[cite: 2]
+            handleSearch();[cite: 2]
         }
 
         function toggleMobileSearch(forceState) {
-            const overlay = document.getElementById('mobileSearchOverlay');
-            const input = document.getElementById('mobileSearchInput');
-            const isCurrentlyActive = overlay.classList.contains('active');
-            const newState = forceState !== undefined ? forceState : !isCurrentlyActive;
+            const overlay = document.getElementById('mobileSearchOverlay');[cite: 2]
+            const input = document.getElementById('mobileSearchInput');[cite: 2]
+            const isCurrentlyActive = overlay.classList.contains('active');[cite: 2]
+            const newState = forceState !== undefined ? forceState : !isCurrentlyActive;[cite: 2]
 
             if (newState) {
-                overlay.classList.add('active');
-                input.focus();
+                overlay.classList.add('active');[cite: 2]
+                input.focus();[cite: 2]
             } else {
-                overlay.classList.remove('active');
-                input.blur();
+                overlay.classList.remove('active');[cite: 2]
+                input.blur();[cite: 2]
             }
         }
 
         function copyAddress(text, event, btnEl) {
-            if (event) { event.stopPropagation(); event.preventDefault(); }
-            if (!text) return;
+            if (event) { event.stopPropagation(); event.preventDefault(); }[cite: 2]
+            if (!text) return;[cite: 2]
 
             const executeCopy = () => {
                 if (btnEl) {
-                    const origHtml = btnEl.innerHTML;
-                    btnEl.innerHTML = '✓ Скопировано';
-                    btnEl.style.color = '#10b981';
-                    setTimeout(() => { btnEl.innerHTML = origHtml; btnEl.style.color = ''; }, 1500);
+                    const origHtml = btnEl.innerHTML;[cite: 2]
+                    btnEl.innerHTML = '✓ Скопировано';[cite: 2]
+                    btnEl.style.color = '#10b981';[cite: 2]
+                    setTimeout(() => { btnEl.innerHTML = origHtml; btnEl.style.color = ''; }, 1500);[cite: 2]
                 }
             };
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(executeCopy).catch(() => fallbackCopy(text, executeCopy));
-            } else fallbackCopy(text, executeCopy);
+                navigator.clipboard.writeText(text).then(executeCopy).catch(() => fallbackCopy(text, executeCopy));[cite: 2]
+            } else fallbackCopy(text, executeCopy);[cite: 2]
         }
 
         function fallbackCopy(text, callback) {
-            const textArea = document.createElement("textarea");
-            textArea.value = text; document.body.appendChild(textArea); textArea.select();
-            document.execCommand('copy'); document.body.removeChild(textArea);
-            if (callback) callback();
+            const textArea = document.createElement("textarea");[cite: 2]
+            textArea.value = text; document.body.appendChild(textArea); textArea.select();[cite: 2]
+            document.execCommand('copy'); document.body.removeChild(textArea);[cite: 2]
+            if (callback) callback();[cite: 2]
         }
 
-        function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+        function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }[cite: 2]
 
         function renderMetroBadges(metroList) {
             if (!metroList || !Array.isArray(metroList) || metroList.length === 0) return '';
@@ -685,38 +867,38 @@
         }
 
         function renderInterface(locationsToRender) {
-            const listEl = document.getElementById('locations-list');
-            listEl.innerHTML = '';
-            const grouped = {};
+            const listEl = document.getElementById('locations-list');[cite: 2]
+            listEl.innerHTML = '';[cite: 2]
+            const grouped = {};[cite: 2]
             
             locationsToRender.forEach(loc => {
-                const cat = loc.category || '📍 Другое';
-                if (!grouped[cat]) grouped[cat] = [];
-                grouped[cat].push(loc);
+                const cat = loc.category || '📍 Другое';[cite: 2]
+                if (!grouped[cat]) grouped[cat] = [];[cite: 2]
+                grouped[cat].push(loc);[cite: 2]
             });
 
-            Object.values(categoryCollections).forEach(coll => myMap.geoObjects.remove(coll));
-            categoryCollections = {};
+            Object.values(categoryCollections).forEach(coll => myMap.geoObjects.remove(coll));[cite: 2]
+            categoryCollections = {};[cite: 2]
 
             if (locationsToRender.length === 0) {
-                listEl.innerHTML = '<div style="text-align:center; padding:30px; color:#9ca3af; font-size:0.9rem;">Ничего не найдено 🔍</div>';
-                renderTopCatFilter([]);
-                return;
+                listEl.innerHTML = '<div style="text-align:center; padding:30px; color:#9ca3af; font-size:0.9rem;">Ничего не найдено 🔍</div>';[cite: 2]
+                renderTopCatFilter([]);[cite: 2]
+                return;[cite: 2]
             }
 
-            const activeCategoriesList = Object.keys(grouped);
-            renderTopCatFilter(activeCategoriesList);
+            const activeCategoriesList = Object.keys(grouped);[cite: 2]
+            renderTopCatFilter(activeCategoriesList);[cite: 2]
 
             activeCategoriesList.forEach(catName => {
-                if (categoryVisibility[catName] === undefined) categoryVisibility[catName] = true;
+                if (categoryVisibility[catName] === undefined) categoryVisibility[catName] = true;[cite: 2]
 
-                const collection = new ymaps.GeoObjectCollection({}, { visible: categoryVisibility[catName] });
-                categoryCollections[catName] = collection;
-                myMap.geoObjects.add(collection);
+                const collection = new ymaps.GeoObjectCollection({}, { visible: categoryVisibility[catName] });[cite: 2]
+                categoryCollections[catName] = collection;[cite: 2]
+                myMap.geoObjects.add(collection);[cite: 2]
 
-                const groupEl = document.createElement('div');
-                groupEl.className = 'category-group';
-                const isVisible = categoryVisibility[catName];
+                const groupEl = document.createElement('div');[cite: 2]
+                groupEl.className = 'category-group';[cite: 2]
+                const isVisible = categoryVisibility[catName];[cite: 2]
                 
                 groupEl.innerHTML = `
                     <div class="category-header">
@@ -732,12 +914,12 @@
                         </div>
                     </div>
                     <div class="category-content"></div>
-                `;
+                `;[cite: 2]
 
-                const contentEl = groupEl.querySelector('.category-content');
+                const contentEl = groupEl.querySelector('.category-content');[cite: 2]
 
                 grouped[catName].forEach(loc => {
-                    const categoryIcon = loc.category ? loc.category.split(' ')[0] : '📍';
+                    const categoryIcon = loc.category ? loc.category.split(' ')[0] : '📍';[cite: 2]
                     const pinColor = getCategoryPinColor(loc.category);
 
                     const layout = ymaps.templateLayoutFactory.createClass(
@@ -752,28 +934,28 @@
                         iconOffset: [-19, -19],
                         iconShape: { type: 'Circle', coordinates: [19, 19], radius: 19 },
                         cursor: 'pointer'
-                    });
+                    });[cite: 2]
 
-                    placemark.events.add('click', () => highlightLocationCard(loc.id));
-                    collection.add(placemark);
+                    placemark.events.add('click', () => highlightLocationCard(loc.id));[cite: 2]
+                    collection.add(placemark);[cite: 2]
 
-                    const cardEl = document.createElement('div');
-                    cardEl.className = 'location-card'; cardEl.id = `card-${loc.id}`;
+                    const cardEl = document.createElement('div');[cite: 2]
+                    cardEl.className = 'location-card'; cardEl.id = `card-${loc.id}`;[cite: 2]
                     cardEl.onclick = (e) => {
-                        if (!e.target.classList.contains('card-photo-thumb') && !e.target.classList.contains('copy-btn') && !e.target.classList.contains('route-btn')) {
-                            selectLocationOnMap(loc, placemark);
+                        if (!e.target.classList.contains('card-photo-thumb') && !e.target.classList.contains('copy-btn') && !e.target.classList.contains('route-btn')) {[cite: 2]
+                            selectLocationOnMap(loc, placemark);[cite: 2]
                         }
                     };
 
-                    let photosHtml = '';
-                    if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {
+                    let photosHtml = '';[cite: 2]
+                    if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {[cite: 2]
                         photosHtml = `<div class="card-photos">
                             ${loc.images.map((imgUrl, index) => `<img src="${imgUrl}" class="card-photo-thumb" onclick="openLightboxByUrl('${loc.id}', ${index}, event)">`).join('')}
-                        </div>`;
+                        </div>`;[cite: 2]
                     }
 
-                    const routeUrl = `https://yandex.ru/maps/?rtext=~${loc.lat},${loc.lng}`;
-                    const safeAddr = escapeQuotes(loc.address);
+                    const routeUrl = `https://yandex.ru/maps/?rtext=~${loc.lat},${loc.lng}`;[cite: 2]
+                    const safeAddr = escapeQuotes(loc.address);[cite: 2]
 
                     cardEl.innerHTML = `
                         <div class="card-title">${loc.title}</div>
@@ -787,22 +969,22 @@
                         ${renderMetroBadges(loc.metro)}
                         ${loc.description ? `<div class="card-desc">${loc.description}</div>` : ''}
                         ${photosHtml}
-                    `;
-                    contentEl.appendChild(cardEl);
+                    `;[cite: 2]
+                    contentEl.appendChild(cardEl);[cite: 2]
                 });
-                listEl.appendChild(groupEl);
+                listEl.appendChild(groupEl);[cite: 2]
             });
         }
 
         function createBalloonHTML(loc) {
-            let photosHtml = '';
-            if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {
+            let photosHtml = '';[cite: 2]
+            if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {[cite: 2]
                 photosHtml = `<div class="balloon-photos">
                     ${loc.images.map((img, idx) => `<img src="${img}" class="balloon-photo-img" onclick="openLightboxByUrl('${loc.id}', ${idx}, event)">`).join('')}
-                </div>`;
+                </div>`;[cite: 2]
             }
-            const routeUrl = `https://yandex.ru/maps/?rtext=~${loc.lat},${loc.lng}`;
-            const safeAddr = escapeQuotes(loc.address);
+            const routeUrl = `https://yandex.ru/maps/?rtext=~${loc.lat},${loc.lng}`;[cite: 2]
+            const safeAddr = escapeQuotes(loc.address);[cite: 2]
 
             let metroHtml = '';
             if (loc.metro && Array.isArray(loc.metro) && loc.metro.length > 0) {
@@ -828,124 +1010,124 @@
                     ${loc.description ? `<div class="balloon-desc">${loc.description}</div>` : ''}
                     ${photosHtml}
                 </div>
-            `;
+            `;[cite: 2]
         }
 
         function renderTopCatFilter(categories) {
-            const container = document.getElementById('catChipsScroll');
-            container.innerHTML = '';
-            if (!categories || categories.length === 0) return;
+            const container = document.getElementById('catChipsScroll');[cite: 2]
+            container.innerHTML = '';[cite: 2]
+            if (!categories || categories.length === 0) return;[cite: 2]
 
             categories.forEach(catName => {
-                const isVis = categoryVisibility[catName] !== false;
-                const chip = document.createElement('div');
-                chip.className = `cat-chip ${isVis ? 'active' : 'disabled'}`;
-                chip.innerHTML = `<span>${catName}</span>`;
+                const isVis = categoryVisibility[catName] !== false;[cite: 2]
+                const chip = document.createElement('div');[cite: 2]
+                chip.className = `cat-chip ${isVis ? 'active' : 'disabled'}`;[cite: 2]
+                chip.innerHTML = `<span>${catName}</span>`;[cite: 2]
                 chip.onclick = () => {
-                    categoryVisibility[catName] = !categoryVisibility[catName];
-                    const nextState = categoryVisibility[catName];
-                    if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', nextState);
+                    categoryVisibility[catName] = !categoryVisibility[catName];[cite: 2]
+                    const nextState = categoryVisibility[catName];[cite: 2]
+                    if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', nextState);[cite: 2]
                     
-                    if (nextState) { chip.classList.remove('disabled'); chip.classList.add('active'); }
-                    else { chip.classList.remove('active'); chip.classList.add('disabled'); }
+                    if (nextState) { chip.classList.remove('disabled'); chip.classList.add('active'); }[cite: 2]
+                    else { chip.classList.remove('active'); chip.classList.add('disabled'); }[cite: 2]
                     
                     const listIcon = document.getElementById(`pub-cat-icon-${encodeURIComponent(catName)}`);
                     if (listIcon) listIcon.innerText = nextState ? '👁️' : '🙈';
 
-                    updateToggleAllBtnState();
+                    updateToggleAllBtnState();[cite: 2]
                 };
-                container.appendChild(chip);
+                container.appendChild(chip);[cite: 2]
             });
-            updateToggleAllBtnState();
+            updateToggleAllBtnState();[cite: 2]
         }
 
         function toggleAllCategories() {
-            allVisibleState = !allVisibleState;
+            allVisibleState = !allVisibleState;[cite: 2]
             Object.keys(categoryCollections).forEach(catName => {
-                categoryVisibility[catName] = allVisibleState;
-                if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', allVisibleState);
+                categoryVisibility[catName] = allVisibleState;[cite: 2]
+                if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', allVisibleState);[cite: 2]
 
                 const listIcon = document.getElementById(`pub-cat-icon-${encodeURIComponent(catName)}`);
                 if (listIcon) listIcon.innerText = allVisibleState ? '👁️' : '🙈';
             });
 
             document.querySelectorAll('#catChipsScroll .cat-chip').forEach(chip => {
-                if (allVisibleState) { chip.classList.remove('disabled'); chip.classList.add('active'); }
-                else { chip.classList.remove('active'); chip.classList.add('disabled'); }
+                if (allVisibleState) { chip.classList.remove('disabled'); chip.classList.add('active'); }[cite: 2]
+                else { chip.classList.remove('active'); chip.classList.add('disabled'); }[cite: 2]
             });
-            updateToggleAllBtnState();
+            updateToggleAllBtnState();[cite: 2]
         }
 
         function updateToggleAllBtnState() {
-            const toggleBtn = document.getElementById('toggleAllBtn');
-            const hasActive = Object.values(categoryVisibility).some(v => v === true);
-            if (hasActive) { allVisibleState = true; toggleBtn.classList.remove('off'); toggleBtn.innerText = '👁️ Все'; }
-            else { allVisibleState = false; toggleBtn.classList.add('off'); toggleBtn.innerText = '🙈 Все'; }
+            const toggleBtn = document.getElementById('toggleAllBtn');[cite: 2]
+            const hasActive = Object.values(categoryVisibility).some(v => v === true);[cite: 2]
+            if (hasActive) { allVisibleState = true; toggleBtn.classList.remove('off'); toggleBtn.innerText = '👁️ Все'; }[cite: 2]
+            else { allVisibleState = false; toggleBtn.classList.add('off'); toggleBtn.innerText = '🙈 Все'; }[cite: 2]
         }
 
         function toggleCategoryMap(catName, btnEl, event) {
-            if (event) { event.stopPropagation(); event.preventDefault(); }
-            categoryVisibility[catName] = !categoryVisibility[catName];
-            const isVis = categoryVisibility[catName];
+            if (event) { event.stopPropagation(); event.preventDefault(); }[cite: 2]
+            categoryVisibility[catName] = !categoryVisibility[catName];[cite: 2]
+            const isVis = categoryVisibility[catName];[cite: 2]
             
-            if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', isVis);
+            if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', isVis);[cite: 2]
             
             const listIcon = document.getElementById(`pub-cat-icon-${encodeURIComponent(catName)}`);
             if (listIcon) listIcon.innerText = isVis ? '👁️' : '🙈';
 
-            renderTopCatFilter(Object.keys(categoryCollections));
+            renderTopCatFilter(Object.keys(categoryCollections));[cite: 2]
         }
 
-        function toggleAccordion(element) { element.closest('.category-group').classList.toggle('collapsed'); }
+        function toggleAccordion(element) { element.closest('.category-group').classList.toggle('collapsed'); }[cite: 2]
 
         function selectLocationOnMap(loc, placemark) {
-            myMap.setCenter([loc.lat, loc.lng], 15, { duration: 300 }).then(() => placemark.balloon.open());
-            document.querySelectorAll('.location-card').forEach(c => c.classList.remove('active'));
-            const card = document.getElementById(`card-${loc.id}`);
-            if (card) card.classList.add('active');
-            if (window.innerWidth <= 768) switchMobileView('map');
+            myMap.setCenter([loc.lat, loc.lng], 15, { duration: 300 }).then(() => placemark.balloon.open());[cite: 2]
+            document.querySelectorAll('.location-card').forEach(c => c.classList.remove('active'));[cite: 2]
+            const card = document.getElementById(`card-${loc.id}`);[cite: 2]
+            if (card) card.classList.add('active');[cite: 2]
+            if (window.innerWidth <= 768) switchMobileView('map');[cite: 2]
         }
 
         function highlightLocationCard(locId) {
-            document.querySelectorAll('.location-card').forEach(c => c.classList.remove('active'));
-            const card = document.getElementById(`card-${locId}`);
+            document.querySelectorAll('.location-card').forEach(c => c.classList.remove('active'));[cite: 2]
+            const card = document.getElementById(`card-${locId}`);[cite: 2]
             if (card) {
-                card.classList.add('active');
-                const group = card.closest('.category-group');
-                if (group) group.classList.remove('collapsed');
-                card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                card.classList.add('active');[cite: 2]
+                const group = card.closest('.category-group');[cite: 2]
+                if (group) group.classList.remove('collapsed');[cite: 2]
+                card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });[cite: 2]
             }
         }
 
         function openLightboxByUrl(locId, index, event) {
-            if (event) event.stopPropagation();
-            const loc = allLocations.find(l => l.id === locId);
-            if (!loc || !loc.images) return;
-            currentGallery = loc.images; currentImageIdx = index;
-            updateLightboxImage();
-            document.getElementById('lightbox').classList.add('active');
+            if (event) event.stopPropagation();[cite: 2]
+            const loc = allLocations.find(l => l.id === locId);[cite: 2]
+            if (!loc || !loc.images) return;[cite: 2]
+            currentGallery = loc.images; currentImageIdx = index;[cite: 2]
+            updateLightboxImage();[cite: 2]
+            document.getElementById('lightbox').classList.add('active');[cite: 2]
         }
 
         function updateLightboxImage() {
-            document.getElementById('lightbox-img').src = currentGallery[currentImageIdx];
-            document.getElementById('lightbox-counter').innerText = `${currentImageIdx + 1} из ${currentGallery.length}`;
+            document.getElementById('lightbox-img').src = currentGallery[currentImageIdx];[cite: 2]
+            document.getElementById('lightbox-counter').innerText = `${currentImageIdx + 1} из ${currentGallery.length}`;[cite: 2]
         }
 
-        function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
-        function nextImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx + 1) % currentGallery.length; updateLightboxImage(); }
-        function prevImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx - 1 + currentGallery.length) % currentGallery.length; updateLightboxImage(); }
+        function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }[cite: 2]
+        function nextImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx + 1) % currentGallery.length; updateLightboxImage(); }[cite: 2]
+        function prevImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx - 1 + currentGallery.length) % currentGallery.length; updateLightboxImage(); }[cite: 2]
 
         function switchMobileView(view) {
-            const btnMap = document.getElementById('btn-map-view');
-            const btnList = document.getElementById('btn-list-view');
+            const btnMap = document.getElementById('btn-map-view');[cite: 2]
+            const btnList = document.getElementById('btn-list-view');[cite: 2]
             if (view === 'map') {
-                document.body.classList.remove('show-list');
-                btnMap.classList.add('active'); btnList.classList.remove('active');
+                document.body.classList.remove('show-list');[cite: 2]
+                btnMap.classList.add('active'); btnList.classList.remove('active');[cite: 2]
                 setTimeout(() => { if (myMap) myMap.container.fitToViewport(); }, 50);
             } else {
-                document.body.classList.add('show-list');
-                btnList.classList.add('active'); btnMap.classList.remove('active');
-                toggleMobileSearch(false);
+                document.body.classList.add('show-list');[cite: 2]
+                btnList.classList.add('active'); btnMap.classList.remove('active');[cite: 2]
+                toggleMobileSearch(false);[cite: 2]
             }
         }
     </script>
