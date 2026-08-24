@@ -35,7 +35,7 @@
             display: flex; background: #fff; 
         }
 
-        #sidebar { width: 420px; height: 100%; background: #fff; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; z-index: 10; flex-shrink: 0; }
+        #sidebar { width: 440px; height: 100%; background: #fff; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; z-index: 10; flex-shrink: 0; }
         .sidebar-header { padding: max(calc(env(safe-area-inset-top) + 12px), 16px) 16px 12px 16px; background: #fff; border-bottom: 1px solid #f0f0f0; }
 
         .admin-badge { display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; padding: 10px 14px; border-radius: 12px; margin-bottom: 12px; font-size: 0.88rem; font-weight: 600; }
@@ -47,16 +47,14 @@
         .form-input, .form-select, .form-textarea { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.82rem; outline: none; background: #fff; }
         .form-textarea { resize: vertical; min-height: 55px; }
 
-        .btn-mini { padding: 6px 10px; background: #0f172a; color: #fff; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+        .btn-mini { padding: 6px 10px; background: #0f172a; color: #fff; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
 
         .file-upload-label { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border: 1px dashed #0f172a; border-radius: 8px; background: #fff; color: #0f172a; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
         .file-upload-input { display: none; }
         .upload-status { font-size: 0.75rem; color: #64748b; }
 
+        .metro-field-group { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 8px; margin-bottom: 4px; display: flex; flex-direction: column; gap: 4px; }
         .metro-field-row { display: flex; gap: 6px; align-items: center; }
-        .metro-color-indicator { width: 10px; height: 10px; border-radius: 50%; background: #94a3b8; flex-shrink: 0; }
-        .metro-field-name { flex: 2; }
-        .metro-field-time { flex: 1; }
 
         .submit-btn { background: #0f172a; color: #fff; border: none; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
         .submit-btn:hover { background: #1e293b; }
@@ -83,21 +81,16 @@
         .card-title { font-size: 1rem; font-weight: 600; color: #111827; margin-bottom: 8px; }
         .card-address { background: #f1f5f9; color: #475569; font-size: 0.78rem; padding: 6px 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 8px; }
         .card-metro-block { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
-        .metro-badge { display: inline-flex; align-items: center; gap: 6px; background: #f8fafc; color: #1e293b; font-size: 0.74rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; border: 1px solid #e2e8f0; }
-        .metro-badge-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        
+        .metro-badge { display: inline-flex; align-items: center; gap: 5px; background: #ffffff; color: #1e293b; font-size: 0.74rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+        .metro-icon-svg { width: 14px; height: 11px; flex-shrink: 0; }
 
         .card-actions-row { display: flex; gap: 6px; }
         .edit-btn, .delete-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 6px 8px; font-size: 0.75rem; font-weight: 500; border-radius: 8px; cursor: pointer; border: 1px solid #cbd5e1; }
         .edit-btn { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
         .delete-btn { background: #fee2e2; border-color: #ef4444; color: #991b1b; }
 
-        /* Полноэкранный растяг карты */
-        #map-container { 
-            position: fixed; 
-            top: 0; left: 420px; right: 0; bottom: 0; 
-            width: calc(100vw - 420px); height: 100%; 
-            z-index: 1; 
-        }
+        #map-container { position: fixed; top: 0; left: 440px; right: 0; bottom: 0; width: calc(100vw - 440px); height: 100%; z-index: 1; }
         #map { width: 100%; height: 100%; }
 
         .custom-map-pin { width: 38px; height: 38px; background: #0f172a; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 2px solid #fff; cursor: pointer; }
@@ -111,7 +104,7 @@
         .balloon-photos { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; }
         .balloon-photo-img { height: 60px; width: 60px; border-radius: 6px; object-fit: cover; cursor: pointer; flex-shrink: 0; }
 
-        .top-cat-filter-bar { position: absolute; top: max(calc(env(safe-area-inset-top) + 14px), 16px); left: 50%; transform: translateX(-50%); width: calc(100% - 32px); max-width: 600px; display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 9999px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 500; }
+        .top-cat-filter-bar { position: absolute; top: max(calc(env(safe-area-inset-top) + 14px), 16px); left: 50%; transform: translateX(-50%); width: calc(100% - 32px); max-width: 600px; display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); border-radius: 9999px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 500; }
         .toggle-all-btn { padding: 6px 12px; border-radius: 9999px; background: #0f172a; color: #fff; font-size: 0.78rem; font-weight: 600; border: none; cursor: pointer; flex-shrink: 0; }
         .toggle-all-btn.off { background: #e2e8f0; color: #64748b; }
         .cat-chips-scroll { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; width: 100%; }
@@ -142,94 +135,13 @@
             .show-list #sidebar { display: flex; }
             body:not(.show-list) #sidebar { display: none; }
             body:not(.show-list) #map-container { display: block; }
-            .mobile-toggle-bar { display: flex; position: fixed; bottom: max(calc(env(safe-area-inset-bottom) + 12px), 20px); left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 4px; border-radius: 9999px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 1000; gap: 4px; }
+            .mobile-toggle-bar { display: flex; position: fixed; bottom: max(calc(env(safe-area-inset-bottom) + 12px), 20px); left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); padding: 4px; border-radius: 9999px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 1000; gap: 4px; }
             .toggle-btn { padding: 9px 18px; border-radius: 9999px; border: none; background: transparent; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: #64748b; }
             .toggle-btn.active { background: #0f172a; color: #fff; }
         }
     </style>
 </head>
 <body>
-
-    <!-- СПИСОК СТАНЦИЙ МЕТРО МОСКВЫ С ЦВЕТАМИ -->
-    <datalist id="moscowMetroList">
-        <!-- Сокольническая (Красная) -->
-        <option value="Охотный Ряд" label="🔴 Сокольническая"></option>
-        <option value="Лубянка" label="🔴 Сокольническая"></option>
-        <option value="Чистые пруды" label="🔴 Сокольническая"></option>
-        <option value="Красные Ворота" label="🔴 Сокольническая"></option>
-        <option value="Комсомольская" label="🔴 Сокольническая"></option>
-        <option value="Библиотека им. Ленина" label="🔴 Сокольническая"></option>
-        <option value="Кропоткинская" label="🔴 Сокольническая"></option>
-        <option value="Парк культуры" label="🔴 Сокольническая"></option>
-        <option value="Фрунзенская" label="🔴 Сокольническая"></option>
-        <option value="Спортивная" label="🔴 Сокольническая"></option>
-        <!-- Замоскворецкая (Зеленая) -->
-        <option value="Театральная" label="🟢 Замоскворецкая"></option>
-        <option value="Тверская" label="🟢 Замоскворецкая"></option>
-        <option value="Маяковская" label="🟢 Замоскворецкая"></option>
-        <option value="Белорусская" label="🟢 Замоскворецкая"></option>
-        <option value="Новокузнецкая" label="🟢 Замоскворецкая"></option>
-        <option value="Павелецкая" label="🟢 Замоскворецкая"></option>
-        <option value="Автозаводская" label="🟢 Замоскворецкая"></option>
-        <!-- Арбатско-Покровская (Синяя) -->
-        <option value="Площадь Революции" label="🔵 Арбатско-Покровская"></option>
-        <option value="Арбатская" label="🔵 Арбатско-Покровская"></option>
-        <option value="Смоленская" label="🔵 Арбатско-Покровская"></option>
-        <option value="Киевская" label="🔵 Арбатско-Покровская"></option>
-        <option value="Курская" label="🔵 Арбатско-Покровская"></option>
-        <option value="Бауманская" label="🔵 Арбатско-Покровская"></option>
-        <option value="Электрозаводская" label="🔵 Арбатско-Покровская"></option>
-        <!-- Филевская (Голубая) -->
-        <option value="Александровский сад" label="🩵 Филевская"></option>
-        <option value="Выставочная" label="🩵 Филевская"></option>
-        <option value="Международная" label="🩵 Филевская"></option>
-        <!-- Кольцевая (Коричневая) -->
-        <option value="Добрынинская" label="🟤 Кольцевая"></option>
-        <option value="Октябрьская" label="🟤 Кольцевая"></option>
-        <option value="Таганская" label="🟤 Кольцевая"></option>
-        <option value="Проспект Мира" label="🟤 Кольцевая"></option>
-        <option value="Новослободская" label="🟤 Кольцевая"></option>
-        <option value="Краснопресненская" label="🟤 Кольцевая"></option>
-        <!-- Калужско-Рижская (Оранжевая) -->
-        <option value="Китай-город" label="🟠 Калужско-Рижская"></option>
-        <option value="Тургеневская" label="🟠 Калужско-Рижская"></option>
-        <option value="Сухаревская" label="🟠 Калужско-Рижская"></option>
-        <option value="Третьяковская" label="🟠 Калужско-Рижская"></option>
-        <option value="Шаболовская" label="🟠 Калужско-Рижская"></option>
-        <option value="Ленинский проспект" label="🟠 Калужско-Рижская"></option>
-        <!-- Таганско-Краснопресненская (Фиолетовая) -->
-        <option value="Кузнецкий Мост" label="🟣 Таганско-Краснопресненская"></option>
-        <option value="Пушкинская" label="🟣 Таганско-Краснопресненская"></option>
-        <option value="Баррикадная" label="🟣 Таганско-Краснопресненская"></option>
-        <option value="Улица 1905 года" label="🟣 Таганско-Краснопресненская"></option>
-        <option value="Пролетарская" label="🟣 Таганско-Краснопресненская"></option>
-        <option value="Волгоградский проспект" label="🟣 Таганско-Краснопресненская"></option>
-        <!-- Калининская (Желтая) -->
-        <option value="Марксистская" label="🟡 Калининская"></option>
-        <option value="Площадь Ильича" label="🟡 Калининская"></option>
-        <option value="Авиамоторная" label="🟡 Калининская"></option>
-        <!-- Серпуховско-Тимирязевская (Серая) -->
-        <option value="Чеховская" label="⚪ Серпуховско-Тимирязевская"></option>
-        <option value="Боровицкая" label="⚪ Серпуховско-Тимирязевская"></option>
-        <option value="Полянка" label="⚪ Серпуховско-Тимирязевская"></option>
-        <option value="Серпуховская" label="⚪ Серпуховско-Тимирязевская"></option>
-        <option value="Тульская" label="⚪ Серпуховско-Тимирязевская"></option>
-        <option value="Цветной бульвар" label="⚪ Серпуховско-Тимирязевская"></option>
-        <option value="Менделеевская" label="⚪ Серпуховско-Тимирязевская"></option>
-        <option value="Савеловская" label="⚪ Серпуховско-Тимирязевская"></option>
-        <!-- Люблинско-Дмитровская (Салатовая) -->
-        <option value="Трубная" label="🟢 Люблинско-Дмитровская"></option>
-        <option value="Сретенский бульвар" label="🟢 Люблинско-Дмитровская"></option>
-        <option value="Чкаловская" label="🟢 Люблинско-Дмитровская"></option>
-        <option value="Римская" label="🟢 Люблинско-Дмитровская"></option>
-        <option value="Крестьянская Застава" label="🟢 Люблинско-Дмитровская"></option>
-        <option value="Дубровка" label="🟢 Люблинско-Дмитровская"></option>
-        <option value="Достоевская" label="🟢 Люблинско-Дмитровская"></option>
-        <option value="Марьина Роща" label="🟢 Люблинско-Дмитровская"></option>
-        <!-- БКЛ (Бирюзовая) -->
-        <option value="Деловой центр" label="🩵 БКЛ"></option>
-        <option value="Шелепиха" label="🩵 БКЛ"></option>
-    </datalist>
 
     <div id="authOverlay" class="auth-overlay">
         <div class="auth-box">
@@ -277,21 +189,30 @@
                     <input type="text" id="addAddress" class="form-input" placeholder="Адрес">
                     
                     <div style="display: flex; flex-direction: column; gap: 4px;">
-                        <label class="upload-status">🚇 Метро рядом (выберите или начните вводить):</label>
-                        <div class="metro-field-row">
-                            <span id="addMetro1_dot" class="metro-color-indicator"></span>
-                            <input type="text" list="moscowMetroList" id="addMetro1_name" class="form-input metro-field-name" placeholder="Станция 1" oninput="updateMetroColorPreview('add', 1)">
-                            <input type="number" id="addMetro1_time" class="form-input metro-field-time" placeholder="Мин">
+                        <label class="upload-status">🚇 Метро (Линия ➔ Станция ➔ Минуты):</label>
+                        
+                        <div class="metro-field-group">
+                            <select id="addMetro1_line" class="form-select" onchange="onLineChange('add', 1)"></select>
+                            <div class="metro-field-row">
+                                <select id="addMetro1_station" class="form-select" style="flex:2;"></select>
+                                <input type="number" id="addMetro1_time" class="form-input" placeholder="Мин пешком" style="flex:1;">
+                            </div>
                         </div>
-                        <div class="metro-field-row">
-                            <span id="addMetro2_dot" class="metro-color-indicator"></span>
-                            <input type="text" list="moscowMetroList" id="addMetro2_name" class="form-input metro-field-name" placeholder="Станция 2" oninput="updateMetroColorPreview('add', 2)">
-                            <input type="number" id="addMetro2_time" class="form-input metro-field-time" placeholder="Мин">
+
+                        <div class="metro-field-group">
+                            <select id="addMetro2_line" class="form-select" onchange="onLineChange('add', 2)"></select>
+                            <div class="metro-field-row">
+                                <select id="addMetro2_station" class="form-select" style="flex:2;"></select>
+                                <input type="number" id="addMetro2_time" class="form-input" placeholder="Мин пешком" style="flex:1;">
+                            </div>
                         </div>
-                        <div class="metro-field-row">
-                            <span id="addMetro3_dot" class="metro-color-indicator"></span>
-                            <input type="text" list="moscowMetroList" id="addMetro3_name" class="form-input metro-field-name" placeholder="Станция 3" oninput="updateMetroColorPreview('add', 3)">
-                            <input type="number" id="addMetro3_time" class="form-input metro-field-time" placeholder="Мин">
+
+                        <div class="metro-field-group">
+                            <select id="addMetro3_line" class="form-select" onchange="onLineChange('add', 3)"></select>
+                            <div class="metro-field-row">
+                                <select id="addMetro3_station" class="form-select" style="flex:2;"></select>
+                                <input type="number" id="addMetro3_time" class="form-input" placeholder="Мин пешком" style="flex:1;">
+                            </div>
                         </div>
                     </div>
 
@@ -352,20 +273,26 @@
             </div>
             <div>
                 <label class="upload-status">🚇 Станции метро рядом</label>
-                <div class="metro-field-row" style="margin-bottom: 4px;">
-                    <span id="editMetro1_dot" class="metro-color-indicator"></span>
-                    <input type="text" list="moscowMetroList" id="editMetro1_name" class="form-input metro-field-name" placeholder="Станция 1" oninput="updateMetroColorPreview('edit', 1)">
-                    <input type="number" id="editMetro1_time" class="form-input metro-field-time" placeholder="Мин">
+                <div class="metro-field-group">
+                    <select id="editMetro1_line" class="form-select" onchange="onLineChange('edit', 1)"></select>
+                    <div class="metro-field-row">
+                        <select id="editMetro1_station" class="form-select" style="flex:2;"></select>
+                        <input type="number" id="editMetro1_time" class="form-input" placeholder="Мин" style="flex:1;">
+                    </div>
                 </div>
-                <div class="metro-field-row" style="margin-bottom: 4px;">
-                    <span id="editMetro2_dot" class="metro-color-indicator"></span>
-                    <input type="text" list="moscowMetroList" id="editMetro2_name" class="form-input metro-field-name" placeholder="Станция 2" oninput="updateMetroColorPreview('edit', 2)">
-                    <input type="number" id="editMetro2_time" class="form-input metro-field-time" placeholder="Мин">
+                <div class="metro-field-group">
+                    <select id="editMetro2_line" class="form-select" onchange="onLineChange('edit', 2)"></select>
+                    <div class="metro-field-row">
+                        <select id="editMetro2_station" class="form-select" style="flex:2;"></select>
+                        <input type="number" id="editMetro2_time" class="form-input" placeholder="Мин" style="flex:1;">
+                    </div>
                 </div>
-                <div class="metro-field-row" style="margin-bottom: 4px;">
-                    <span id="editMetro3_dot" class="metro-color-indicator"></span>
-                    <input type="text" list="moscowMetroList" id="editMetro3_name" class="form-input metro-field-name" placeholder="Станция 3" oninput="updateMetroColorPreview('edit', 3)">
-                    <input type="number" id="editMetro3_time" class="form-input metro-field-time" placeholder="Мин">
+                <div class="metro-field-group">
+                    <select id="editMetro3_line" class="form-select" onchange="onLineChange('edit', 3)"></select>
+                    <div class="metro-field-row">
+                        <select id="editMetro3_station" class="form-select" style="flex:2;"></select>
+                        <input type="number" id="editMetro3_time" class="form-input" placeholder="Мин" style="flex:1;">
+                    </div>
                 </div>
             </div>
             <div>
@@ -404,33 +331,139 @@
         let editingImagesList = [];
         let editNewFiles = [];
 
-        // Карта официальных цветов станций метро Москвы
-        const METRO_LINE_COLORS = {
-            "Охотный Ряд": "#EF161E", "Лубянка": "#EF161E", "Чистые пруды": "#EF161E", "Красные Ворота": "#EF161E", "Комсомольская": "#EF161E", "Библиотека им. Ленина": "#EF161E", "Кропоткинская": "#EF161E", "Парк культуры": "#EF161E", "Фрунзенская": "#EF161E", "Спортивная": "#EF161E",
-            "Театральная": "#2DBE2C", "Тверская": "#2DBE2C", "Маяковская": "#2DBE2C", "Белорусская": "#2DBE2C", "Новокузнецкая": "#2DBE2C", "Павелецкая": "#2DBE2C", "Автозаводская": "#2DBE2C",
-            "Площадь Революции": "#0078BF", "Арбатская": "#0078BF", "Смоленская": "#0078BF", "Киевская": "#0078BF", "Курская": "#0078BF", "Бауманская": "#0078BF", "Электрозаводская": "#0078BF",
-            "Александровский сад": "#00BFFF", "Выставочная": "#00BFFF", "Международная": "#00BFFF",
-            "Добрынинская": "#8D5B2D", "Октябрьская": "#8D5B2D", "Таганская": "#8D5B2D", "Проспект Мира": "#8D5B2D", "Новослободская": "#8D5B2D", "Краснопресненская": "#8D5B2D",
-            "Китай-город": "#ED9121", "Тургеневская": "#ED9121", "Сухаревская": "#ED9121", "Третьяковская": "#ED9121", "Шаболовская": "#ED9121", "Ленинский проспект": "#ED9121",
-            "Кузнецкий Мост": "#800080", "Пушкинская": "#800080", "Баррикадная": "#800080", "Улица 1905 года": "#800080", "Пролетарская": "#800080", "Волгоградский проспект": "#800080",
-            "Марксистская": "#FFD702", "Площадь Ильича": "#FFD702", "Авиамоторная": "#FFD702",
-            "Чеховская": "#A0A0A0", "Боровицкая": "#A0A0A0", "Полянка": "#A0A0A0", "Серпуховская": "#A0A0A0", "Тульская": "#A0A0A0", "Цветной бульвар": "#A0A0A0", "Менделеевская": "#A0A0A0", "Савеловская": "#A0A0A0",
-            "Трубная": "#99CC00", "Сретенский бульвар": "#99CC00", "Чкаловская": "#99CC00", "Римская": "#99CC00", "Крестьянская Застава": "#99CC00", "Дубровка": "#99CC00", "Достоевская": "#99CC00", "Марьина Роща": "#99CC00",
-            "Деловой центр": "#70C9C7", "Шелепиха": "#70C9C7"
-        };
-
-        function getMetroColor(stationName) {
-            if (!stationName) return '#94a3b8';
-            for (let name in METRO_LINE_COLORS) {
-                if (stationName.toLowerCase().includes(name.toLowerCase())) return METRO_LINE_COLORS[name];
+        // БАЗА ДАННЫХ ЛИНИЙ И СТАНЦИЙ МЕТРО МОСКВЫ
+        const MOSCOW_METRO_DATA = [
+            {
+                id: "line-1", name: "Сокольническая", color: "#EF161E",
+                stations: ["Бульвар Рокоссовского", "Черкизовская", "Преображенская площадь", "Сокольники", "Красносельская", "Комсомольская", "Красные Ворота", "Чистые пруды", "Лубянка", "Охотный Ряд", "Библиотека им. Ленина", "Кропоткинская", "Парк культуры", "Фрунзенская", "Спортивная", "Воробьёвы горы", "Университет", "Проспект Вернадского", "Юго-Западная"]
+            },
+            {
+                id: "line-2", name: "Замоскворецкая", color: "#2DBE2C",
+                stations: ["Ховрино", "Беломорская", "Речной вокзал", "Водный стадион", "Войковская", "Сокол", "Аэропорт", "Динамо", "Белорусская", "Маяковская", "Тверская", "Театральная", "Новокузнецкая", "Павелецкая", "Автозаводская", "Технопарк", "Коломенская", "Каширская", "Царицыно"]
+            },
+            {
+                id: "line-3", name: "Арбатско-Покровская", color: "#0078BF",
+                stations: ["Пятницкое шоссе", "Митино", "Строгино", "Крылатское", "Молодёжная", "Кунцевская", "Славянский бульвар", "Парк Победы", "Киевская", "Смоленская", "Арбатская", "Площадь Революции", "Курская", "Бауманская", "Электрозаводская", "Семёновская", "Партизанская", "Измайловская", "Первомайская", "Щёлковская"]
+            },
+            {
+                id: "line-4", name: "Филёвская", color: "#00BFFF",
+                stations: ["Кунцевская", "Пионерская", "Филёвский парк", "Багратионовская", "Фили", "Кутузовская", "Студенческая", "Киевская", "Смоленская", "Арбатская", "Александровский сад", "Выставочная", "Международная"]
+            },
+            {
+                id: "line-5", name: "Кольцевая", color: "#8D5B2D",
+                stations: ["Парк культуры", "Октябрьская", "Добрынинская", "Павелецкая", "Таганская", "Курская", "Комсомольская", "Проспект Мира", "Новослободская", "Белорусская", "Краснопресненская", "Киевская"]
+            },
+            {
+                id: "line-6", name: "Калужско-Рижская", color: "#ED9121",
+                stations: ["Медведково", "Бабушкинская", "Свиблово", "Ботанический сад", "ВДНХ", "Алексеевская", "Рижская", "Проспект Мира", "Сухаревская", "Тургеневская", "Китай-город", "Третьяковская", "Октябрьская", "Шаболовская", "Ленинский проспект", "Академическая", "Профсоюзная", "Новые Черёмушки", "Калужская", "Беляево"]
+            },
+            {
+                id: "line-7", name: "Таганско-Краснопресненская", color: "#800080",
+                stations: ["Планерная", "Сходненская", "Тушинская", "Спартак", "Щукинская", "Октябрьское Поле", "Полежаевская", "Беговая", "Улица 1905 года", "Баррикадная", "Пушкинская", "Кузнецкий Мост", "Китай-город", "Таганская", "Пролетарская", "Волгоградский проспект", "Текстильщики", "Кузьминки"]
+            },
+            {
+                id: "line-8", name: "Калининская / Солнцевская", color: "#FFD702",
+                stations: ["Новокосино", "Новогиреево", "Перово", "Шоссе Энтузиастов", "Авиамоторная", "Площадь Ильича", "Марксистская", "Третьяковская", "Деловой центр", "Парк Победы", "Минская", "Ломоносовский проспект", "Раменки", "Мичуринский проспект"]
+            },
+            {
+                id: "line-9", name: "Серпуховско-Тимирязевская", color: "#A0A0A0",
+                stations: ["Алтуфьево", "Бибирево", "Отрадное", "Владыкино", "Петровско-Разумовская", "Тимирязевская", "Дмитровская", "Савёловская", "Менделеевская", "Цветной бульвар", "Чеховская", "Боровицкая", "Полянка", "Серпуховская", "Тульская", "Нагатинская", "Нагорная", "Нахимовский проспект"]
+            },
+            {
+                id: "line-10", name: "Люблинско-Дмитровская", color: "#99CC00",
+                stations: ["Селигерская", "Верхние Лихоборы", "Окружная", "Петровско-Разумовская", "Фонвизинская", "Бутырская", "Марьина Роща", "Достоевская", "Трубная", "Сретенский бульвар", "Чкаловская", "Римская", "Крестьянская Застава", "Дубровка", "Кожуховская", "Печатники"]
+            },
+            {
+                id: "line-11", name: "Большая кольцевая (БКЛ)", color: "#70C9C7",
+                stations: ["Савёловская", "Марьина Роща", "Рижская", "Сокольники", "Электрозаводская", "Лефортово", "Авиамоторная", "Нижегородская", "Текстильщики", "Печатники", "Каширская", "Варшавская", "Каховская", "Зюзино", "Воронцовская", "Новаторская", "Проспект Вернадского", "Мичуринский проспект", "Аминьевская", "Давыдково", "Кунцевская", "Терехово", "Мнёвники", "Народное Ополчение", "Хорошёвская", "ЦСКА", "Петровский парк"]
+            },
+            {
+                id: "line-14", name: "МЦК", color: "#FFFFFF",
+                stations: ["Лужники", "Площадь Гагарина", "Крымская", "Верхние Котлы", "ЗИЛ", "Автозаводская", "Дубровка", "Угрешская", "Новохохловская", "Нижегородская", "Андроновка", "Шоссе Энтузиастов", "Соколиная Гора", "Измайлово", "Локомотив", "Бульвар Рокоссовского", "Владыкино", "Окружная", "Лихоборы", "Коптево", "Балтийская", "Стрешнево", "Панфиловская", "Зорге", "Хорошёво", "Шелепиха", "Деловой центр", "Кутузовская"]
             }
-            return '#0ea5e9';
+        ];
+
+        function getMetroSvg(color = "#EF161E") {
+            return `<svg class="metro-icon-svg" viewBox="0 0 24 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0 18L7.5 0L12 9.5L16.5 0L24 18H19L15 8L12 14.5L9 8L5 18H0Z" fill="${color}"/>
+            </svg>`;
         }
 
-        function updateMetroColorPreview(prefix, idx) {
-            const val = document.getElementById(`${prefix}Metro${idx}_name`).value.trim();
-            const dot = document.getElementById(`${prefix}Metro${idx}_dot`);
-            if (dot) dot.style.background = getMetroColor(val);
+        function populateMetroLineSelects() {
+            ['add', 'edit'].forEach(prefix => {
+                for (let i = 1; i <= 3; i++) {
+                    const lineSelect = document.getElementById(`${prefix}Metro${i}_line`);
+                    if (!lineSelect) continue;
+                    lineSelect.innerHTML = '<option value="">-- Выберите линию метро --</option>';
+                    MOSCOW_METRO_DATA.forEach(line => {
+                        const opt = document.createElement('option');
+                        opt.value = line.id;
+                        opt.innerText = `● ${line.name}`;
+                        opt.style.color = line.color === '#FFFFFF' ? '#333' : line.color;
+                        lineSelect.appendChild(opt);
+                    });
+                    onLineChange(prefix, i);
+                }
+            });
+        }
+
+        function onLineChange(prefix, idx, preselectedStation = "") {
+            const lineSelect = document.getElementById(`${prefix}Metro${idx}_line`);
+            const stationSelect = document.getElementById(`${prefix}Metro${idx}_station`);
+            const selectedLineId = lineSelect.value;
+
+            stationSelect.innerHTML = '<option value="">-- Станция --</option>';
+            if (!selectedLineId) return;
+
+            const lineData = MOSCOW_METRO_DATA.find(l => l.id === selectedLineId);
+            if (lineData) {
+                lineData.stations.forEach(st => {
+                    const opt = document.createElement('option');
+                    opt.value = st;
+                    opt.innerText = st;
+                    if (st === preselectedStation) opt.selected = true;
+                    stationSelect.appendChild(opt);
+                });
+            }
+        }
+
+        function getMetroFromInputs(prefix) {
+            const metro = [];
+            for (let i = 1; i <= 3; i++) {
+                const lineId = document.getElementById(`${prefix}Metro${i}_line`).value;
+                const station = document.getElementById(`${prefix}Metro${i}_station`).value;
+                const time = parseInt(document.getElementById(`${prefix}Metro${i}_time`).value);
+                if (station) {
+                    const lineData = MOSCOW_METRO_DATA.find(l => l.id === lineId);
+                    const color = lineData ? lineData.color : "#EF161E";
+                    metro.push({ name: station, line: lineData ? lineData.name : "", color, time: isNaN(time) ? null : time });
+                }
+            }
+            return metro;
+        }
+
+        function setMetroToInputs(prefix, metroList) {
+            for (let i = 1; i <= 3; i++) {
+                const item = metroList && metroList[i - 1] ? metroList[i - 1] : null;
+                const lineSelect = document.getElementById(`${prefix}Metro${i}_line`);
+                const timeInput = document.getElementById(`${prefix}Metro${i}_time`);
+                
+                if (item) {
+                    let matchedLine = MOSCOW_METRO_DATA.find(l => l.stations.includes(item.name) || (item.line && l.name.includes(item.line)));
+                    if (matchedLine) {
+                        lineSelect.value = matchedLine.id;
+                        onLineChange(prefix, i, item.name);
+                    } else {
+                        lineSelect.value = "";
+                        onLineChange(prefix, i);
+                    }
+                    timeInput.value = item.time || '';
+                } else {
+                    lineSelect.value = "";
+                    onLineChange(prefix, i);
+                    timeInput.value = '';
+                }
+            }
         }
 
         const defaultCategories = [
@@ -444,7 +477,10 @@
             const overlay = document.getElementById('authOverlay');
             if (session) {
                 overlay.style.display = 'none';
-                ymaps.ready(initMap);
+                ymaps.ready(() => {
+                    initMap();
+                    populateMetroLineSelects();
+                });
             } else {
                 overlay.style.display = 'flex';
             }
@@ -475,7 +511,10 @@
                 errDiv.style.display = 'block';
             } else {
                 document.getElementById('authOverlay').style.display = 'none';
-                ymaps.ready(initMap);
+                ymaps.ready(() => {
+                    initMap();
+                    populateMetroLineSelects();
+                });
             }
         }
 
@@ -484,32 +523,33 @@
             window.location.reload();
         }
 
-        /* --- 📍 ГЕОКОДИНГ ПО КНОПКЕ И КЛИКУ --- */
+        /* --- 📍 ИСПРАВЛЕННЫЙ НАДЕЖНЫЙ ГЕОКОДИНГ --- */
         async function manualResolveAddress(prefix) {
             const coordsStr = document.getElementById(`${prefix}Coords`).value.trim();
             if (!coordsStr) { alert("Сначала укажите координаты (кликните по карте)!"); return; }
             
             const parts = coordsStr.split(',').map(s => parseFloat(s.trim()));
             if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) {
-                alert("Неверные координаты!"); return;
+                alert("Неверный формат координат!"); return;
             }
 
             const addrInput = document.getElementById(`${prefix}Address`);
             addrInput.value = "Поиск адреса...";
 
             try {
-                const res = await ymaps.geocode(parts, { results: 1 });
+                // Прямой вызов geocode с массивом координат широта-долгота
+                const res = await ymaps.geocode([parts[0], parts[1]], { results: 1 });
                 const firstGeoObject = res.geoObjects.get(0);
                 if (firstGeoObject) {
                     addrInput.value = firstGeoObject.getAddressLine() || '';
                 } else {
                     addrInput.value = '';
-                    alert("Адрес не найден");
+                    alert("Адрес по этим координатам не найден.");
                 }
             } catch (err) {
                 console.error("Ошибка геокодирования:", err);
                 addrInput.value = '';
-                alert("Ошибка геокодирования API");
+                alert("Ошибка запроса к геокодеру API.");
             }
         }
 
@@ -533,7 +573,7 @@
                     myMap.geoObjects.add(tempPlacemark);
                 }
 
-                // Быстрое автоопределение
+                // Автоматическое тихое заполнение адреса
                 ymaps.geocode(coords, { results: 1 }).then(res => {
                     const firstObj = res.geoObjects.get(0);
                     if (firstObj) document.getElementById('addAddress').value = firstObj.getAddressLine() || '';
@@ -542,25 +582,6 @@
 
             loadLocations();
             window.addEventListener('resize', () => { if (myMap) myMap.container.fitToViewport(); });
-        }
-
-        function getMetroFromInputs(prefix) {
-            const metro = [];
-            for (let i = 1; i <= 3; i++) {
-                const name = document.getElementById(`${prefix}Metro${i}_name`).value.trim();
-                const time = parseInt(document.getElementById(`${prefix}Metro${i}_time`).value);
-                if (name) metro.push({ name, time: isNaN(time) ? null : time, color: getMetroColor(name) });
-            }
-            return metro;
-        }
-
-        function setMetroToInputs(prefix, metroList) {
-            for (let i = 1; i <= 3; i++) {
-                const item = metroList && metroList[i - 1] ? metroList[i - 1] : null;
-                document.getElementById(`${prefix}Metro${i}_name`).value = item ? item.name : '';
-                document.getElementById(`${prefix}Metro${i}_time`).value = item && item.time ? item.time : '';
-                updateMetroColorPreview(prefix, i);
-            }
         }
 
         async function compressImage(file, maxWidth = 1400, quality = 0.82) {
@@ -712,7 +733,7 @@
             if (!metroList || !Array.isArray(metroList) || metroList.length === 0) return '';
             return `<div class="card-metro-block">${metroList.map(m => `
                 <span class="metro-badge">
-                    <span class="metro-badge-dot" style="background: ${m.color || getMetroColor(m.name)};"></span>
+                    ${getMetroSvg(m.color || '#EF161E')}
                     ${m.name} ${m.time ? `<span style="color:#64748b; font-weight:400;">(${m.time} мин)</span>` : ''}
                 </span>
             `).join('')}</div>`;
@@ -812,7 +833,7 @@
             if (loc.metro && Array.isArray(loc.metro) && loc.metro.length > 0) {
                 metroHtml = `<div class="balloon-metro-block">${loc.metro.map(m => `
                     <span class="metro-badge">
-                        <span class="metro-badge-dot" style="background: ${m.color || getMetroColor(m.name)};"></span>
+                        ${getMetroSvg(m.color || '#EF161E')}
                         ${m.name} ${m.time ? `<span style="color:#64748b; font-weight:400;">(${m.time} мин)</span>` : ''}
                     </span>
                 `).join('')}</div>`;
