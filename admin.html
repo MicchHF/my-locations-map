@@ -32,13 +32,31 @@
         <div style="padding:15px; background:#fafafa; border-bottom:1px solid #eee;">
             <h3>Добавить место</h3>
             <p id="coordsDisplay" style="color:#ef4444; font-size:0.8rem;">Кликните по карте</p>
+            
             <div class="form-group">
                 <label>Название</label>
-                <input type="text" id="locTitle">
+                <input type="text" id="locTitle" placeholder="Например: Кофейня 'Энтузиаст'">
+            </div>
+            <div class="form-group">
+                <label>Категория</label>
+                <select id="locCategory">
+                    <option value="☕">☕ Еда и кофе</option>
+                    <option value="🍸">🍸 Бары и тусовки</option>
+                    <option value="🏞️">🏞️ Парки и природа</option>
+                    <option value="🏛️">🏛️ Культура и музеи</option>
+                    <option value="📸">📸 Инсталокации</option>
+                    <option value="🛍️">🛍️ Шопинг</option>
+                    <option value="🏨">🏨 Отели и жилье</option>
+                    <option value="📍" selected>📍 Другое</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Адрес</label>
+                <input type="text" id="locAddress" placeholder="например, ул. Покровка, 16">
             </div>
             <div class="form-group">
                 <label>Описание</label>
-                <textarea id="locDesc"></textarea>
+                <textarea id="locDesc" placeholder="Заметки или рекомендации..."></textarea>
             </div>
             <div class="form-group">
                 <label>Фотографии</label>
@@ -51,6 +69,12 @@
         </div>
     </div>
     <div id="map"></div>
+
+    <!-- Мобильный переключатель -->
+    <div class="mobile-toggle-bar">
+        <button id="btn-map-view" class="toggle-btn active" onclick="switchMobileView('map')">🗺️ Карта</button>
+        <button id="btn-list-view" class="toggle-btn" onclick="switchMobileView('list')">📋 Список</button>
+    </div>
 
     <script src="js/supabase.js"></script>
     <script>
@@ -91,6 +115,8 @@
         async function saveLocation() {
             if (!currentCoords) return alert('Выберите место на карте!');
             const title = document.getElementById('locTitle').value;
+            const category = document.getElementById('locCategory').value;
+            const address = document.getElementById('locAddress').value;
             const description = document.getElementById('locDesc').value;
             const files = document.getElementById('locFiles').files;
             const images = [];
@@ -105,7 +131,7 @@
             }
 
             const { error } = await supabaseClient.from('Location').insert([{
-                title, description, lat: currentCoords[0], lng: currentCoords[1], images
+                title, category, address, description, lat: currentCoords[0], lng: currentCoords[1], images
             }]);
 
             if (error) alert(error.message);
@@ -119,12 +145,21 @@
 
             listEl.innerHTML = '';
             locations.forEach(loc => {
-                const placemark = new ymaps.Placemark([loc.lat, loc.lng], { balloonContent: loc.title });
+                const categoryIcon = loc.category || '📍';
+                const layout = ymaps.templateLayoutFactory.createClass(
+                    `<div class="custom-map-pin"><span>${categoryIcon}</span></div>`
+                );
+
+                const placemark = new ymaps.Placemark([loc.lat, loc.lng], { 
+                    balloonContent: `<b>${categoryIcon} ${loc.title}</b><br><small>${loc.address || ''}</small>` 
+                }, {
+                    iconLayout: layout, iconOffset: [-18, -36]
+                });
                 myMap.geoObjects.add(placemark);
 
                 const item = document.createElement('div');
                 item.style.cssText = 'padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;';
-                item.innerHTML = `<span>${loc.title}</span> <button style="color:red;" onclick="deleteLocation('${loc.id}')">Удалить</button>`;
+                item.innerHTML = `<div><strong>${categoryIcon} ${loc.title}</strong><br><small style="color:#666">${loc.address || ''}</small></div> <button style="color:red;" onclick="deleteLocation('${loc.id}')">Удалить</button>`;
                 listEl.appendChild(item);
             });
         }
@@ -135,6 +170,23 @@
                 location.reload();
             }
         }
+
+        function switchMobileView(view) {
+            const btnMap = document.getElementById('btn-map-view');
+            const btnList = document.getElementById('btn-list-view');
+            if (view === 'map') {
+                document.body.classList.remove('show-list');
+                btnMap.classList.add('active');
+                btnList.classList.remove('active');
+                if (myMap) myMap.container.fitToViewport();
+            } else {
+                document.body.classList.add('show-list');
+                btnList.classList.add('active');
+                btnMap.classList.remove('active');
+            }
+        }
     </script>
+</body>
+</html>
 </body>
 </html>
