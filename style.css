@@ -1,13 +1,15 @@
 * { box-sizing: border-box; }
 body { 
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif; 
-    margin: 0; padding: 0; display: flex; height: 100vh; color: #18181b; background: #09090b; overflow: hidden; 
+    margin: 0; padding: 0; display: flex; height: 100vh; height: 100dvh; color: #18181b; background: #09090b; overflow: hidden; 
 }
+
+/* Десктопная версия */
 #sidebar { 
     width: 380px; background: #ffffff; box-shadow: 4px 0 24px rgba(0,0,0,0.15); 
-    z-index: 10; display: flex; flex-direction: column; flex-shrink: 0; 
+    z-index: 10; display: flex; flex-direction: column; flex-shrink: 0; height: 100%;
 }
-.header { background: #09090b; padding: 18px 20px; border-bottom: 1px solid #27272a; color: #fff; }
+.header { background: #09090b; padding: 18px 20px; border-bottom: 1px solid #27272a; color: #fff; display: flex; justify-content: space-between; align-items: center; }
 .header h1 { margin: 0; font-size: 1.05rem; font-weight: 600; }
 #list-section { padding: 18px 20px; flex-grow: 1; overflow-y: auto; background: #ffffff; }
 #map { flex-grow: 1; height: 100%; width: 100%; }
@@ -25,9 +27,9 @@ input[type="text"], input[type="email"], input[type="password"], textarea, selec
 
 .auth-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(9,9,11,0.95);
-    z-index: 10000; display: flex; justify-content: center; align-items: center;
+    z-index: 10000; display: flex; justify-content: center; align-items: center; padding: 16px;
 }
-.auth-box { background: #fff; padding: 30px; border-radius: 12px; width: 340px; }
+.auth-box { background: #fff; padding: 24px; border-radius: 12px; width: 100%; max-width: 340px; }
 
 .custom-map-pin {
     width: 36px; height: 36px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
@@ -36,7 +38,33 @@ input[type="text"], input[type="email"], input[type="password"], textarea, selec
 }
 .custom-map-pin span { transform: rotate(45deg); font-size: 17px; }
 
-.balloon-content { max-width: 240px; }
+.balloon-content { max-width: 220px; }
 .balloon-photos { display: flex; gap: 6px; overflow-x: auto; margin: 8px 0; }
 .balloon-photos img { height: 60px; border-radius: 4px; object-fit: cover; }
 .route-btn { display: block; background: #09090b; color: #fff; text-decoration: none; padding: 8px; border-radius: 6px; text-align: center; font-size: 0.8rem; }
+
+/* Адаптация для мобильных экранов */
+@media (max-width: 768px) {
+    body {
+        flex-direction: column-reverse; /* Карта сверху, список/форма снизу */
+    }
+
+    #sidebar {
+        width: 100%;
+        height: 45vh; /* Нижняя шторка с метками */
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+    }
+
+    #map {
+        width: 100%;
+        height: 55vh; /* Карта занимает верхнюю часть */
+    }
+
+    .header {
+        padding: 12px 16px;
+    }
+
+    #list-section {
+        padding: 12px 16px;
+    }
+}
