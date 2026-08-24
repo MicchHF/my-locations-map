@@ -7,19 +7,78 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://api-maps.yandex.ru/2.1/?apikey=17e91f7c-3356-4174-9a25-5ac34ba55d46&lang=ru_RU"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .photo-preview-grid {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 8px 0;
+            margin-bottom: 10px;
+        }
+
+        .photo-preview-item {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #fff;
+            padding: 4px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .photo-preview-item img {
+            height: 70px;
+            width: auto;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+
+        .photo-controls {
+            display: flex;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .photo-controls button {
+            padding: 2px 6px;
+            font-size: 11px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            background: #f0f0f0;
+            border-radius: 3px;
+        }
+
+        /* Модальное окно редактирования */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal-box {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+    </style>
 </head>
 <body>
     <div id="authModal" class="auth-overlay">
         <div class="auth-box">
             <h2>Вход Администратора</h2>
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="authEmail">
-            </div>
-            <div class="form-group">
-                <label>Пароль</label>
-                <input type="password" id="authPassword">
-            </div>
+            <div class="form-group"><label>Email</label><input type="email" id="authEmail"></div>
+            <div class="form-group"><label>Пароль</label><input type="password" id="authPassword"></div>
             <button class="btn" onclick="login()">Войти</button>
         </div>
     </div>
@@ -29,6 +88,7 @@
             <h1>Админ-панель</h1>
             <button class="btn" onclick="logout()" style="width:auto; padding:4px 8px; font-size:0.75rem;">Выйти</button>
         </div>
+
         <div style="padding:15px; background:#fafafa; border-bottom:1px solid #eee;">
             <h3>Добавить место</h3>
             
@@ -45,16 +105,16 @@
             <div class="form-group">
                 <label>Категория</label>
                 <select id="locCategory">
-                    <option value="☕">☕ Кофейни</option>
-                    <option value="🍽️">🍽️ Заведения (рестораны)</option>
-                    <option value="🍸">🍸 Бары и тусовки</option>
-                    <option value="🚪">🚪 Двери и архитектура</option>
-                    <option value="🏞️">🏞️ Парки и природа</option>
-                    <option value="🏛️">🏛️ Культура и музеи</option>
-                    <option value="📸">📸 Инсталокации</option>
-                    <option value="🛍️">🛍️ Шопинг</option>
-                    <option value="🏨">🏨 Отели</option>
-                    <option value="📍" selected>📍 Другое</option>
+                    <option value="☕ Кофейни">☕ Кофейни</option>
+                    <option value="🍽️ Заведения (рестораны)">🍽️ Заведения (рестораны)</option>
+                    <option value="🍸 Бары и тусовки">🍸 Бары и тусовки</option>
+                    <option value="🚪 Двери и архитектура">🚪 Двери и архитектура</option>
+                    <option value="🏞️ Парки и природа">🏞️ Парки и природа</option>
+                    <option value="🏛️ Культура и музеи">🏛️ Культура и музеи</option>
+                    <option value="📸 Инсталокации">📸 Инсталокации</option>
+                    <option value="🛍️ Шопинг">🛍️ Шопинг</option>
+                    <option value="🏨 Отели">🏨 Отели</option>
+                    <option value="📍 Другое" selected>📍 Другое</option>
                 </select>
             </div>
             
@@ -70,26 +130,82 @@
             
             <div class="form-group">
                 <label>Фотографии</label>
-                <input type="file" id="locFiles" multiple accept="image/*">
+                <input type="file" id="locFiles" multiple accept="image/*" onchange="handleNewFilesSelect(event)">
             </div>
+
+            <!-- Сетка изменения порядка новых фото -->
+            <div id="newPhotoPreview" class="photo-preview-grid"></div>
             
             <button id="saveBtn" class="btn" onclick="saveLocation()">Сохранить на карту</button>
         </div>
+
         <div id="list-section">
             <div id="admin-locations-list"></div>
         </div>
     </div>
+
     <div id="map"></div>
 
-    <!-- Мобильный переключатель -->
-    <div class="mobile-toggle-bar">
-        <button id="btn-map-view" class="toggle-btn active" onclick="switchMobileView('map')">🗺️ Карта</button>
-        <button id="btn-list-view" class="toggle-btn" onclick="switchMobileView('list')">📋 Список</button>
+    <!-- Модальное окно редактирования метки -->
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Редактировать место</h3>
+            <input type="hidden" id="editLocId">
+            
+            <div class="form-group">
+                <label>Название</label>
+                <input type="text" id="editTitle">
+            </div>
+            
+            <div class="form-group">
+                <label>Категория</label>
+                <select id="editCategory">
+                    <option value="☕ Кофейни">☕ Кофейни</option>
+                    <option value="🍽️ Заведения (рестораны)">🍽️ Заведения (рестораны)</option>
+                    <option value="🍸 Бары и тусовки">🍸 Бары и тусовки</option>
+                    <option value="🚪 Двери и архитектура">🚪 Двери и архитектура</option>
+                    <option value="🏞️ Парки и природа">🏞️ Парки и природа</option>
+                    <option value="🏛️ Культура и музеи">🏛️ Культура и музеи</option>
+                    <option value="📸 Инсталокации">📸 Инсталокации</option>
+                    <option value="🛍️ Шопинг">🛍️ Шопинг</option>
+                    <option value="🏨 Отели">🏨 Отели</option>
+                    <option value="📍 Другое">📍 Другое</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Адрес</label>
+                <input type="text" id="editAddress">
+            </div>
+            
+            <div class="form-group">
+                <label>Описание</label>
+                <textarea id="editDesc"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Текущие фото (изменение порядка: ← / →)</label>
+                <div id="editPhotoGrid" class="photo-preview-grid"></div>
+            </div>
+
+            <div class="form-group">
+                <label>Добавить еще фото</label>
+                <input type="file" id="editNewFiles" multiple accept="image/*">
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button class="btn" onclick="updateLocation()">Сохранить изменения</button>
+                <button class="btn" style="background:#888;" onclick="closeEditModal()">Отмена</button>
+            </div>
+        </div>
     </div>
 
     <script src="js/supabase.js"></script>
     <script>
         let myMap, currentCoords = null, tempPlacemark = null;
+        let selectedFiles = []; // Массив файлов для создания новой точки
+        let editCurrentImages = []; // Массив ссылок фото для редактирования
+        let allAdminLocations = [];
 
         window.onload = async () => {
             const { data: { session } } = await supabaseClient.auth.getSession();
@@ -137,26 +253,65 @@
             myMap.geoObjects.add(tempPlacemark);
         }
 
+        // ===== Работа с новыми файлами при создании =====
+        function handleNewFilesSelect(e) {
+            selectedFiles = Array.from(e.target.files);
+            renderNewPhotoPreview();
+        }
+
+        function renderNewPhotoPreview() {
+            const container = document.getElementById('newPhotoPreview');
+            container.innerHTML = '';
+
+            selectedFiles.forEach((file, index) => {
+                const item = document.createElement('div');
+                item.className = 'photo-preview-item';
+                const url = URL.createObjectURL(file);
+
+                item.innerHTML = `
+                    <img src="${url}">
+                    <div class="photo-controls">
+                        <button onclick="moveNewPhoto(${index}, -1)">←</button>
+                        <button onclick="moveNewPhoto(${index}, 1)">→</button>
+                        <button style="color:red;" onclick="removeNewPhoto(${index})">✕</button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function moveNewPhoto(index, dir) {
+            const newIdx = index + dir;
+            if (newIdx < 0 || newIdx >= selectedFiles.length) return;
+            const temp = selectedFiles[index];
+            selectedFiles[index] = selectedFiles[newIdx];
+            selectedFiles[newIdx] = temp;
+            renderNewPhotoPreview();
+        }
+
+        function removeNewPhoto(index) {
+            selectedFiles.splice(index, 1);
+            renderNewPhotoPreview();
+        }
+
+        // ===== Сохранение новой метки =====
         async function saveLocation() {
-            if (!currentCoords) return alert('Укажите координаты или кликните по карте!');
+            if (!currentCoords) return alert('Укажите координаты!');
             
             const title = document.getElementById('locTitle').value;
             const category = document.getElementById('locCategory').value;
             const address = document.getElementById('locAddress').value;
             const description = document.getElementById('locDesc').value;
-            const files = document.getElementById('locFiles').files;
             const saveBtn = document.getElementById('saveBtn');
             
             saveBtn.disabled = true;
             const images = [];
 
             try {
-                // Загрузка фото по одному с прогрессом
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    saveBtn.innerText = `Загрузка фото ${i + 1}/${files.length}...`;
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    const file = selectedFiles[i];
+                    saveBtn.innerText = `Загрузка фото ${i + 1}/${selectedFiles.length}...`;
 
-                    // Очищаем имя от спецсимволов и кириллицы
                     const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
                     const filePath = `public/${Date.now()}_${cleanName}`;
 
@@ -164,84 +319,152 @@
                         .from('location-photos')
                         .upload(filePath, file);
 
-                    if (uploadError) {
-                        console.error(`Ошибка файла ${file.name}:`, uploadError.message);
-                        alert(`Ошибка при загрузке ${file.name}: ${uploadError.message}`);
-                        continue;
+                    if (!uploadError) {
+                        const { data } = supabaseClient.storage.from('location-photos').getPublicUrl(filePath);
+                        images.push(data.publicUrl);
                     }
-
-                    const { data } = supabaseClient.storage
-                        .from('location-photos')
-                        .getPublicUrl(filePath);
-
-                    images.push(data.publicUrl);
                 }
 
-                saveBtn.innerText = 'Сохранение в базу...';
+                saveBtn.innerText = 'Сохранение...';
 
                 const { error } = await supabaseClient.from('Location').insert([{
                     title, category, address, description, lat: currentCoords[0], lng: currentCoords[1], images
                 }]);
 
-                if (error) {
-                    alert('Ошибка записи в БД: ' + error.message);
-                } else {
-                    alert('Метка успешно добавлена!');
-                    location.reload();
-                }
+                if (error) alert('Ошибка записи: ' + error.message);
+                else { alert('Метка успешно добавлена!'); location.reload(); }
             } catch (err) {
-                alert('Произошла ошибка: ' + err.message);
+                alert('Сбой: ' + err.message);
             } finally {
                 saveBtn.disabled = false;
                 saveBtn.innerText = 'Сохранить на карту';
             }
         }
 
+        // ===== Загрузка и редактирование меток =====
         async function loadAdminLocations() {
             const { data: locations } = await supabaseClient.from('Location').select('*');
             const listEl = document.getElementById('admin-locations-list');
             if (!locations) return;
 
+            allAdminLocations = locations;
             listEl.innerHTML = '';
+
             locations.forEach(loc => {
-                const categoryIcon = loc.category || '📍';
+                const categoryIcon = loc.category ? loc.category.split(' ')[0] : '📍';
+                
                 const layout = ymaps.templateLayoutFactory.createClass(
-                    `<div class="custom-map-pin"><span>${categoryIcon}</span></div>`
+                    `<div style="width:34px; height:34px; background:#1e293b; border:2px solid #fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; box-shadow:0 3px 8px rgba(0,0,0,0.3);"><span>${categoryIcon}</span></div>`
                 );
 
                 const placemark = new ymaps.Placemark([loc.lat, loc.lng], { 
                     balloonContent: `<b>${categoryIcon} ${loc.title}</b><br><small>${loc.address || ''}</small>` 
                 }, {
-                    iconLayout: layout, iconOffset: [-18, -36]
+                    iconLayout: layout, iconOffset: [-17, -17]
                 });
                 myMap.geoObjects.add(placemark);
 
                 const item = document.createElement('div');
                 item.style.cssText = 'padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;';
-                item.innerHTML = `<div><strong>${categoryIcon} ${loc.title}</strong><br><small style="color:#666">${loc.address || ''}</small></div> <button style="color:red;" onclick="deleteLocation('${loc.id}')">Удалить</button>`;
+                item.innerHTML = `
+                    <div><strong>${categoryIcon} ${loc.title}</strong><br><small style="color:#666">${loc.address || ''}</small></div>
+                    <div style="display:flex; gap:6px;">
+                        <button onclick="openEditModal('${loc.id}')">✏️</button>
+                        <button style="color:red;" onclick="deleteLocation('${loc.id}')">🗑️</button>
+                    </div>
+                `;
                 listEl.appendChild(item);
             });
+        }
+
+        // Редактирование сущности
+        function openEditModal(id) {
+            const loc = allAdminLocations.find(l => l.id === id);
+            if (!loc) return;
+
+            document.getElementById('editLocId').value = loc.id;
+            document.getElementById('editTitle').value = loc.title || '';
+            document.getElementById('editCategory').value = loc.category || '📍 Другое';
+            document.getElementById('editAddress').value = loc.address || '';
+            document.getElementById('editDesc').value = loc.description || '';
+
+            editCurrentImages = Array.isArray(loc.images) ? [...loc.images] : [];
+            renderEditPhotoGrid();
+
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function renderEditPhotoGrid() {
+            const grid = document.getElementById('editPhotoGrid');
+            grid.innerHTML = '';
+
+            editCurrentImages.forEach((imgUrl, index) => {
+                const item = document.createElement('div');
+                item.className = 'photo-preview-item';
+                item.innerHTML = `
+                    <img src="${imgUrl}">
+                    <div class="photo-controls">
+                        <button onclick="moveEditPhoto(${index}, -1)">←</button>
+                        <button onclick="moveEditPhoto(${index}, 1)">→</button>
+                        <button style="color:red;" onclick="removeEditPhoto(${index})">✕</button>
+                    </div>
+                `;
+                grid.appendChild(item);
+            });
+        }
+
+        function moveEditPhoto(index, dir) {
+            const newIdx = index + dir;
+            if (newIdx < 0 || newIdx >= editCurrentImages.length) return;
+            const temp = editCurrentImages[index];
+            editCurrentImages[index] = editCurrentImages[newIdx];
+            editCurrentImages[newIdx] = temp;
+            renderEditPhotoGrid();
+        }
+
+        function removeEditPhoto(index) {
+            editCurrentImages.splice(index, 1);
+            renderEditPhotoGrid();
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        async function updateLocation() {
+            const id = document.getElementById('editLocId').value;
+            const title = document.getElementById('editTitle').value;
+            const category = document.getElementById('editCategory').value;
+            const address = document.getElementById('editAddress').value;
+            const description = document.getElementById('editDesc').value;
+            const newFiles = document.getElementById('editNewFiles').files;
+
+            const updatedImages = [...editCurrentImages];
+
+            // Загружаем новые добавленные снимки
+            for (let file of newFiles) {
+                const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+                const filePath = `public/${Date.now()}_${cleanName}`;
+
+                const { error: uploadError } = await supabaseClient.storage.from('location-photos').upload(filePath, file);
+                if (!uploadError) {
+                    const { data } = supabaseClient.storage.from('location-photos').getPublicUrl(filePath);
+                    updatedImages.push(data.publicUrl);
+                }
+            }
+
+            const { error } = await supabaseClient.from('Location').update({
+                title, category, address, description, images: updatedImages
+            }).eq('id', id);
+
+            if (error) alert('Ошибка обновления: ' + error.message);
+            else { alert('Сохранено!'); location.reload(); }
         }
 
         async function deleteLocation(id) {
             if (confirm('Удалить эту метку?')) {
                 await supabaseClient.from('Location').delete().eq('id', id);
                 location.reload();
-            }
-        }
-
-        function switchMobileView(view) {
-            const btnMap = document.getElementById('btn-map-view');
-            const btnList = document.getElementById('btn-list-view');
-            if (view === 'map') {
-                document.body.classList.remove('show-list');
-                btnMap.classList.add('active');
-                btnList.classList.remove('active');
-                if (myMap) myMap.container.fitToViewport();
-            } else {
-                document.body.classList.add('show-list');
-                btnList.classList.add('active');
-                btnMap.classList.remove('active');
             }
         }
     </script>
