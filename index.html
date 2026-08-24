@@ -163,7 +163,7 @@
         }
         .location-card.active { border-color: #0f172a; background-color: #f8fafc; }
         .card-title { font-size: 1rem; font-weight: 600; color: #111827; margin-bottom: 8px; line-height: 1.3; }
-        .card-address-block { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; width: 100%; }
+        .card-address-block { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; width: 100%; }
         .card-address {
             display: flex;
             align-items: center;
@@ -178,8 +178,10 @@
             border: 1px solid #e2e8f0;
             width: 100%;
         }
-        .card-actions-row { display: flex; gap: 6px; width: 100%; }
+        .card-metro-block { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+        .metro-badge { display: inline-flex; align-items: center; gap: 4px; background: #f1f5f9; color: #334155; font-size: 0.74rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; border: 1px solid #e2e8f0; }
         
+        .card-actions-row { display: flex; gap: 6px; width: 100%; }
         .copy-btn, .route-btn {
             flex: 1;
             display: inline-flex;
@@ -244,6 +246,7 @@
         .balloon-title { font-size: 0.95rem; font-weight: 700; color: #0f172a; line-height: 1.25; margin-bottom: 8px; }
         .balloon-address-block { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; width: 100%; }
         .balloon-address { font-size: 0.78rem; color: #475569; background: #f1f5f9; padding: 6px 8px; border-radius: 6px; line-height: 1.35; word-break: break-word; border: 1px solid #e2e8f0; width: 100%; }
+        .balloon-metro-block { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
         .balloon-actions-row { display: flex; gap: 6px; width: 100%; }
         .balloon-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 8px; font-size: 0.75rem; font-weight: 600; border-radius: 6px; text-decoration: none; cursor: pointer; text-align: center; }
         .balloon-copy-btn { background: #ffffff; border: 1px solid #cbd5e1; color: #334155; }
@@ -421,7 +424,7 @@
                 </a>
                 <div class="search-container">
                     <span class="search-icon">🔍</span>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию или адресу..." oninput="handleSearch()">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, адресу, метро..." oninput="handleSearch()">
                 </div>
             </div>
             <div id="locations-list"></div>
@@ -492,7 +495,8 @@
                 const titleMatch = (loc.title || '').toLowerCase().includes(query);
                 const addressMatch = (loc.address || '').toLowerCase().includes(query);
                 const descMatch = (loc.description || '').toLowerCase().includes(query);
-                return titleMatch || addressMatch || descMatch;
+                const metroMatch = loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => (m.name || '').toLowerCase().includes(query));
+                return titleMatch || addressMatch || descMatch || metroMatch;
             });
             renderInterface(filtered);
         }
@@ -542,6 +546,13 @@
         }
 
         function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+
+        function renderMetroBadges(metroList) {
+            if (!metroList || !Array.isArray(metroList) || metroList.length === 0) return '';
+            return `<div class="card-metro-block">${metroList.map(m => `
+                <span class="metro-badge">🚇 ${m.name} ${m.time ? `<span style="color:#64748b; font-weight:400;">(${m.time} мин)</span>` : ''}</span>
+            `).join('')}</div>`;
+        }
 
         function renderInterface(locationsToRender) {
             const listEl = document.getElementById('locations-list');
@@ -639,6 +650,7 @@
                                 <a href="${routeUrl}" target="_blank" rel="noopener" class="route-btn" onclick="event.stopPropagation();">🧭 Маршрут</a>
                             </div>
                         </div>
+                        ${renderMetroBadges(loc.metro)}
                         ${loc.description ? `<div class="card-desc">${loc.description}</div>` : ''}
                         ${photosHtml}
                     `;
@@ -658,6 +670,13 @@
             const routeUrl = `https://yandex.ru/maps/?rtext=~${loc.lat},${loc.lng}`;
             const safeAddr = escapeQuotes(loc.address);
 
+            let metroHtml = '';
+            if (loc.metro && Array.isArray(loc.metro) && loc.metro.length > 0) {
+                metroHtml = `<div class="balloon-metro-block">${loc.metro.map(m => `
+                    <span class="metro-badge">🚇 ${m.name} ${m.time ? `<span style="color:#64748b; font-weight:400;">(${m.time} мин)</span>` : ''}</span>
+                `).join('')}</div>`;
+            }
+
             return `
                 <div class="balloon-wrapper">
                     <div class="balloon-title">${loc.title}</div>
@@ -668,6 +687,7 @@
                             <a href="${routeUrl}" target="_blank" rel="noopener" class="balloon-btn balloon-route-btn">🧭 Маршрут</a>
                         </div>
                     </div>
+                    ${metroHtml}
                     ${loc.description ? `<div class="balloon-desc">${loc.description}</div>` : ''}
                     ${photosHtml}
                 </div>
@@ -692,7 +712,6 @@
                     if (nextState) { chip.classList.remove('disabled'); chip.classList.add('active'); }
                     else { chip.classList.remove('active'); chip.classList.add('disabled'); }
                     
-                    // Синхронизация иконки в списке
                     const listIcon = document.getElementById(`pub-cat-icon-${encodeURIComponent(catName)}`);
                     if (listIcon) listIcon.innerText = nextState ? '👁️' : '🙈';
 
@@ -709,7 +728,6 @@
                 categoryVisibility[catName] = allVisibleState;
                 if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', allVisibleState);
 
-                // Синхронизируем каждый глазик в списке
                 const listIcon = document.getElementById(`pub-cat-icon-${encodeURIComponent(catName)}`);
                 if (listIcon) listIcon.innerText = allVisibleState ? '👁️' : '🙈';
             });
