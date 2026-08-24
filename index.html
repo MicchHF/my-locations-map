@@ -22,7 +22,6 @@
             color: #1a1a1a;
         }
 
-        /* Боковая панель */
         #sidebar {
             width: 390px;
             height: 100%;
@@ -59,7 +58,6 @@
             padding: 12px;
         }
 
-        /* Категории (Аккордеон) */
         .category-group {
             margin-bottom: 12px;
             background: #ffffff;
@@ -79,14 +77,18 @@
             justify-content: space-between;
             padding: 12px 14px;
             background: #f9fafb;
-            cursor: pointer;
             user-select: none;
         }
 
-        .category-title {
+        .category-title-wrap {
             display: flex;
             align-items: center;
             gap: 8px;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .category-title {
             font-weight: 600;
             font-size: 0.95rem;
             color: #1f2937;
@@ -112,19 +114,21 @@
             border: none;
             cursor: pointer;
             font-size: 1.1rem;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-            padding: 2px;
+            padding: 4px 6px;
+            border-radius: 6px;
+            transition: background 0.2s;
         }
 
         .toggle-visibility-btn:hover {
-            opacity: 1;
+            background: #e5e7eb;
         }
 
         .chevron {
             font-size: 0.8rem;
             transition: transform 0.2s;
             color: #9ca3af;
+            cursor: pointer;
+            padding: 4px;
         }
 
         .category-group.collapsed .chevron {
@@ -139,7 +143,6 @@
             padding: 8px;
         }
 
-        /* Карточка точки */
         .location-card {
             background: #ffffff;
             border: 1px solid #f3f4f6;
@@ -165,7 +168,6 @@
             background-color: #f0f6ff;
         }
 
-        /* Заголовок карточки */
         .card-title {
             font-size: 1.05rem;
             font-weight: 600;
@@ -174,7 +176,6 @@
             line-height: 1.3;
         }
 
-        /* Бейдж Адреса (Выделенный отдельный блок) */
         .card-address {
             display: inline-flex;
             align-items: center;
@@ -194,7 +195,6 @@
             font-size: 0.85rem;
         }
 
-        /* Описание */
         .card-desc {
             font-size: 0.88rem;
             color: #4b5563;
@@ -203,18 +203,19 @@
             white-space: pre-line;
         }
 
-        /* Фото Галерея (Миниатюры) */
+        /* Пропорциональные миниатюры фото */
         .card-photos {
             display: flex;
-            gap: 6px;
+            gap: 8px;
             overflow-x: auto;
             padding-bottom: 4px;
             scrollbar-width: thin;
         }
 
         .card-photo-thumb {
-            width: 68px;
-            height: 68px;
+            height: 85px;
+            width: auto;
+            max-width: 160px;
             border-radius: 8px;
             object-fit: cover;
             flex-shrink: 0;
@@ -224,27 +225,27 @@
         }
 
         .card-photo-thumb:hover {
-            transform: scale(1.04);
+            transform: scale(1.03);
             opacity: 0.9;
         }
 
-        /* Карта */
         #map {
             flex: 1;
             height: 100%;
         }
 
-        /* Стили кастомных меток на карте */
+        /* Темные метки на карте для высокой контрастности */
         .custom-map-pin {
-            width: 36px;
-            height: 36px;
-            background: #ffffff;
+            width: 38px;
+            height: 38px;
+            background: #1e293b;
+            color: #ffffff;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+            font-size: 19px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.35);
             border: 2px solid #ffffff;
             cursor: pointer;
             transition: transform 0.2s;
@@ -254,7 +255,7 @@
             transform: scale(1.15);
         }
 
-        /* Модальное окно (Полноэкранная галерея - Lightbox) */
+        /* Полноэкранный просмотрщик */
         .lightbox-modal {
             display: none;
             position: fixed;
@@ -320,25 +321,14 @@
             font-size: 14px;
         }
 
-        /* Переключатель вида для мобильных */
         .mobile-toggle-bar {
             display: none;
         }
 
         @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-            }
-
-            #sidebar {
-                width: 100%;
-                height: 100%;
-            }
-
-            #map {
-                width: 100%;
-                height: 100%;
-            }
+            body { flex-direction: column; }
+            #sidebar { width: 100%; height: 100%; }
+            #map { width: 100%; height: 100%; }
 
             .show-list #map { display: none; }
             .show-list #sidebar { display: flex; }
@@ -379,27 +369,21 @@
 </head>
 <body>
 
-    <!-- Боковая панель -->
     <div id="sidebar">
         <div class="sidebar-header">
             <h1>Локации</h1>
-            <p>Карта интересные мест и заведений</p>
+            <p>Карта интересных мест и заведений</p>
         </div>
-        <div id="locations-list">
-            <!-- Сюда динамически загружаются категории и точки -->
-        </div>
+        <div id="locations-list"></div>
     </div>
 
-    <!-- Карта -->
     <div id="map"></div>
 
-    <!-- Переключатель для мобильных устройств -->
     <div class="mobile-toggle-bar">
         <button id="btn-map-view" class="toggle-btn active" onclick="switchMobileView('map')">🗺️ Карта</button>
         <button id="btn-list-view" class="toggle-btn" onclick="switchMobileView('list')">📋 Список</button>
     </div>
 
-    <!-- Модальное окно для полноэкранного просмотра фотографий -->
     <div id="lightbox" class="lightbox-modal">
         <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
         <span class="lightbox-nav lightbox-prev" onclick="prevImage()">&#10094;</span>
@@ -412,10 +396,9 @@
     <script>
         let myMap;
         let allLocations = [];
-        let categoryCollections = {}; // Группы меток для Yandex Maps
-        let categoryVisibility = {};  // Состояние видимости категорий
+        let categoryCollections = {};
+        let categoryVisibility = {};
         
-        // Галерея
         let currentGallery = [];
         let currentImageIdx = 0;
 
@@ -434,7 +417,7 @@
         async function loadLocations() {
             const { data, error } = await supabaseClient.from('Location').select('*');
             if (error) {
-                console.error("Ошибка загрузки меток:", error);
+                console.error("Ошибка загрузки:", error);
                 return;
             }
 
@@ -446,7 +429,6 @@
             const listEl = document.getElementById('locations-list');
             listEl.innerHTML = '';
 
-            // Группировка меток по категориям
             const grouped = {};
             allLocations.forEach(loc => {
                 const cat = loc.category || '📍 Другое';
@@ -454,24 +436,20 @@
                 grouped[cat].push(loc);
             });
 
-            // Очищаем старые GeoObjectCollection с карты
             Object.values(categoryCollections).forEach(coll => myMap.geoObjects.remove(coll));
             categoryCollections = {};
 
-            // Отрисовываем каждую категорию
             Object.keys(grouped).forEach(catName => {
                 if (categoryVisibility[catName] === undefined) {
-                    categoryVisibility[catName] = true; // По умолчанию все видимы
+                    categoryVisibility[catName] = true;
                 }
 
-                // Коллекция Yandex Maps для этой категории
                 const collection = new ymaps.GeoObjectCollection({}, {
                     visible: categoryVisibility[catName]
                 });
                 categoryCollections[catName] = collection;
                 myMap.geoObjects.add(collection);
 
-                // Создаем группу в интерфейсе
                 const groupEl = document.createElement('div');
                 groupEl.className = 'category-group';
                 
@@ -480,25 +458,23 @@
 
                 groupEl.innerHTML = `
                     <div class="category-header">
-                        <div class="category-title" onclick="toggleAccordion(this)">
-                            <span>${catName}</span>
+                        <div class="category-title-wrap" onclick="toggleAccordion(this)">
+                            <span class="category-title">${catName}</span>
                             <span class="category-count">${itemsCount}</span>
                         </div>
                         <div class="category-controls">
-                            <button class="toggle-visibility-btn" title="Показать/скрыть на карте" onclick="toggleCategoryMap('${catName}', event)">
+                            <button class="toggle-visibility-btn" title="Показать/скрыть на карте" onclick="toggleCategoryMap('${catName}', this, event)">
                                 ${isVisible ? '👁️' : '🙈'}
                             </button>
                             <span class="chevron" onclick="toggleAccordion(this)">▼</span>
                         </div>
                     </div>
-                    <div class="category-content" id="cat-content-${catName.replace(/\s+/g, '-')}"></div>
+                    <div class="category-content"></div>
                 `;
 
                 const contentEl = groupEl.querySelector('.category-content');
 
-                // Отрисовываем карточки внутри категории
                 grouped[catName].forEach(loc => {
-                    // 1. Создаем метку на карте
                     const categoryIcon = loc.category ? loc.category.split(' ')[0] : '📍';
                     
                     const layout = ymaps.templateLayoutFactory.createClass(
@@ -510,33 +486,29 @@
                         balloonContent: createBalloonHTML(loc)
                     }, {
                         iconLayout: layout,
-                        iconOffset: [-18, -18],
+                        iconOffset: [-19, -19],
                         iconShape: {
                             type: 'Rectangle',
-                            coordinates: [[-18, -18], [18, 18]]
+                            coordinates: [[-19, -19], [19, 19]]
                         },
                         cursor: 'pointer'
                     });
 
-                    // Клик по метке на карте
                     placemark.events.add('click', () => {
                         highlightLocationCard(loc.id);
                     });
 
                     collection.add(placemark);
 
-                    // 2. Создаем карточку в боковом списке
                     const cardEl = document.createElement('div');
                     cardEl.className = 'location-card';
                     cardEl.id = `card-${loc.id}`;
                     cardEl.onclick = (e) => {
-                        // Если кликнули не по фото
                         if (!e.target.classList.contains('card-photo-thumb')) {
                             selectLocationOnMap(loc, placemark);
                         }
                     };
 
-                    // Формируем HTML карточки
                     let photosHtml = '';
                     if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {
                         photosHtml = `<div class="card-photos">
@@ -546,15 +518,8 @@
                         </div>`;
                     }
 
-                    let addressHtml = '';
-                    if (loc.address) {
-                        addressHtml = `<div class="card-address"><span class="card-address-icon">📍</span>${loc.address}</div>`;
-                    }
-
-                    let descHtml = '';
-                    if (loc.description) {
-                        descHtml = `<div class="card-desc">${loc.description}</div>`;
-                    }
+                    let addressHtml = loc.address ? `<div class="card-address"><span class="card-address-icon">📍</span>${loc.address}</div>` : '';
+                    let descHtml = loc.description ? `<div class="card-desc">${loc.description}</div>` : '';
 
                     cardEl.innerHTML = `
                         <div class="card-title">${loc.title}</div>
@@ -570,26 +535,26 @@
             });
         }
 
-        // Переключение видимости категории на карте
-        function toggleCategoryMap(catName, event) {
+        // Четкое переключение видимости без перезагрузки интерфейса
+        function toggleCategoryMap(catName, btnEl, event) {
             event.stopPropagation();
-            const currentVis = categoryVisibility[catName];
-            categoryVisibility[catName] = !currentVis;
+            event.preventDefault();
+
+            categoryVisibility[catName] = !categoryVisibility[catName];
+            const isVis = categoryVisibility[catName];
 
             if (categoryCollections[catName]) {
-                categoryCollections[catName].options.set('visible', categoryVisibility[catName]);
+                categoryCollections[catName].options.set('visible', isVis);
             }
 
-            renderInterface();
+            btnEl.innerText = isVis ? '👁️' : '🙈';
         }
 
-        // Сворачивание / Разворачивание категории в списке
         function toggleAccordion(element) {
             const group = element.closest('.category-group');
             group.classList.toggle('collapsed');
         }
 
-        // Клик по карточке — центрирование и открытие балуна
         function selectLocationOnMap(loc, placemark) {
             myMap.setCenter([loc.lat, loc.lng], 15, { duration: 300 }).then(() => {
                 placemark.balloon.open();
@@ -599,32 +564,25 @@
             const card = document.getElementById(`card-${loc.id}`);
             if (card) card.classList.add('active');
 
-            if (window.innerWidth <= 768) {
-                switchMobileView('map');
-            }
+            if (window.innerWidth <= 768) switchMobileView('map');
         }
 
-        // Выделение и прокрутка к карточке при клике на метку карты
         function highlightLocationCard(locId) {
             document.querySelectorAll('.location-card').forEach(c => c.classList.remove('active'));
             const card = document.getElementById(`card-${locId}`);
             if (card) {
                 card.classList.add('active');
-                
-                // Автоматически разворачиваем группу, если она свернута
                 const group = card.closest('.category-group');
                 if (group) group.classList.remove('collapsed');
-
                 card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         }
 
-        // Верстка HTML для балуна Яндекс Карты
         function createBalloonHTML(loc) {
             let photosHtml = '';
             if (loc.images && loc.images.length > 0) {
-                photosHtml = `<div style="display:flex; gap:4px; margin-top:8px; overflow-x:auto;">
-                    ${loc.images.map((img, idx) => `<img src="${img}" style="width:50px; height:50px; object-fit:cover; border-radius:4px; cursor:pointer;" onclick="openLightboxByUrl('${loc.id}', ${idx}, event)">`).join('')}
+                photosHtml = `<div style="display:flex; gap:6px; margin-top:8px; overflow-x:auto;">
+                    ${loc.images.map((img, idx) => `<img src="${img}" style="height:55px; width:auto; border-radius:4px; cursor:pointer;" onclick="openLightboxByUrl('${loc.id}', ${idx}, event)">`).join('')}
                 </div>`;
             }
 
@@ -638,7 +596,6 @@
             `;
         }
 
-        // ===== Полноэкранная Галерея (Lightbox) =====
         function openLightboxByUrl(locId, index, event) {
             if (event) event.stopPropagation();
             const loc = allLocations.find(l => l.id === locId);
@@ -652,11 +609,8 @@
         }
 
         function updateLightboxImage() {
-            const imgEl = document.getElementById('lightbox-img');
-            const counterEl = document.getElementById('lightbox-counter');
-            
-            imgEl.src = currentGallery[currentImageIdx];
-            counterEl.innerText = `${currentImageIdx + 1} из ${currentGallery.length}`;
+            document.getElementById('lightbox-img').src = currentGallery[currentImageIdx];
+            document.getElementById('lightbox-counter').innerText = `${currentImageIdx + 1} из ${currentGallery.length}`;
         }
 
         function closeLightbox() {
@@ -664,18 +618,17 @@
         }
 
         function nextImage() {
-            if (currentGallery.length === 0) return;
+            if (!currentGallery.length) return;
             currentImageIdx = (currentImageIdx + 1) % currentGallery.length;
             updateLightboxImage();
         }
 
         function prevImage() {
-            if (currentGallery.length === 0) return;
+            if (!currentGallery.length) return;
             currentImageIdx = (currentImageIdx - 1 + currentGallery.length) % currentGallery.length;
             updateLightboxImage();
         }
 
-        // Клавиатурная навигация по галерее
         document.addEventListener('keydown', (e) => {
             const lightbox = document.getElementById('lightbox');
             if (lightbox.classList.contains('active')) {
@@ -685,7 +638,6 @@
             }
         });
 
-        // Переключение вида на мобильных устройствах
         function switchMobileView(view) {
             const btnMap = document.getElementById('btn-map-view');
             const btnList = document.getElementById('btn-list-view');
