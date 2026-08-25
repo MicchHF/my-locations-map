@@ -184,6 +184,32 @@
     </div>
 
     <script>
+        // iOS Safari: сохраняем размеры большого viewport и обновляем их при
+        // изменении панели браузера/ориентации. Саму карту держим на 100lvh,
+        // а visualViewport используем только для корректного перерасчёта карты.
+        function syncIOSViewport() {
+            const root = document.documentElement;
+            if (!root) return;
+
+            const vv = window.visualViewport;
+            const visualHeight = vv ? vv.height : window.innerHeight;
+            const visualWidth = vv ? vv.width : window.innerWidth;
+
+            root.style.setProperty('--visual-vh', `${visualHeight}px`);
+            root.style.setProperty('--visual-vw', `${visualWidth}px`);
+
+            if (window.myMap && window.myMap.container) {
+                requestAnimationFrame(() => window.myMap.container.fitToViewport());
+            }
+        }
+
+        syncIOSViewport();
+        window.addEventListener('resize', syncIOSViewport, { passive: true });
+        window.addEventListener('orientationchange', () => setTimeout(syncIOSViewport, 180), { passive: true });
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', syncIOSViewport, { passive: true });
+        }
+
         const isInsideTelegram = !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe?.user);
         if (isInsideTelegram) {
             const tg = window.Telegram.WebApp;
@@ -202,6 +228,7 @@
         };
 
         let myMap;
+        window.myMap = null;
         let activeBalloonPlacemark = null;
         let userLocationPlacemark = null;
         let allLocations = [];
@@ -490,6 +517,7 @@
                     autoFitToViewport: 'always',
                     suppressMapOpenBlock: true
                 });
+                window.myMap = myMap;
 
                 myMap.events.add('click', function () {
                     if (activeBalloonPlacemark) {
@@ -515,7 +543,6 @@
 
                 if (window.visualViewport) {
                     window.visualViewport.addEventListener('resize', refitMapViewport, { passive: true });
-                    window.visualViewport.addEventListener('scroll', refitMapViewport, { passive: true });
                 }
             });
         }
