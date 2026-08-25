@@ -19,7 +19,7 @@
     <script src="https://api-maps.yandex.ru/2.1/?apikey=7370bad5-a627-4414-a1e8-b2023bda7a61&lang=ru_RU"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- Общий модуль базы и утилит -->
+    <!-- Единый модуль данных и утилит -->
     <script src="js/shared.js"></script>
 </head>
 <body>
@@ -74,7 +74,6 @@
                     <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, адресу, метро..." oninput="handleSearch()">
                 </div>
 
-                <!-- Быстрая навигация по категориям в режиме списка -->
                 <div class="sidebar-cat-scroll-wrap">
                     <button id="sidebarToggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
                     <div id="sidebarCatChipsScroll" class="cat-chips-scroll"></div>
@@ -109,7 +108,6 @@
         </div>
     </div>
 
-    <!-- Меню метро -->
     <div id="metroSidebarOverlay" class="metro-sidebar-overlay" onclick="closeMetroDrawer(event)">
         <div class="metro-sidebar-drawer" onclick="event.stopPropagation()">
             <div class="metro-drawer-header">
@@ -192,12 +190,14 @@
             isDarkMode = dark;
             if (dark) {
                 document.body.classList.add('dark-mode');
-                document.getElementById('themeColorMeta').setAttribute('content', '#090d16');
-                document.getElementById('themeToggleBtn').innerText = '☀️';
+                document.getElementById('themeColorMeta')?.setAttribute('content', '#090d16');
+                const btn = document.getElementById('themeToggleBtn');
+                if (btn) btn.innerText = '☀️';
             } else {
                 document.body.classList.remove('dark-mode');
-                document.getElementById('themeColorMeta').setAttribute('content', '#f4f3f0');
-                document.getElementById('themeToggleBtn').innerText = '🌙';
+                document.getElementById('themeColorMeta')?.setAttribute('content', '#f4f3f0');
+                const btn = document.getElementById('themeToggleBtn');
+                if (btn) btn.innerText = '🌙';
             }
         }
 
@@ -261,7 +261,8 @@
                     Этот ключ привязан к другим устройствам.<br>
                     Перейдите в бот и нажмите кнопку <b>«🔄 Сбросить привязанные устройства»</b>.
                 `;
-                document.querySelector('.auth-input-group').style.display = 'none';
+                const inputGroup = document.querySelector('.auth-input-group');
+                if (inputGroup) inputGroup.style.display = 'none';
                 return false;
             }
 
@@ -328,9 +329,7 @@
                     .maybeSingle();
 
                 if (profile) return profile;
-            } catch (e) {
-                console.error("Ошибка поиска токена:", e);
-            }
+            } catch (e) {}
             return null;
         }
 
@@ -511,6 +510,7 @@
 
         function initMetroDrawer() {
             const linesGrid = document.getElementById('metroLinesGrid');
+            if (!linesGrid) return;
             linesGrid.innerHTML = `
                 <div class="metro-line-item ${!selectedLineName ? 'selected' : ''}" onclick="selectMetroLine('')">
                     <span class="metro-line-color-dot" style="background:#0f172a;"></span>
@@ -540,23 +540,32 @@
 
         function renderMetroStationsList() {
             const listEl = document.getElementById('metroStationsList');
+            if (!listEl) return;
             listEl.innerHTML = '';
 
             let stations = [];
             if (selectedLineName) {
                 const found = MOSCOW_METRO_DATA.find(l => l.name === selectedLineName);
-                if (found) stations = found.stations;
+                if (found && found.stations) {
+                    stations = found.stations.map(s => typeof s === 'string' ? s : s.name);
+                }
             } else {
                 const set = new Set();
-                MOSCOW_METRO_DATA.forEach(l => l.stations.forEach(s => set.add(s)));
-                stations = Array.from(set).sort((a, b) => a.localeCompare(b));
+                MOSCOW_METRO_DATA.forEach(l => {
+                    if (l.stations) {
+                        l.stations.forEach(s => {
+                            const name = typeof s === 'string' ? s : s.name;
+                            if (name) set.add(name);
+                        });
+                    }
+                });
+                stations = Array.from(set).sort((a, b) => a.localeCompare(b, 'ru'));
             }
 
-            stations.forEach(st => {
-                const stName = typeof st === 'string' ? st : st.name;
+            stations.forEach(stName => {
                 let count = 0;
                 allLocations.forEach(loc => {
-                    if (loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => m.name === stName)) count++;
+                    if (loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => (m.name || m.stationName) === stName)) count++;
                 });
 
                 const item = document.createElement('div');
@@ -624,17 +633,17 @@
         }
 
         function applyCombinedFilters() {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const query = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
             const favs = getFavorites();
             
             const filtered = allLocations.filter(loc => {
                 const titleMatch = (loc.title || '').toLowerCase().includes(query);
                 const addressMatch = (loc.address || '').toLowerCase().includes(query);
                 const descMatch = (loc.description || '').toLowerCase().includes(query);
-                const metroMatch = loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => (m.name || '').toLowerCase().includes(query));
+                const metroMatch = loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => (m.name || m.stationName || '').toLowerCase().includes(query));
                 const textPass = !query || (titleMatch || addressMatch || descMatch || metroMatch);
 
-                const metroPass = !selectedMetroFilter || (loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => m.name === selectedMetroFilter));
+                const metroPass = !selectedMetroFilter || (loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => (m.name || m.stationName) === selectedMetroFilter));
                 const favPass = !showFavoritesOnly || favs.includes(String(loc.id));
 
                 return textPass && metroPass && favPass;
@@ -643,23 +652,27 @@
             renderInterface(filtered);
 
             if (selectedMetroFilter && filtered.length > 0 && myMap) {
-                const coordsList = filtered.map(l => [l.lat, l.lng]);
+                const coordsList = filtered.map(l => [l.lat, l.lng]).filter(c => c[0] && c[1]);
                 if (coordsList.length === 1) {
                     myMap.setCenter(coordsList[0], 15, { duration: 300 });
-                } else {
+                } else if (coordsList.length > 1) {
                     ymaps.geoQuery(myMap.geoObjects).applyBoundsToMap(myMap, { checkZoomRange: true, duration: 300 });
                 }
             }
         }
 
         function syncMobileSearch(val) {
-            document.getElementById('searchInput').value = val;
-            handleSearch();
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.value = val;
+                handleSearch();
+            }
         }
 
         function toggleMobileSearch(forceState) {
             const overlay = document.getElementById('mobileSearchOverlay');
             const input = document.getElementById('mobileSearchInput');
+            if (!overlay || !input) return;
             const isCurrentlyActive = overlay.classList.contains('active');
             const newState = forceState !== undefined ? forceState : !isCurrentlyActive;
 
@@ -701,17 +714,19 @@
         function renderMetroBadges(metroList) {
             if (!metroList || !Array.isArray(metroList) || metroList.length === 0) return '';
             return `<div class="card-metro-block">${metroList.map(m => {
-                const isMck = (m.name && m.name.includes('МЦК')) || m.color === '#DF4842';
+                const name = m.name || m.stationName || '';
+                const isMck = (name && name.includes('МЦК')) || m.color === '#DF4842';
                 return `
                 <span class="metro-badge">
                     ${getMetroSvg(m.color || '#EF161E', isMck)}
-                    ${m.name} ${m.time ? `<span style="color:var(--text-muted); font-weight:400;">(${m.time} мин)</span>` : ''}
+                    ${name} ${m.time ? `<span style="color:var(--text-muted); font-weight:400;">(${m.time} мин)</span>` : ''}
                 </span>
             `}).join('')}</div>`;
         }
 
         function renderInterface(locationsToRender) {
             const listEl = document.getElementById('locations-list');
+            if (!listEl) return;
             listEl.innerHTML = '';
             const grouped = {};
             const favs = getFavorites();
@@ -722,17 +737,20 @@
                 grouped[cat].push(loc);
             });
 
-            Object.values(categoryCollections).forEach(coll => myMap.geoObjects.remove(coll));
+            if (myMap && myMap.geoObjects) {
+                Object.values(categoryCollections).forEach(coll => myMap.geoObjects.remove(coll));
+            }
             categoryCollections = {};
+
+            const allCatsToDisplay = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
+            renderBothCatFilterBars(allCatsToDisplay);
 
             if (locationsToRender.length === 0) {
                 listEl.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:0.9rem;">Ничего не найдено 🔍</div>';
-                renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
                 return;
             }
 
             const activeCategoriesList = Object.keys(grouped);
-            renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
 
             activeCategoriesList.forEach(catName => {
                 if (categoryVisibility[catName] === undefined) categoryVisibility[catName] = true;
@@ -740,7 +758,9 @@
 
                 const collection = new ymaps.GeoObjectCollection({}, { visible: isVisible });
                 categoryCollections[catName] = collection;
-                myMap.geoObjects.add(collection);
+                if (myMap && myMap.geoObjects) {
+                    myMap.geoObjects.add(collection);
+                }
 
                 const groupEl = document.createElement('div');
                 groupEl.className = 'category-group';
@@ -766,6 +786,7 @@
                 const contentEl = groupEl.querySelector('.category-content');
 
                 grouped[catName].forEach(loc => {
+                    if (!loc.lat || !loc.lng) return;
                     const categoryIcon = loc.category ? loc.category.split(' ')[0] : '📍';
                     const pinColor = getCategoryPinColor(loc.category);
                     const isFav = favs.includes(String(loc.id));
@@ -846,11 +867,12 @@
             let metroHtml = '';
             if (loc.metro && Array.isArray(loc.metro) && loc.metro.length > 0) {
                 metroHtml = `<div class="balloon-metro-block">${loc.metro.map(m => {
-                    const isMck = (m.name && m.name.includes('МЦК')) || m.color === '#DF4842';
+                    const name = m.name || m.stationName || '';
+                    const isMck = (name && name.includes('МЦК')) || m.color === '#DF4842';
                     return `
                     <span class="metro-badge">
                         ${getMetroSvg(m.color || '#EF161E', isMck)}
-                        ${m.name} ${m.time ? `<span style="color:var(--text-muted); font-weight:400;">(${m.time} мин)</span>` : ''}
+                        ${name} ${m.time ? `<span style="color:var(--text-muted); font-weight:400;">(${m.time} мин)</span>` : ''}
                     </span>
                 `}).join('')}</div>`;
             }
