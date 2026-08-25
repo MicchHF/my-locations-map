@@ -8,13 +8,15 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>@dalazareva локации</title>
     
-    <!-- Иконка сайта и приложения -->
+    <!-- Иконка сайта и веб-приложения -->
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <link rel="apple-touch-icon" href="icon.svg">
-
+    
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://api-maps.yandex.ru/2.1/?apikey=7370bad5-a627-4414-a1e8-b2023bda7a61&lang=ru_RU"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         * {
             box-sizing: border-box;
@@ -538,6 +540,7 @@
         .mobile-search-input { flex: 1; border: none; background: transparent; font-size: 16px; outline: none; color: #0f172a; padding-left: 4px; }
         .mobile-search-close { background: none; border: none; font-size: 1.1rem; color: #64748b; cursor: pointer; padding: 4px 8px; }
 
+        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
         @media (max-width: 768px) {
             #sidebar { width: 100vw; height: 100%; display: none; }
             
@@ -680,6 +683,13 @@
 
     <script src="js/supabase.js"></script>
     <script>
+        // Инициализация Telegram WebApp
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            tg.ready();
+            tg.expand();
+        }
+
         let myMap;
         let activeBalloonPlacemark = null;
         let allLocations = [];
