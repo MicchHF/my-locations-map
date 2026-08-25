@@ -6,7 +6,12 @@
     <meta name="theme-color" content="#f4f3f0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Панель управления | локации от @dalazareva</title>
+    <title>Панель управления | @dalazareva локации</title>
+    
+    <!-- Иконка сайта и приложения -->
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.svg">
+    
     <script src="https://api-maps.yandex.ru/2.1/?apikey=7370bad5-a627-4414-a1e8-b2023bda7a61&lang=ru_RU"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -107,6 +112,7 @@
         .metro-badge { display: inline-flex; align-items: center; gap: 5px; background: #ffffff; color: #1e293b; font-size: 0.74rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
         .metro-icon-svg { width: 14px; height: 11px; flex-shrink: 0; }
 
+        /* Фотографии без жесткой обрезки */
         .card-photos { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 8px; margin-top: 4px; }
         .card-photo-thumb { 
             height: 75px; width: auto; max-width: 140px; 
@@ -164,13 +170,15 @@
         .photo-btn { background: rgba(0,0,0,0.75); color: #fff; border: none; border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; cursor: pointer; pointer-events: auto; }
         .photo-btn-delete { background: rgba(239,68,68,0.9); }
 
+        /* Полноэкранный Lightbox со свайпами */
         .lightbox-modal {
             display: none; position: fixed; inset: 0; width: 100vw; height: 100%;
             background: rgba(0, 0, 0, 0.94); z-index: 10005;
             justify-content: center; align-items: center; backdrop-filter: blur(8px);
+            touch-action: none;
         }
         .lightbox-modal.active { display: flex; }
-        .lightbox-img { max-width: 92vw; max-height: 85vh; object-fit: contain; border-radius: 8px; }
+        .lightbox-img { max-width: 92vw; max-height: 85vh; object-fit: contain; border-radius: 8px; user-select: none; }
         .lightbox-close { position: absolute; top: max(calc(env(safe-area-inset-top) + 12px), 20px); right: 20px; color: #ffffff; font-size: 32px; cursor: pointer; padding: 10px; z-index: 10006; }
         .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); color: #ffffff; font-size: 36px; cursor: pointer; padding: 16px; opacity: 0.7; z-index: 10006; user-select: none; }
         .lightbox-prev { left: 10px; } .lightbox-next { right: 10px; }
@@ -372,7 +380,7 @@
         </div>
     </div>
 
-    <!-- LIGHTBOX -->
+    <!-- LIGHTBOX С ПОДДЕРЖКОЙ СВАЙПОВ -->
     <div id="lightbox" class="lightbox-modal">
         <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
         <span class="lightbox-nav lightbox-prev" onclick="prevImage()">&#10094;</span>
@@ -1423,6 +1431,21 @@
         function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
         function nextImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx + 1) % currentGallery.length; updateLightboxImage(); }
         function prevImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx - 1 + currentGallery.length) % currentGallery.length; updateLightboxImage(); }
+
+        /* Обработка свайпов для админки */
+        let touchStartX = 0;
+        let touchEndX = 0;
+        const lightboxEl = document.getElementById('lightbox');
+        
+        lightboxEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        lightboxEl.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            if (touchEndX < touchStartX - 45) nextImage();
+            if (touchEndX > touchStartX + 45) prevImage();
+        }, { passive: true });
 
         function switchMobileView(view) {
             const btnMap = document.getElementById('btn-map-view');
