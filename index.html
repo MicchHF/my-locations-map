@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>@dalazareva локации📍</title>
     
     <!-- Иконка сайта и веб-приложения -->
@@ -28,11 +28,11 @@
 
         html, body {
             width: 100vw;
-            height: 100vh;
+            height: 100%;
             height: 100dvh;
             margin: 0;
             padding: 0;
-            background-color: #0f172a;
+            background-color: #f4f3f0;
             color: #1a1a1a;
             -webkit-text-size-adjust: 100%;
             overflow: hidden;
@@ -155,9 +155,9 @@
             position: fixed;
             inset: 0;
             width: 100vw;
-            height: 100vh;
+            height: 100%;
             height: 100dvh;
-            display: none; /* скрыт до авторизации */
+            display: none;
             background: #f4f3f0;
         }
 
@@ -407,7 +407,7 @@
         /* ВЕРХНЯЯ СТРОКА КАТЕГОРИЙ */
         .top-cat-filter-bar {
             position: fixed;
-            top: max(calc(env(safe-area-inset-top) + 12px), 16px);
+            top: max(calc(env(safe-area-inset-top) + 8px), 12px);
             left: 50%;
             transform: translateX(-50%);
             width: calc(100% - 24px);
@@ -416,12 +416,12 @@
             align-items: center;
             gap: 6px;
             padding: 6px 8px;
-            background: rgba(255, 255, 255, 0.94);
+            background: rgba(255, 255, 255, 0.96);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-radius: 9999px;
             border: 1px solid rgba(0, 0, 0, 0.08);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             z-index: 1000;
         }
 
@@ -465,19 +465,19 @@
         /* ПЛАВАЮЩАЯ КНОПКА МЕТРО */
         .metro-floating-btn {
             position: fixed;
-            top: max(calc(env(safe-area-inset-top) + 72px), 76px);
+            top: max(calc(env(safe-area-inset-top) + 64px), 68px);
             left: max(calc(env(safe-area-inset-left) + 16px), 16px);
             z-index: 1000;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.96);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.08);
             border-radius: 9999px;
             padding: 8px 14px;
             display: flex;
             align-items: center;
             gap: 6px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
             cursor: pointer;
             font-size: 0.82rem;
             font-weight: 600;
@@ -498,7 +498,7 @@
         .metro-sidebar-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(4px);
             z-index: 2000;
             display: none;
@@ -550,7 +550,7 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
-            max-height: 200px;
+            max-height: 220px;
             overflow-y: auto;
             border: 1px solid #e2e8f0;
             border-radius: 12px;
@@ -670,7 +670,7 @@
             backdrop-filter: blur(20px);
             border-radius: 16px;
             padding: 8px 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
             border: 1px solid rgba(0, 0, 0, 0.08);
             align-items: center;
             gap: 8px;
@@ -693,10 +693,12 @@
                 height: 100% !important;
                 height: 100dvh !important;
                 z-index: 1;
+                background: #f4f3f0;
             }
             #map {
                 width: 100% !important;
                 height: 100% !important;
+                background: #f4f3f0;
             }
 
             .show-list #map-container { display: none !important; }
@@ -709,22 +711,22 @@
 
             .metro-floating-btn {
                 left: 12px;
-                top: max(calc(env(safe-area-inset-top) + 68px), 72px);
+                top: max(calc(env(safe-area-inset-top) + 60px), 64px);
             }
 
             .mobile-toggle-bar {
                 display: flex;
                 position: fixed;
-                bottom: max(calc(env(safe-area-inset-bottom) + 12px), 20px);
+                bottom: max(calc(env(safe-area-inset-bottom) + 14px), 20px);
                 left: 50%;
                 transform: translateX(-50%);
-                background: rgba(255, 255, 255, 0.92);
+                background: rgba(255, 255, 255, 0.94);
                 backdrop-filter: blur(20px);
                 -webkit-backdrop-filter: blur(20px);
                 padding: 4px;
                 border-radius: 9999px;
                 border: 1px solid rgba(0, 0, 0, 0.08);
-                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12);
                 z-index: 1000;
                 gap: 4px;
                 align-items: center;
@@ -750,14 +752,12 @@
 </head>
 <body>
 
-    <!-- ЭКРАН БЛОКИРОВКИ: КАРТА И ДАННЫЕ НЕ ИНИЦИАЛИЗИРУЮТСЯ ДО ВХОДА -->
     <div id="authGate">
         <div class="auth-gate-card">
             <div class="auth-gate-icon">📍</div>
             <div class="auth-gate-title">@dalazareva локации📍</div>
             <div class="auth-gate-desc" id="authGateDesc">Гид по лучшим кофейням, фото-спотам и локациям Москвы. Для доступа откройте карту в Telegram или введите код доступа:</div>
             
-            <!-- Основной безопасный вход через Telegram в 1 клик -->
             <a href="https://t.me/dalazareva_locations_bot" class="tg-direct-btn">
                 <span>✈️ Открыть бот в Telegram</span>
             </a>
@@ -774,16 +774,13 @@
     <div id="app-wrapper">
         <div id="sidebar">
             <div class="sidebar-header">
-                <!-- ШАПКА: ПРОФИЛЬ + ССЫЛКА НА КАНАЛ -->
                 <div class="header-top-row">
                     <div class="tg-badge" onclick="handleBadgeClick()" title="Нажмите для управления тарифом в боте">
                         <div style="display: flex; flex-direction: column; gap: 3px; width: 100%;">
-                            <!-- Верхняя строка: Название -->
                             <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
                                 <span style="font-size: 0.92rem; font-weight: 800; color: #ffffff; letter-spacing: -0.2px;">@dalazareva локации📍</span>
                                 <span class="tg-badge-icon" id="badgeActionIcon" style="font-size: 0.8rem; color: #94a3b8;">↗</span>
                             </div>
-                            <!-- Нижняя строка: Никнейм и тариф в одну строку -->
                             <div id="userProfileSubRow" style="font-size: 0.74rem; color: #94a3b8; display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                 <span id="userDisplayName" style="color: #e2e8f0; font-weight: 600;">👤 Пользователь</span>
                                 <span>•</span>
@@ -792,7 +789,6 @@
                         </div>
                     </div>
                     
-                    <!-- Кнопка перехода в Telegram-канал -->
                     <a href="https://t.me/dalazareva" target="_blank" rel="noopener" class="channel-link-btn" title="Перейти в Telegram-канал @dalazareva">
                         <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
@@ -865,12 +861,10 @@
     <script>
         const BOT_USERNAME = "dalazareva_locations_bot";
 
-        // Ваши данные Supabase
         const SUPABASE_URL = "https://cwkgylbtcjfmweoldhyb.supabase.co";
         const SUPABASE_KEY = "sb_publishable_KnWO20wlfuWd0NYKMNKRvw_l1rttjaT";
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Проверка запуска внутри Telegram Mini App
         const isInsideTelegram = !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe?.user);
         if (isInsideTelegram) {
             const tg = window.Telegram.WebApp;
@@ -915,59 +909,67 @@
 
         const MOSCOW_METRO_DATA = [
             {
-                id: "line-1", name: "Сокольническая", color: "#EF161E",
+                id: "line-1", name: "1. Сокольническая", color: "#EF161E",
                 stations: ["Бульвар Рокоссовского", "Черкизовская", "Преображенская площадь", "Сокольники", "Красносельская", "Комсомольская", "Красные Ворота", "Чистые пруды", "Лубянка", "Охотный Ряд", "Библиотека им. Ленина", "Кропоткинская", "Парк культуры", "Фрунзенская", "Спортивная", "Воробьёвы горы", "Университет", "Проспект Вернадского", "Юго-Западная", "Тропарёво", "Румянцево", "Саларьево", "Филатов Луг", "Прокшино", "Ольховая", "Коммунарка", "Потапово"]
             },
             {
-                id: "line-2", name: "Замоскворецкая", color: "#2DBE2C",
+                id: "line-2", name: "2. Замоскворецкая", color: "#2DBE2C",
                 stations: ["Ховрино", "Беломорская", "Речной вокзал", "Водный стадион", "Войковская", "Сокол", "Аэропорт", "Динамо", "Белорусская", "Маяковская", "Тверская", "Театральная", "Новокузнецкая", "Павелецкая", "Автозаводская", "Технопарк", "Коломенская", "Каширская", "Кантемировская", "Царицыно", "Орехово", "Домодедовская", "Красногвардейская", "Алма-Атинская"]
             },
             {
-                id: "line-3", name: "Арбатско-Покровская", color: "#0078BF",
+                id: "line-3", name: "3. Арбатско-Покровская", color: "#0078BF",
                 stations: ["Пятницкое шоссе", "Митино", "Волоколамская", "Мякинино", "Строгино", "Крылатское", "Молодёжная", "Кунцевская", "Славянский бульвар", "Парк Победы", "Киевская", "Смоленская", "Арбатская", "Площадь Революции", "Курская", "Бауманская", "Электрозаводская", "Семёновская", "Партизанская", "Измайловская", "Первомайская", "Щёлковская"]
             },
             {
-                id: "line-4", name: "Филёвская", color: "#00BFFF",
+                id: "line-4", name: "4. Филёвская", color: "#00BFFF",
                 stations: ["Александровский сад", "Арбатская (ФЛ)", "Смоленская (ФЛ)", "Киевская (ФЛ)", "Студенческая", "Кутузовская", "Фили", "Багратионовская", "Филёвский парк", "Пионерская", "Кунцевская (ФЛ)", "Выставочная", "Международная"]
             },
             {
-                id: "line-5", name: "Кольцевая", color: "#8D5B2D",
+                id: "line-5", name: "5. Кольцевая", color: "#8D5B2D",
                 stations: ["Парк культуры (Кольцевая)", "Октябрьская (Кольцевая)", "Добрынинская", "Павелецкая (Кольцевая)", "Таганская (Кольцевая)", "Курская (Кольцевая)", "Комсомольская (Кольцевая)", "Проспект Мира (Кольцевая)", "Новослободская", "Белорусская (Кольцевая)", "Краснопресненская", "Киевская (Кольцевая)"]
             },
             {
-                id: "line-6", name: "Калужско-Рижская", color: "#ED9121",
+                id: "line-6", name: "6. Калужско-Рижская", color: "#ED9121",
                 stations: ["Медведково", "Бабушкинская", "Свиблово", "Ботанический сад", "ВДНХ", "Алексеевская", "Рижская", "Проспект Мира", "Сухаревская", "Тургеневская", "Китай-город", "Третьяковская", "Октябрьская", "Шаболовская", "Ленинский проспект", "Академическая", "Профсоюзная", "Новые Черёмушки", "Калужская", "Воронцовская", "Беляево", "Коньково", "Тёплый Стан", "Ясенево", "Новоясеневская"]
             },
             {
-                id: "line-7", name: "Таганско-Краснопресненская", color: "#800080",
+                id: "line-7", name: "7. Таганско-Краснопресненская", color: "#800080",
                 stations: ["Планерная", "Сходненская", "Тушинская", "Спартак", "Щукинская", "Октябрьское Поле", "Полежаевская", "Беговая", "Улица 1905 года", "Баррикадная", "Пушкинская", "Кузнецкий Мост", "Китай-город (ТКЛ)", "Таганская", "Пролетарская", "Волгоградский проспект", "Текстильщики", "Кузьминки", "Рязанский проспект", "Выхино", "Лермонтовский проспект", "Жулебино", "Котельники"]
             },
             {
-                id: "line-8", name: "Калининская / Солнцевская", color: "#FFD702",
-                stations: ["Новокосино", "Новогиреево", "Перово", "Шоссе Энтузиастов", "Авиамоторная", "Площадь Ильича", "Марксистская", "Третьяковская (Калининская)", "Деловой центр", "Парк Победы", "Минская", "Ломоносовский проспект", "Раменки", "Мичуринский проспект", "Озёрная", "Говорово", "Солнцево", "Боровское шоссе", "Новопеределкино", "Рассказовка", "Пыхтино", "Аэропорт Внуково"]
+                id: "line-8", name: "8. Калининская (Желтая)", color: "#FFD702",
+                stations: ["Новокосино", "Новогиреево", "Перово", "Шоссе Энтузиастов", "Авиамоторная", "Площадь Ильича", "Марксистская", "Третьяковская"]
             },
             {
-                id: "line-9", name: "Серпуховско-Тимирязевская", color: "#A0A0A0",
+                id: "line-8a", name: "8А. Солнцевская (Желтая)", color: "#FFD702",
+                stations: ["Деловой центр", "Парк Победы", "Минская", "Ломоносовский проспект", "Раменки", "Мичуринский проспект", "Озёрная", "Говорово", "Солнцево", "Боровское шоссе", "Новопеределкино", "Рассказовка", "Пыхтино", "Аэропорт Внуково"]
+            },
+            {
+                id: "line-9", name: "9. Серпуховско-Тимирязевская", color: "#A0A0A0",
                 stations: ["Алтуфьево", "Бибирево", "Отрадное", "Владыкино", "Петровско-Разумовская", "Тимирязевская", "Дмитровская", "Савёловская", "Менделеевская", "Цветной бульвар", "Чеховская", "Боровицкая", "Полянка", "Серпуховская", "Тульская", "Нагатинская", "Нагорная", "Нахимовский проспект", "Севастопольская", "Чертановская", "Южная", "Пражская", "Улица Академика Янгеля", "Аннино", "Бульвар Дмитрия Донского"]
             },
             {
-                id: "line-10", name: "Люблинско-Дмитровская", color: "#99CC00",
+                id: "line-10", name: "10. Люблинско-Дмитровская", color: "#99CC00",
                 stations: ["Физтех", "Лианозово", "Яхромская", "Селигерская", "Верхние Лихоборы", "Окружная", "Фонвизинская", "Бутырская", "Марьина Роща", "Достоевская", "Трубная", "Сретенский бульвар", "Чкаловская", "Римская", "Крестьянская Застава", "Дубровка", "Кожуховская", "Печатники", "Волжская", "Люблино", "Братиславская", "Марьино", "Борисово", "Шипиловская", "Зябликово"]
             },
             {
-                id: "line-11", name: "Большая кольцевая (БКЛ)", color: "#70C9C7",
+                id: "line-11", name: "11. Большая кольцевая (БКЛ)", color: "#70C9C7",
                 stations: ["Савёловская (БКЛ)", "Марьина Роща (БКЛ)", "Рижская (БКЛ)", "Сокольники (БКЛ)", "Электрозаводская (БКЛ)", "Лефортово", "Авиамоторная (БКЛ)", "Нижегородская", "Текстильщики (БКЛ)", "Печатники (БКЛ)", "Нагатинский Затон", "Кленовый бульвар", "Каширская (БКЛ)", "Варшавская", "Каховская", "Зюзино", "Воронцовская", "Новаторская", "Проспект Вернадского (БКЛ)", "Мичуринский проспект (БКЛ)", "Аминьевская", "Давыдково", "Кунцевская (БКЛ)", "Терехово", "Мнёвники", "Народное Ополчение", "Хорошёвская", "ЦСКА", "Петровский парк"]
             },
             {
-                id: "line-14", name: "МЦК", color: "#DF4842", isRing: true,
+                id: "line-12", name: "12. Бутовская", color: "#A1B2C8",
+                stations: ["Битцевский парк", "Лесопарковая", "Улица Старокачаловская", "Улица Скобелевская", "Бульвар Адмирала Ушакова", "Улица Горчакова", "Бунинская аллея"]
+            },
+            {
+                id: "line-14", name: "14. МЦК", color: "#DF4842", isRing: true,
                 stations: ["Окружная (МЦК)", "Владыкино (МЦК)", "Ботанический сад (МЦК)", "Ростокино", "Белокаменная", "Бульвар Рокоссовского (МЦК)", "Локомотив", "Измайлово", "Соколиная Гора", "Шоссе Энтузиастов (МЦК)", "Андроновка", "Нижегородская (МЦК)", "Новохохловская", "Угрешская", "Дубровка (МЦК)", "Автозаводская (МЦК)", "ЗИЛ", "Верхние Котлы", "Крымская", "Площадь Гагарина", "Лужники", "Кутузовская (МЦК)", "Деловой центр (МЦК)", "Шелепиха", "Хорошёво", "Зорге", "Панфиловская", "Стрешнево", "Балтийская", "Коптево", "Лихоборы"]
             },
             {
-                id: "line-15", name: "Некрасовская", color: "#DE64A1",
+                id: "line-15", name: "15. Некрасовская", color: "#DE64A1",
                 stations: ["Нижегородская", "Стахановская", "Окская", "Юго-Восточная", "Косино", "Улица Дмитриевского", "Лухмановская", "Некрасовка"]
             },
             {
-                id: "line-16", name: "Троицкая", color: "#3B927D",
+                id: "line-16", name: "16. Троицкая", color: "#3B927D",
                 stations: ["Новаторская", "Университет Дружбы Народов", "Генерала Тюленева", "Тютчевская"]
             }
         ];
@@ -987,7 +989,6 @@
             </svg>`;
         }
 
-        // Уникальный ID текущего браузера/устройства
         function getOrCreateDeviceId() {
             let devId = localStorage.getItem('dalazareva_device_id');
             if (!devId) {
@@ -997,18 +998,15 @@
             return devId;
         }
 
-        // Главная функция проверки доступа и ограничения устройств
         async function verifyAndRegisterDevice(userProfile) {
             const currentDeviceId = getOrCreateDeviceId();
             let devices = userProfile.devices || [];
             const maxDevices = userProfile.max_devices || 2;
 
-            // Если устройство уже авторизовано — пускаем
             if (devices.includes(currentDeviceId)) {
                 return true;
             }
 
-            // Если лимит исчерпан
             if (devices.length >= maxDevices) {
                 document.getElementById('authGateDesc').innerHTML = `
                     🚫 <b>Лимит устройств исчерпан (${devices.length} из ${maxDevices}).</b><br><br>
@@ -1019,7 +1017,6 @@
                 return false;
             }
 
-            // Добавляем текущий браузер в массив и сохраняем в Supabase
             devices.push(currentDeviceId);
             try {
                 let { error: updateError } = await supabaseClient
@@ -1039,7 +1036,6 @@
             }
         }
 
-        // Проверка авторизации: Telegram Mini App, URL-токен или localStorage
         async function checkAuthAndInit() {
             const urlParams = new URLSearchParams(window.location.search);
             const tokenFromUrl = urlParams.get('token') || urlParams.get('auth');
@@ -1077,7 +1073,6 @@
             }
         }
 
-        // Поиск пользователя по длинному токену
         async function findUserByToken(token) {
             if (!token) return null;
             try {
@@ -1095,7 +1090,6 @@
             return null;
         }
 
-        // Синхронизация внутри Telegram
         async function syncUserTelegram(tgUser) {
             try {
                 let { data: profile } = await supabaseClient
@@ -1115,7 +1109,6 @@
             }
         }
 
-        // Ручной ввод кода доступа в Safari
         async function submitAccessCode() {
             const input = document.getElementById('accessCodeInput');
             const code = input.value.trim();
@@ -1141,7 +1134,6 @@
             }
         }
 
-        // Клик по профилю -> открывает бота
         function handleBadgeClick() {
             const botUrl = `https://t.me/${BOT_USERNAME}`;
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
@@ -1706,7 +1698,6 @@
             }
         }
 
-        // Запуск проверки авторизации
         checkAuthAndInit();
     </script>
 </body>
