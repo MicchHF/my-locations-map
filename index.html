@@ -14,17 +14,47 @@
     <link rel="apple-touch-icon" href="icon.svg">
     <link rel="stylesheet" href="style.css">
     
-    <!-- SDK и внешние библиотеки -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://api-maps.yandex.ru/2.1/?apikey=7370bad5-a627-4414-a1e8-b2023bda7a61&lang=ru_RU"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- Единый модуль данных и утилит -->
     <script src="js/shared.js"></script>
+
+    <style>
+        /* Чистая кнопка лайка без рамок и фона */
+        .fav-btn {
+            background: transparent !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0;
+            margin: 0;
+            transition: transform 0.15s ease;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+        .fav-btn:active { transform: scale(1.25); }
+
+        /* Чип избранного в верхней строке */
+        .cat-chip.fav-chip {
+            border-color: #f43f5e !important;
+            color: #f43f5e !important;
+            padding: 6px 10px !important;
+        }
+        .cat-chip.fav-chip.active {
+            background: #f43f5e !important;
+            color: #ffffff !important;
+        }
+    </style>
 </head>
 <body>
 
-    <!-- Экран блокировки -->
     <div id="authGate">
         <div class="auth-gate-card">
             <div class="auth-gate-icon">📍</div>
@@ -108,6 +138,7 @@
         </div>
     </div>
 
+    <!-- МЕНЮ МЕТРО -->
     <div id="metroSidebarOverlay" class="metro-sidebar-overlay" onclick="closeMetroDrawer(event)">
         <div class="metro-sidebar-drawer" onclick="event.stopPropagation()">
             <div class="metro-drawer-header">
@@ -830,7 +861,7 @@
                     const safeAddr = escapeQuotes(loc.address);
 
                     cardEl.innerHTML = `
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px;">
                             <div class="card-title">${loc.title}</div>
                             <button class="fav-btn fav-btn-loc-${loc.id}" onclick="toggleFavorite('${loc.id}', event)" title="В избранное">
                                 ${isFav ? '❤️' : '🤍'}
@@ -879,7 +910,7 @@
 
             return `
                 <div class="balloon-wrapper">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; margin-bottom: 6px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 6px;">
                         <div class="balloon-title">${loc.title}</div>
                         <button class="fav-btn fav-btn-loc-${loc.id}" onclick="toggleFavorite('${loc.id}', event)">
                             ${isFav ? '❤️' : '🤍'}
@@ -927,7 +958,7 @@
         function createFavChip(count) {
             const chip = document.createElement('div');
             chip.className = `cat-chip fav-chip ${showFavoritesOnly ? 'active' : ''}`;
-            chip.innerHTML = `<span>❤️ Избранное</span> ${count > 0 ? `<span style="font-weight:700; opacity:0.9;">(${count})</span>` : ''}`;
+            chip.innerHTML = `<span>❤️</span>${count > 0 ? `<span style="font-weight:700; margin-left:2px;">${count}</span>` : ''}`;
             chip.onclick = () => toggleFavoritesFilter();
             return chip;
         }
@@ -1017,7 +1048,6 @@
             }
         }
 
-        /* Lightbox */
         function openLightboxByUrl(locId, index, event) {
             if (event) event.stopPropagation();
             const loc = allLocations.find(l => l.id === locId);
