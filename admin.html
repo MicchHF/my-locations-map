@@ -107,8 +107,15 @@
         .metro-badge { display: inline-flex; align-items: center; gap: 5px; background: #ffffff; color: #1e293b; font-size: 0.74rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
         .metro-icon-svg { width: 14px; height: 11px; flex-shrink: 0; }
 
-        .card-photos { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 8px; margin-top: 4px; }
-        .card-photo-thumb { height: 65px; width: auto; max-width: 120px; border-radius: 6px; object-fit: cover; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.08); }
+        /* Фотографии без обрезки до квадрата */
+        .card-photos { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 8px; margin-top: 4px; }
+        .card-photo-thumb { 
+            height: 75px; width: auto; max-width: 140px; 
+            border-radius: 6px; object-fit: cover; flex-shrink: 0; 
+            border: 1px solid rgba(0,0,0,0.08); cursor: pointer; 
+            transition: transform 0.15s ease;
+        }
+        .card-photo-thumb:hover { transform: scale(1.03); }
 
         .card-actions-row { display: flex; gap: 6px; }
         .edit-btn, .delete-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 6px 8px; font-size: 0.75rem; font-weight: 500; border-radius: 8px; cursor: pointer; border: 1px solid #cbd5e1; }
@@ -133,7 +140,7 @@
         .balloon-btn { width: 100%; padding: 6px 8px; font-size: 0.75rem; font-weight: 600; border-radius: 6px; cursor: pointer; background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; text-align: center; }
         .balloon-desc { font-size: 0.82rem; color: #334155; margin-top: 8px; white-space: pre-line; border-top: 1px solid #f1f5f9; padding-top: 6px; }
         .balloon-photos { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; }
-        .balloon-photo-img { height: 60px; width: 60px; border-radius: 6px; object-fit: cover; cursor: pointer; flex-shrink: 0; }
+        .balloon-photo-img { height: 65px; width: auto; max-width: 120px; border-radius: 6px; object-fit: cover; cursor: pointer; flex-shrink: 0; }
 
         .top-cat-filter-bar { position: absolute; top: max(calc(env(safe-area-inset-top) + 14px), 16px); left: 50%; transform: translateX(-50%); width: calc(100% - 32px); max-width: 600px; display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); border-radius: 9999px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 500; }
         .toggle-all-btn { padding: 6px 12px; border-radius: 9999px; background: #0f172a; color: #fff; font-size: 0.78rem; font-weight: 600; border: none; cursor: pointer; flex-shrink: 0; }
@@ -151,12 +158,25 @@
         .modal-title { font-weight: 700; font-size: 1.1rem; color: #0f172a; }
         .modal-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #64748b; }
 
-        .edit-photos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; }
-        .edit-photo-item { position: relative; width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 1px solid #cbd5e1; background: #f8fafc; }
-        .edit-photo-item img { width: 100%; height: 100%; object-fit: cover; }
-        .photo-controls { position: absolute; top: 4px; right: 4px; left: 4px; display: flex; justify-content: space-between; gap: 4px; }
-        .photo-btn { background: rgba(0,0,0,0.7); color: #fff; border: none; border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; cursor: pointer; }
+        .edit-photos-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+        .edit-photo-item { position: relative; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #cbd5e1; background: #f8fafc; flex-shrink: 0; }
+        .edit-photo-item img { height: 100%; width: auto; object-fit: cover; cursor: pointer; }
+        .photo-controls { position: absolute; top: 3px; right: 3px; left: 3px; display: flex; justify-content: space-between; gap: 4px; pointer-events: none; }
+        .photo-btn { background: rgba(0,0,0,0.75); color: #fff; border: none; border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; cursor: pointer; pointer-events: auto; }
         .photo-btn-delete { background: rgba(239,68,68,0.9); }
+
+        /* Полноэкранный Lightbox */
+        .lightbox-modal {
+            display: none; position: fixed; inset: 0; width: 100vw; height: 100%;
+            background: rgba(0, 0, 0, 0.94); z-index: 10005;
+            justify-content: center; align-items: center; backdrop-filter: blur(8px);
+        }
+        .lightbox-modal.active { display: flex; }
+        .lightbox-img { max-width: 92vw; max-height: 85vh; object-fit: contain; border-radius: 8px; }
+        .lightbox-close { position: absolute; top: max(calc(env(safe-area-inset-top) + 12px), 20px); right: 20px; color: #ffffff; font-size: 32px; cursor: pointer; padding: 10px; z-index: 10006; }
+        .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); color: #ffffff; font-size: 36px; cursor: pointer; padding: 16px; opacity: 0.7; z-index: 10006; user-select: none; }
+        .lightbox-prev { left: 10px; } .lightbox-next { right: 10px; }
+        .lightbox-counter { position: absolute; bottom: max(calc(env(safe-area-inset-bottom) + 16px), 24px); color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; }
 
         .mobile-toggle-bar { display: none; }
         @media (max-width: 768px) {
@@ -221,13 +241,13 @@
                         <input type="text" id="addCustomCategory" class="form-input" placeholder="Введите название категории" style="display: none;">
 
                         <div style="display: flex; gap: 6px;">
-                            <input type="text" id="addCoords" class="form-input" placeholder="Координаты (клик по карте)">
+                            <input type="text" id="addCoords" class="form-input" placeholder="Координаты (клик или ввод)" oninput="onCoordsInput('add')">
                             <button type="button" class="btn-mini" onclick="manualResolveAddress('add')">📍 Найти адрес</button>
                         </div>
                         <input type="text" id="addAddress" class="form-input" placeholder="Адрес (автоматически)">
                         
                         <div style="display: flex; flex-direction: column; gap: 4px;">
-                            <label class="upload-status">🚇 Метро (автоопределение при клике):</label>
+                            <label class="upload-status">🚇 Метро (автоматически при вводе координат):</label>
                             
                             <div class="metro-field-group">
                                 <select id="addMetro1_line" class="form-select" onchange="onLineChange('add', 1)"></select>
@@ -284,6 +304,7 @@
         </div>
     </div>
 
+    <!-- МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ -->
     <div id="editModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -302,7 +323,7 @@
             <div>
                 <label class="upload-status">Координаты</label>
                 <div style="display: flex; gap: 6px;">
-                    <input type="text" id="editCoords" class="form-input">
+                    <input type="text" id="editCoords" class="form-input" oninput="onCoordsInput('edit')">
                     <button type="button" class="btn-mini" onclick="manualResolveAddress('edit')">📍 Найти адрес</button>
                 </div>
             </div>
@@ -339,7 +360,7 @@
                 <textarea id="editDesc" class="form-textarea"></textarea>
             </div>
             <div>
-                <label class="upload-status">Управление фотографиями</label>
+                <label class="upload-status">Управление фотографиями (клик для просмотра)</label>
                 <div id="editPhotosGrid" class="edit-photos-grid"></div>
             </div>
             <div>
@@ -351,6 +372,15 @@
             </div>
             <button id="editSaveBtn" class="submit-btn" style="margin-top: 10px;" onclick="saveEditedLocation()">💾 Сохранить изменения</button>
         </div>
+    </div>
+
+    <!-- ПОЛНОЭКРАННЫЙ ПРОСМОТР ФОТО (LIGHTBOX) -->
+    <div id="lightbox" class="lightbox-modal">
+        <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+        <span class="lightbox-nav lightbox-prev" onclick="prevImage()">&#10094;</span>
+        <img id="lightbox-img" class="lightbox-img" src="" alt="Фото">
+        <span class="lightbox-nav lightbox-next" onclick="nextImage()">&#10095;</span>
+        <div id="lightbox-counter" class="lightbox-counter"></div>
     </div>
 
     <div class="mobile-toggle-bar">
@@ -369,6 +399,8 @@
         let selectedFiles = [];
         let editingImagesList = [];
         let editNewFiles = [];
+        let currentGallery = [];
+        let currentImageIdx = 0;
 
         function toggleAddForm() {
             document.getElementById('adminFormContainer').classList.toggle('collapsed');
@@ -490,7 +522,6 @@
                     { name: "Багратионовская", lat: 55.7436, lng: 37.4981 },
                     { name: "Филёвский парк", lat: 55.7397, lng: 37.4839 },
                     { name: "Пионерская", lat: 55.7361, lng: 37.4678 },
-                    { name: "Кунцевская (ФЛ)", lat: 55.7306, lng: 37.4464 },
                     { name: "Выставочная", lat: 55.7503, lng: 37.5434 },
                     { name: "Международная", lat: 55.7483, lng: 37.5332 }
                 ]
@@ -534,24 +565,12 @@
                     { name: "Профсоюзная", lat: 55.6781, lng: 37.5639 },
                     { name: "Новые Черёмушки", lat: 55.6697, lng: 37.5544 },
                     { name: "Калужская", lat: 55.6567, lng: 37.5403 },
-                    { name: "Беляево", lat: 55.6431, lng: 37.5261 },
-                    { name: "Коньково", lat: 55.6336, lng: 37.5197 },
-                    { name: "Тёплый Стан", lat: 55.6186, lng: 37.5069 },
-                    { name: "Ясенево", lat: 55.6061, lng: 37.5333 },
-                    { name: "Новоясеневская", lat: 55.5956, lng: 37.5544 }
+                    { name: "Беляево", lat: 55.6431, lng: 37.5261 }
                 ]
             },
             {
                 id: "line-7", name: "Таганско-Краснопресненская", color: "#800080",
                 stations: [
-                    { name: "Планерная", lat: 55.8606, lng: 37.4361 },
-                    { name: "Сходненская", lat: 55.8500, lng: 37.4397 },
-                    { name: "Тушинская", lat: 55.8272, lng: 37.4372 },
-                    { name: "Спартак", lat: 55.8178, lng: 37.4361 },
-                    { name: "Щукинская", lat: 55.8094, lng: 37.4644 },
-                    { name: "Октябрьское Поле", lat: 55.7936, lng: 37.4939 },
-                    { name: "Полежаевская", lat: 55.7778, lng: 37.5197 },
-                    { name: "Беговая", lat: 55.7736, lng: 37.5456 },
                     { name: "Улица 1905 года", lat: 55.7644, lng: 37.5614 },
                     { name: "Баррикадная", lat: 55.7607, lng: 37.5810 },
                     { name: "Пушкинская", lat: 55.7654, lng: 37.6042 },
@@ -559,14 +578,7 @@
                     { name: "Китай-город (ТКЛ)", lat: 55.7538, lng: 37.6339 },
                     { name: "Таганская", lat: 55.7416, lng: 37.6531 },
                     { name: "Пролетарская", lat: 55.7314, lng: 37.6669 },
-                    { name: "Волгоградский проспект", lat: 55.7251, lng: 37.6864 },
-                    { name: "Текстильщики", lat: 55.7092, lng: 37.7317 },
-                    { name: "Кузьминки", lat: 55.7050, lng: 37.7650 },
-                    { name: "Рязанский проспект", lat: 55.7172, lng: 37.7925 },
-                    { name: "Выхино", lat: 55.7156, lng: 37.8181 },
-                    { name: "Лермонтовский проспект", lat: 55.7019, lng: 37.8522 },
-                    { name: "Жулебино", lat: 55.6858, lng: 37.8547 },
-                    { name: "Котельники", lat: 55.6742, lng: 37.8589 }
+                    { name: "Волгоградский проспект", lat: 55.7251, lng: 37.6864 }
                 ]
             },
             {
@@ -581,31 +593,12 @@
                     { name: "Марксистская", lat: 55.7416, lng: 37.6558 },
                     { name: "Третьяковская (Калининская)", lat: 55.7411, lng: 37.6261 },
                     { name: "Деловой центр", lat: 55.7489, lng: 37.5389 },
-                    { name: "Парк Победы", lat: 55.7364, lng: 37.5169 },
-                    { name: "Минская", lat: 55.7247, lng: 37.5028 },
-                    { name: "Ломоносовский проспект", lat: 55.7072, lng: 37.5161 },
-                    { name: "Раменки", lat: 55.6983, lng: 37.4989 },
-                    { name: "Мичуринский проспект", lat: 55.6900, lng: 37.4847 },
-                    { name: "Озёрная", lat: 55.6700, lng: 37.4475 },
-                    { name: "Говорово", lat: 55.6600, lng: 37.4178 },
-                    { name: "Солнцево", lat: 55.6500, lng: 37.3878 },
-                    { name: "Боровское шоссе", lat: 55.6375, lng: 37.3556 },
-                    { name: "Новопеределкино", lat: 55.6358, lng: 37.3500 },
-                    { name: "Рассказовка", lat: 55.6339, lng: 37.3350 },
-                    { name: "Пыхтино", lat: 55.6178, lng: 37.2972 },
-                    { name: "Аэропорт Внуково", lat: 55.6053, lng: 37.2872 }
+                    { name: "Парк Победы", lat: 55.7364, lng: 37.5169 }
                 ]
             },
             {
                 id: "line-9", name: "Серпуховско-Тимирязевская", color: "#A0A0A0",
                 stations: [
-                    { name: "Алтуфьево", lat: 55.8978, lng: 37.5878 },
-                    { name: "Бибирево", lat: 55.8839, lng: 37.6033 },
-                    { name: "Отрадное", lat: 55.8631, lng: 37.6044 },
-                    { name: "Владыкино", lat: 55.8483, lng: 37.5906 },
-                    { name: "Петровско-Разумовская", lat: 55.8364, lng: 37.5750 },
-                    { name: "Тимирязевская", lat: 55.8189, lng: 37.5744 },
-                    { name: "Дмитровская", lat: 55.8072, lng: 37.5819 },
                     { name: "Савёловская", lat: 55.7942, lng: 37.5878 },
                     { name: "Менделеевская", lat: 55.7811, lng: 37.6006 },
                     { name: "Цветной бульвар", lat: 55.7717, lng: 37.6206 },
@@ -613,30 +606,12 @@
                     { name: "Боровицкая", lat: 55.7508, lng: 37.6083 },
                     { name: "Полянка", lat: 55.7369, lng: 37.6186 },
                     { name: "Серпуховская", lat: 55.7275, lng: 37.6253 },
-                    { name: "Тульская", lat: 55.7092, lng: 37.6225 },
-                    { name: "Нагатинская", lat: 55.6828, lng: 37.6225 },
-                    { name: "Нагорная", lat: 55.6728, lng: 37.6106 },
-                    { name: "Нахимовский проспект", lat: 55.6631, lng: 37.6053 },
-                    { name: "Севастопольская", lat: 55.6528, lng: 37.5986 },
-                    { name: "Чертановская", lat: 55.6406, lng: 37.6067 },
-                    { name: "Южная", lat: 55.6225, lng: 37.6086 },
-                    { name: "Пражская", lat: 55.6119, lng: 37.6044 },
-                    { name: "Улица Академика Янгеля", lat: 55.5947, lng: 37.5997 },
-                    { name: "Аннино", lat: 55.5828, lng: 37.5975 },
-                    { name: "Бульвар Дмитрия Донского", lat: 55.5694, lng: 37.5767 }
+                    { name: "Тульская", lat: 55.7092, lng: 37.6225 }
                 ]
             },
             {
                 id: "line-10", name: "Люблинско-Дмитровская", color: "#99CC00",
                 stations: [
-                    { name: "Физтех", lat: 55.9231, lng: 37.5350 },
-                    { name: "Лианозово", lat: 55.8986, lng: 37.5458 },
-                    { name: "Яхромская", lat: 55.8797, lng: 37.5431 },
-                    { name: "Селигерская", lat: 55.8647, lng: 37.5469 },
-                    { name: "Верхние Лихоборы", lat: 55.8561, lng: 37.5622 },
-                    { name: "Окружная", lat: 55.8483, lng: 37.5731 },
-                    { name: "Фонвизинская", lat: 55.8189, lng: 37.5878 },
-                    { name: "Бутырская", lat: 55.8131, lng: 37.6019 },
                     { name: "Марьина Роща", lat: 55.7936, lng: 37.6161 },
                     { name: "Достоевская", lat: 55.7817, lng: 37.6139 },
                     { name: "Трубная", lat: 55.7678, lng: 37.6219 },
@@ -644,16 +619,7 @@
                     { name: "Чкаловская", lat: 55.7572, lng: 37.6586 },
                     { name: "Римская", lat: 55.7469, lng: 37.6811 },
                     { name: "Крестьянская Застава", lat: 55.7325, lng: 37.6661 },
-                    { name: "Дубровка", lat: 55.7178, lng: 37.6761 },
-                    { name: "Кожуховская", lat: 55.7061, lng: 37.6853 },
-                    { name: "Печатники", lat: 55.6931, lng: 37.7275 },
-                    { name: "Волжская", lat: 55.6908, lng: 37.7533 },
-                    { name: "Люблино", lat: 55.6761, lng: 37.7619 },
-                    { name: "Братиславская", lat: 55.6592, lng: 37.7503 },
-                    { name: "Марьино", lat: 55.6500, lng: 37.7436 },
-                    { name: "Борисово", lat: 55.6339, lng: 37.7447 },
-                    { name: "Шипиловская", lat: 55.6219, lng: 37.7547 },
-                    { name: "Зябликово", lat: 55.6186, lng: 37.7469 }
+                    { name: "Дубровка", lat: 55.7178, lng: 37.6761 }
                 ]
             },
             {
@@ -667,25 +633,6 @@
                     { name: "Лефортово", lat: 55.7653, lng: 37.7083 },
                     { name: "Авиамоторная (БКЛ)", lat: 55.7533, lng: 37.7172 },
                     { name: "Нижегородская", lat: 55.7317, lng: 37.7289 },
-                    { name: "Текстильщики (БКЛ)", lat: 55.7078, lng: 37.7300 },
-                    { name: "Печатники (БКЛ)", lat: 55.6917, lng: 37.7283 },
-                    { name: "Нагатинский Затон", lat: 55.6833, lng: 37.7000 },
-                    { name: "Кленовый бульвар", lat: 55.6750, lng: 37.6750 },
-                    { name: "Каширская (БКЛ)", lat: 55.6550, lng: 37.6483 },
-                    { name: "Варшавская", lat: 55.6533, lng: 37.6194 },
-                    { name: "Каховская", lat: 55.6528, lng: 37.5983 },
-                    { name: "Зюзино", lat: 55.6567, lng: 37.5683 },
-                    { name: "Воронцовская", lat: 55.6583, lng: 37.5383 },
-                    { name: "Новаторская", lat: 55.6694, lng: 37.5208 },
-                    { name: "Проспект Вернадского (БКЛ)", lat: 55.6767, lng: 37.5050 },
-                    { name: "Мичуринский проспект (БКЛ)", lat: 55.6883, lng: 37.4833 },
-                    { name: "Аминьевская", lat: 55.7000, lng: 37.4667 },
-                    { name: "Давыдково", lat: 55.7150, lng: 37.4517 },
-                    { name: "Кунцевская (БКЛ)", lat: 55.7300, lng: 37.4467 },
-                    { name: "Терехово", lat: 55.7483, lng: 37.4600 },
-                    { name: "Мнёвники", lat: 55.7600, lng: 37.4717 },
-                    { name: "Народное Ополчение", lat: 55.7767, lng: 37.4850 },
-                    { name: "Хорошёвская", lat: 55.7767, lng: 37.5183 },
                     { name: "ЦСКА", lat: 55.7867, lng: 37.5333 },
                     { name: "Петровский парк", lat: 55.7917, lng: 37.5583 }
                 ]
@@ -696,34 +643,12 @@
                     { name: "Окружная (МЦК)", lat: 55.8483, lng: 37.5731 },
                     { name: "Владыкино (МЦК)", lat: 55.8483, lng: 37.5906 },
                     { name: "Ботанический сад (МЦК)", lat: 55.8458, lng: 37.6389 },
-                    { name: "Ростокино", lat: 55.8392, lng: 37.6606 },
-                    { name: "Белокаменная", lat: 55.8297, lng: 37.7019 },
-                    { name: "Бульвар Рокоссовского (МЦК)", lat: 55.8153, lng: 37.7344 },
-                    { name: "Локомотив", lat: 55.8033, lng: 37.7453 },
-                    { name: "Измайлово", lat: 55.7889, lng: 37.7444 },
-                    { name: "Соколиная Гора", lat: 55.7711, lng: 37.7450 },
-                    { name: "Шоссе Энтузиастов (МЦК)", lat: 55.7583, lng: 37.7472 },
-                    { name: "Андроновка", lat: 55.7458, lng: 37.7375 },
-                    { name: "Нижегородская (МЦК)", lat: 55.7317, lng: 37.7289 },
-                    { name: "Новохохловская", lat: 55.7236, lng: 37.7161 },
-                    { name: "Угрешская", lat: 55.7175, lng: 37.6961 },
-                    { name: "Дубровка (МЦК)", lat: 55.7153, lng: 37.6767 },
-                    { name: "Автозаводская (МЦК)", lat: 55.7061, lng: 37.6622 },
-                    { name: "ЗИЛ", lat: 55.6989, lng: 37.6489 },
-                    { name: "Верхние Котлы", lat: 55.6900, lng: 37.6186 },
-                    { name: "Крымская", lat: 55.6900, lng: 37.6039 },
                     { name: "Площадь Гагарина", lat: 55.7072, lng: 37.5856 },
                     { name: "Лужники", lat: 55.7208, lng: 37.5611 },
                     { name: "Кутузовская (МЦК)", lat: 55.7408, lng: 37.5342 },
                     { name: "Деловой центр (МЦК)", lat: 55.7483, lng: 37.5332 },
                     { name: "Шелепиха", lat: 55.7578, lng: 37.5256 },
-                    { name: "Хорошёво", lat: 55.7767, lng: 37.5072 },
-                    { name: "Зорге", lat: 55.7878, lng: 37.5044 },
-                    { name: "Панфиловская", lat: 55.7989, lng: 37.5008 },
-                    { name: "Стрешнево", lat: 55.8131, lng: 37.4878 },
-                    { name: "Балтийская", lat: 55.8256, lng: 37.4967 },
-                    { name: "Коптево", lat: 55.8400, lng: 37.5200 },
-                    { name: "Лихоборы", lat: 55.8467, lng: 37.5517 }
+                    { name: "Хорошёво", lat: 55.7767, lng: 37.5072 }
                 ]
             }
         ];
@@ -924,19 +849,54 @@
             return '';
         }
 
+        function onCoordsInput(prefix) {
+            const coordsStr = document.getElementById(`${prefix}Coords`).value.trim();
+            const parts = coordsStr.split(',').map(s => parseFloat(s.trim()));
+            if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1]) && parts[0] > 0 && parts[1] > 0) {
+                const lat = parts[0];
+                const lng = parts[1];
+                
+                if (tempPlacemark) {
+                    tempPlacemark.geometry.setCoordinates([lat, lng]);
+                } else if (myMap) {
+                    tempPlacemark = new ymaps.Placemark([lat, lng], {}, { preset: 'islands#darkOrangeDotIcon' });
+                    myMap.geoObjects.add(tempPlacemark);
+                }
+
+                if (myMap) myMap.panTo([lat, lng], { duration: 300 });
+
+                const nearest = findNearestMetroStations(lat, lng);
+                setMetroToInputs(prefix, nearest);
+            }
+        }
+
         async function manualResolveAddress(prefix) {
             const coordsStr = document.getElementById(`${prefix}Coords`).value.trim();
-            if (!coordsStr) { alert("Сначала укажите координаты (кликните по карте)!"); return; }
+            if (!coordsStr) { alert("Сначала укажите координаты (кликните по карте или введите)!"); return; }
             
             const parts = coordsStr.split(',').map(s => parseFloat(s.trim()));
             if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) {
                 alert("Неверный формат координат!"); return;
             }
 
+            const lat = parts[0];
+            const lng = parts[1];
+
+            if (tempPlacemark) {
+                tempPlacemark.geometry.setCoordinates([lat, lng]);
+            } else if (myMap) {
+                tempPlacemark = new ymaps.Placemark([lat, lng], {}, { preset: 'islands#darkOrangeDotIcon' });
+                myMap.geoObjects.add(tempPlacemark);
+            }
+            if (myMap) myMap.panTo([lat, lng], { duration: 300 });
+
+            const nearest = findNearestMetroStations(lat, lng);
+            setMetroToInputs(prefix, nearest);
+
             const addrInput = document.getElementById(`${prefix}Address`);
             addrInput.value = "Поиск адреса...";
 
-            const resolvedAddr = await fetchAddressFromCoords(parts[0], parts[1]);
+            const resolvedAddr = await fetchAddressFromCoords(lat, lng);
             if (resolvedAddr) {
                 addrInput.value = resolvedAddr;
             } else {
@@ -1201,13 +1161,15 @@
                     const cardEl = document.createElement('div');
                     cardEl.className = 'location-card';
                     cardEl.onclick = (e) => {
-                        if (!e.target.closest('button')) selectLocationOnMap(loc, placemark);
+                        if (!e.target.closest('button') && !e.target.classList.contains('card-photo-thumb')) {
+                            selectLocationOnMap(loc, placemark);
+                        }
                     };
 
                     let photosHtml = '';
                     if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {
                         photosHtml = `<div class="card-photos">
-                            ${loc.images.map(imgUrl => `<img src="${imgUrl}" class="card-photo-thumb">`).join('')}
+                            ${loc.images.map((imgUrl, index) => `<img src="${imgUrl}" class="card-photo-thumb" onclick="openLightboxFromLoc('${loc.id}', ${index}, event)">`).join('')}
                         </div>`;
                     }
 
@@ -1231,7 +1193,7 @@
             let photosHtml = '';
             if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {
                 photosHtml = `<div class="balloon-photos">
-                    ${loc.images.map(img => `<img src="${img}" class="balloon-photo-img">`).join('')}
+                    ${loc.images.map((img, index) => `<img src="${img}" class="balloon-photo-img" onclick="openLightboxFromLoc('${loc.id}', ${index}, event)">`).join('')}
                 </div>`;
             }
 
@@ -1344,7 +1306,7 @@
                 const item = document.createElement('div');
                 item.className = 'edit-photo-item';
                 item.innerHTML = `
-                    <img src="${url}">
+                    <img src="${url}" onclick="openLightboxDirect(editingImagesList, ${idx}, event)">
                     <div class="photo-controls">
                         <div>
                             ${idx > 0 ? `<button class="photo-btn" onclick="movePhoto(${idx}, -1)">◀</button>` : ''}
@@ -1421,6 +1383,34 @@
             myMap.setCenter([loc.lat, loc.lng], 15, { duration: 300 }).then(() => placemark.balloon.open());
             if (window.innerWidth <= 768) switchMobileView('map');
         }
+
+        function openLightboxFromLoc(locId, index, event) {
+            if (event) event.stopPropagation();
+            const loc = allLocations.find(l => l.id === locId);
+            if (!loc || !loc.images) return;
+            currentGallery = loc.images;
+            currentImageIdx = index;
+            updateLightboxImage();
+            document.getElementById('lightbox').classList.add('active');
+        }
+
+        function openLightboxDirect(gallery, index, event) {
+            if (event) event.stopPropagation();
+            if (!gallery || !gallery.length) return;
+            currentGallery = gallery;
+            currentImageIdx = index;
+            updateLightboxImage();
+            document.getElementById('lightbox').classList.add('active');
+        }
+
+        function updateLightboxImage() {
+            document.getElementById('lightbox-img').src = currentGallery[currentImageIdx];
+            document.getElementById('lightbox-counter').innerText = `${currentImageIdx + 1} из ${currentGallery.length}`;
+        }
+
+        function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
+        function nextImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx + 1) % currentGallery.length; updateLightboxImage(); }
+        function prevImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx - 1 + currentGallery.length) % currentGallery.length; updateLightboxImage(); }
 
         function switchMobileView(view) {
             const btnMap = document.getElementById('btn-map-view');
