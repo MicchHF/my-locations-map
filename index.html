@@ -14,10 +14,12 @@
     <link rel="apple-touch-icon" href="icon.svg">
     <link rel="stylesheet" href="style.css">
     
+    <!-- SDK и внешние библиотеки -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://api-maps.yandex.ru/2.1/?apikey=7370bad5-a627-4414-a1e8-b2023bda7a61&lang=ru_RU"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
+    <!-- Единый модуль базы и утилит -->
     <script src="js/shared.js"></script>
 
     <style>
@@ -45,7 +47,7 @@
         .cat-chip.fav-chip {
             border-color: #f43f5e !important;
             color: #f43f5e !important;
-            padding: 6px 10px !important;
+            padding: 6px 12px !important;
         }
         .cat-chip.fav-chip.active {
             background: #f43f5e !important;
@@ -55,6 +57,7 @@
 </head>
 <body>
 
+    <!-- Экран блокировки -->
     <div id="authGate">
         <div class="auth-gate-card">
             <div class="auth-gate-icon">📍</div>
@@ -138,7 +141,7 @@
         </div>
     </div>
 
-    <!-- МЕНЮ МЕТРО -->
+    <!-- Меню метро -->
     <div id="metroSidebarOverlay" class="metro-sidebar-overlay" onclick="closeMetroDrawer(event)">
         <div class="metro-sidebar-drawer" onclick="event.stopPropagation()">
             <div class="metro-drawer-header">
@@ -245,15 +248,17 @@
             } catch(e) { return []; }
         }
 
-        function toggleFavorite(locId, event) {
+        async function toggleFavorite(locId, event) {
             if (event) { event.stopPropagation(); event.preventDefault(); }
             let favs = getFavorites();
             const idStr = String(locId);
+            
             if (favs.includes(idStr)) {
                 favs = favs.filter(id => id !== idStr);
             } else {
                 favs.push(idStr);
             }
+            
             localStorage.setItem('dalazareva_favorites', JSON.stringify(favs));
             
             document.querySelectorAll(`.fav-btn-loc-${idStr}`).forEach(btn => {
@@ -262,6 +267,26 @@
 
             renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
             if (showFavoritesOnly) applyCombinedFilters();
+
+            // Облачная синхронизация избранного в Supabase
+            if (currentUser && (currentUser.telegram_id || currentUser.access_token)) {
+                try {
+                    const query = currentUser.telegram_id
+                        ? supabaseClient.from('app_users').update({ favorites: favs }).eq('telegram_id', currentUser.telegram_id)
+                        : supabaseClient.from('app_users').update({ favorites: favs }).eq('access_token', currentUser.access_token);
+                    await query;
+                } catch(e) {
+                    console.error("Ошибка синхронизации избранного:", e);
+                }
+            }
+        }
+
+        function syncUserFavorites(profile) {
+            if (profile && Array.isArray(profile.favorites)) {
+                const localFavs = getFavorites();
+                const mergedFavs = Array.from(new Set([...localFavs, ...profile.favorites.map(String)]));
+                localStorage.setItem('dalazareva_favorites', JSON.stringify(mergedFavs));
+            }
         }
 
         function toggleFavoritesFilter() {
@@ -332,6 +357,7 @@
                 const profile = await findUserByToken(tokenToVerify);
                 if (profile) {
                     currentUser = profile;
+                    syncUserFavorites(profile);
                     localStorage.setItem('dalazareva_access_token', profile.access_token);
                     if (tokenFromUrl) window.history.replaceState({}, document.title, window.location.pathname);
                     authenticated = await verifyAndRegisterDevice(currentUser);
@@ -372,7 +398,10 @@
                     .eq('telegram_id', tgUser.id)
                     .maybeSingle();
 
-                if (profile) currentUser = profile;
+                if (profile) {
+                    currentUser = profile;
+                    syncUserFavorites(profile);
+                }
             } catch (e) {
                 currentUser.first_name = tgUser.first_name;
                 currentUser.username = tgUser.username;
@@ -391,6 +420,7 @@
             const profile = await findUserByToken(code);
             if (profile) {
                 currentUser = profile;
+                syncUserFavorites(profile);
                 localStorage.setItem('dalazareva_access_token', profile.access_token);
                 
                 const allowed = await verifyAndRegisterDevice(currentUser);
@@ -958,7 +988,7 @@
         function createFavChip(count) {
             const chip = document.createElement('div');
             chip.className = `cat-chip fav-chip ${showFavoritesOnly ? 'active' : ''}`;
-            chip.innerHTML = `<span>❤️</span>${count > 0 ? `<span style="font-weight:700; margin-left:2px;">${count}</span>` : ''}`;
+            chip.innerHTML = `<span>❤️</span>${count > 0 ? `<span style="font-weight:700; margin-left:3px;">${count}</span>` : ''}`;
             chip.onclick = () => toggleFavoritesFilter();
             return chip;
         }
