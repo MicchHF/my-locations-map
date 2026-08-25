@@ -81,8 +81,9 @@
             margin-bottom: 12px;
             font-size: 0.88rem;
             box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+            transition: transform 0.15s ease;
         }
-        .tg-badge-text strong { color: #38bdf8; font-weight: 700; }
+        .tg-badge:active { transform: scale(0.98); }
 
         .search-container { position: relative; width: 100%; }
         .search-input {
@@ -223,7 +224,9 @@
             flex-shrink: 0;
             cursor: pointer;
             border: 1px solid rgba(0,0,0,0.08);
+            transition: transform 0.15s ease;
         }
+        .card-photo-thumb:hover { transform: scale(1.02); }
 
         #map-container {
             position: absolute;
@@ -540,7 +543,6 @@
         .mobile-search-input { flex: 1; border: none; background: transparent; font-size: 16px; outline: none; color: #0f172a; padding-left: 4px; }
         .mobile-search-close { background: none; border: none; font-size: 1.1rem; color: #64748b; cursor: pointer; padding: 4px 8px; }
 
-        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
         @media (max-width: 768px) {
             #sidebar { width: 100vw; height: 100%; display: none; }
             
@@ -616,7 +618,10 @@
         <div id="sidebar">
             <div class="sidebar-header">
                 <a href="https://t.me/dalazareva" target="_blank" rel="noopener" class="tg-badge">
-                    <span class="tg-badge-text"><strong>@dalazareva</strong> локации</span>
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <span style="font-size: 0.88rem; font-weight: 700; color: #ffffff;" id="userProfileName"><strong>@dalazareva</strong> локации</span>
+                        <span style="font-size: 0.72rem; color: #38bdf8; font-weight: 600;" id="userPlanLabel">Тариф: FREE</span>
+                    </div>
                     <span class="tg-badge-icon">↗</span>
                 </a>
                 <div class="search-container">
@@ -689,6 +694,13 @@
             tg.ready();
             tg.expand();
         }
+
+        let currentUser = {
+            telegram_id: null,
+            first_name: "",
+            username: "",
+            plan: "free"
+        };
 
         let myMap;
         let activeBalloonPlacemark = null;
@@ -789,6 +801,72 @@
             </svg>`;
         }
 
+        // Авторизация пользователя и определение тарифа в Telegram Mini App
+        async function initTelegramAuth() {
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe?.user) {
+                const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+                const tgId = tgUser.id;
+
+                try {
+                    let { data: profile, error } = await supabaseClient
+                        .from('app_users')
+                        .select('*')
+                        .eq('telegram_id', tgId)
+                        .maybeSingle();
+
+                    if (!profile) {
+                        const newProfile = {
+                            telegram_id: tgId,
+                            username: tgUser.username || '',
+                            first_name: tgUser.first_name || 'Пользователь',
+                            plan: 'free',
+                            expires_at: null
+                        };
+
+                        const { data: createdUser } = await supabaseClient
+                            .from('app_users')
+                            .insert([newProfile])
+                            .select()
+                            .single();
+
+                        profile = createdUser || newProfile;
+                    }
+
+                    currentUser = profile;
+                } catch (e) {
+                    console.error("Ошибка авторизации пользователя:", e);
+                }
+            }
+
+            renderUserPlanBadge();
+        }
+
+        function renderUserPlanBadge() {
+            const nameEl = document.getElementById('userProfileName');
+            const planEl = document.getElementById('userPlanLabel');
+            if (!nameEl || !planEl) return;
+
+            if (currentUser.first_name) {
+                nameEl.innerHTML = `<strong>👤 ${currentUser.first_name}</strong>`;
+            } else {
+                nameEl.innerHTML = `<strong>@dalazareva</strong> локации`;
+            }
+
+            let planLabel = "Тариф: FREE";
+            let planColor = "#38bdf8";
+
+            if (currentUser.plan === 'premium' || currentUser.plan === 'vip') {
+                planLabel = "Тариф: PREMIUM ✨";
+                planColor = "#fbbf24";
+            } else if (currentUser.plan === 'trial') {
+                planLabel = "Тариф: ТЕСТ 🎁";
+                planColor = "#34d399";
+            }
+
+            planEl.innerText = planLabel;
+            planEl.style.color = planColor;
+        }
+
         ymaps.ready(initMap);
 
         function initMap() {
@@ -812,6 +890,8 @@
         }
 
         async function loadLocations() {
+            initTelegramAuth();
+
             const { data, error } = await supabaseClient.from('Location').select('*');
             if (error) { console.error("Ошибка загрузки:", error); return; }
             allLocations = data || [];
