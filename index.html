@@ -755,17 +755,17 @@
         <div class="auth-gate-card">
             <div class="auth-gate-icon">📍</div>
             <div class="auth-gate-title">@dalazareva локации📍</div>
-            <div class="auth-gate-desc">Гид по лучшим кофейням, фото-спотам и локациям Москвы. Для доступа откройте карту в Telegram или введите код доступа:</div>
+            <div class="auth-gate-desc" id="authGateDesc">Гид по лучшим кофейням, фото-спотам и локациям Москвы. Для доступа откройте карту в Telegram или введите код доступа:</div>
             
             <!-- Основной безопасный вход через Telegram в 1 клик -->
-            <a href="https://t.me/dalazareva_locations_bot/map" class="tg-direct-btn">
-                <span>✈️ Открыть карту в Telegram</span>
+            <a href="https://t.me/dalazareva_locations_bot" class="tg-direct-btn">
+                <span>✈️ Открыть бот в Telegram</span>
             </a>
 
             <div class="auth-divider">для входа в Safari / на ПК</div>
 
             <div class="auth-input-group">
-                <input type="text" id="accessCodeInput" class="auth-input" placeholder="Введите ключ или код доступа">
+                <input type="text" id="accessCodeInput" class="auth-input" placeholder="Введите ключ доступа (dl_...)">
                 <button class="auth-submit-btn" onclick="submitAccessCode()">Войти в Safari</button>
             </div>
         </div>
@@ -862,9 +862,13 @@
         <div id="lightbox-counter" class="lightbox-counter"></div>
     </div>
 
-    <script src="js/supabase.js"></script>
     <script>
         const BOT_USERNAME = "dalazareva_locations_bot";
+
+        // Ваши данные Supabase
+        const SUPABASE_URL = "https://cwkgylbtcjfmweoldhyb.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_KnWO20wlfuWd0NYKMNKRvw_l1rttjaT";
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // Проверка запуска внутри Telegram Mini App
         const isInsideTelegram = !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe?.user);
@@ -879,6 +883,8 @@
             first_name: "",
             username: "",
             access_token: "",
+            devices: [],
+            max_devices: 2,
             plan: "free"
         };
 
@@ -981,9 +987,56 @@
             </svg>`;
         }
 
-        // Генератор безопасного случайного токена
-        function generateSecretToken() {
-            return 'loc_' + Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
+        // Уникальный ID текущего браузера/устройства
+        function getOrCreateDeviceId() {
+            let devId = localStorage.getItem('dalazareva_device_id');
+            if (!devId) {
+                devId = 'dev_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+                localStorage.setItem('dalazareva_device_id', devId);
+            }
+            return devId;
+        }
+
+        // Главная функция проверки доступа и ограничения устройств
+        async function verifyAndRegisterDevice(userProfile) {
+            const currentDeviceId = getOrCreateDeviceId();
+            let devices = userProfile.devices || [];
+            const maxDevices = userProfile.max_devices || 2;
+
+            // Если устройство уже авторизовано — пускаем
+            if (devices.includes(currentDeviceId)) {
+                return true;
+            }
+
+            // Если лимит исчерпан
+            if (devices.length >= maxDevices) {
+                document.getElementById('authGateDesc').innerHTML = `
+                    🚫 <b>Лимит устройств исчерпан (${devices.length} из ${maxDevices}).</b><br><br>
+                    Этот ключ привязан к другим устройствам.<br>
+                    Перейдите в бот и нажмите кнопку <b>«🔄 Сбросить привязанные устройства»</b>.
+                `;
+                document.querySelector('.auth-input-group').style.display = 'none';
+                return false;
+            }
+
+            // Добавляем текущий браузер в массив и сохраняем в Supabase
+            devices.push(currentDeviceId);
+            try {
+                let { error: updateError } = await supabaseClient
+                    .from('app_users')
+                    .update({ devices: devices })
+                    .eq('telegram_id', userProfile.telegram_id);
+
+                if (updateError) {
+                    console.error("Ошибка привязки устройства:", updateError);
+                    return false;
+                }
+                currentUser.devices = devices;
+                return true;
+            } catch (e) {
+                console.error("Ошибка сети при привязке:", e);
+                return false;
+            }
         }
 
         // Проверка авторизации: Telegram Mini App, URL-токен или localStorage
@@ -998,14 +1051,18 @@
                 const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
                 if (tgUser && tgUser.id) {
                     await syncUserTelegram(tgUser);
-                    authenticated = true;
+                    authenticated = await verifyAndRegisterDevice(currentUser);
                 }
             } else if (tokenFromUrl || savedToken) {
                 const tokenToVerify = tokenFromUrl || savedToken;
-                authenticated = await verifyAccessToken(tokenToVerify);
-                if (authenticated && tokenFromUrl) {
-                    localStorage.setItem('dalazareva_access_token', tokenToVerify);
-                    window.history.replaceState({}, document.title, window.location.pathname);
+                const profile = await findUserByToken(tokenToVerify);
+                if (profile) {
+                    currentUser = profile;
+                    localStorage.setItem('dalazareva_access_token', profile.access_token);
+                    if (tokenFromUrl) {
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    }
+                    authenticated = await verifyAndRegisterDevice(currentUser);
                 }
             }
 
@@ -1020,6 +1077,24 @@
             }
         }
 
+        // Поиск пользователя по длинному токену
+        async function findUserByToken(token) {
+            if (!token) return null;
+            try {
+                const cleanToken = token.trim();
+                let { data: profile } = await supabaseClient
+                    .from('app_users')
+                    .select('*')
+                    .eq('access_token', cleanToken)
+                    .maybeSingle();
+
+                if (profile) return profile;
+            } catch (e) {
+                console.error("Ошибка поиска токена:", e);
+            }
+            return null;
+        }
+
         // Синхронизация внутри Telegram
         async function syncUserTelegram(tgUser) {
             try {
@@ -1029,59 +1104,15 @@
                     .eq('telegram_id', tgUser.id)
                     .maybeSingle();
 
-                if (!profile) {
-                    const secretToken = generateSecretToken();
-                    const newProfile = {
-                        telegram_id: tgUser.id,
-                        username: tgUser.username || '',
-                        first_name: tgUser.first_name || 'Пользователь',
-                        access_token: secretToken,
-                        plan: 'free',
-                        expires_at: null
-                    };
-
-                    const { data: created } = await supabaseClient
-                        .from('app_users')
-                        .insert([newProfile])
-                        .select()
-                        .single();
-
-                    profile = created || newProfile;
-                } else if (!profile.access_token) {
-                    const secretToken = generateSecretToken();
-                    await supabaseClient.from('app_users').update({ access_token: secretToken }).eq('telegram_id', tgUser.id);
-                    profile.access_token = secretToken;
+                if (profile) {
+                    currentUser = profile;
                 }
-
-                currentUser = profile;
-                localStorage.setItem('dalazareva_access_token', profile.access_token);
             } catch (e) {
                 console.error("Ошибка синхронизации:", e);
                 currentUser.first_name = tgUser.first_name;
                 currentUser.username = tgUser.username;
+                currentUser.telegram_id = tgUser.id;
             }
-        }
-
-        // Проверка токена/кода доступа из Safari
-        async function verifyAccessToken(token) {
-            if (!token) return false;
-            try {
-                const cleanToken = token.trim();
-                let { data: profile } = await supabaseClient
-                    .from('app_users')
-                    .select('*')
-                    .or(`access_token.eq.${cleanToken},telegram_id.eq.${parseInt(cleanToken) || 0}`)
-                    .maybeSingle();
-
-                if (profile) {
-                    currentUser = profile;
-                    localStorage.setItem('dalazareva_access_token', profile.access_token || cleanToken);
-                    return true;
-                }
-            } catch (e) {
-                console.error("Ошибка верификации токена:", e);
-            }
-            return false;
         }
 
         // Ручной ввод кода доступа в Safari
@@ -1089,18 +1120,24 @@
             const input = document.getElementById('accessCodeInput');
             const code = input.value.trim();
             if (!code) {
-                alert("Пожалуйста, введите код или токен доступа из Telegram-бота");
+                alert("Пожалуйста, введите токен доступа (например, dl_...)");
                 return;
             }
 
-            const success = await verifyAccessToken(code);
-            if (success) {
-                document.getElementById('authGate').style.display = 'none';
-                document.getElementById('app-wrapper').style.display = 'flex';
-                renderUserPlanBadge();
-                initMap();
+            const profile = await findUserByToken(code);
+            if (profile) {
+                currentUser = profile;
+                localStorage.setItem('dalazareva_access_token', profile.access_token);
+                
+                const allowed = await verifyAndRegisterDevice(currentUser);
+                if (allowed) {
+                    document.getElementById('authGate').style.display = 'none';
+                    document.getElementById('app-wrapper').style.display = 'flex';
+                    renderUserPlanBadge();
+                    initMap();
+                }
             } else {
-                alert("Неверный ключ доступа. Запустите бота @dalazareva_locations_bot, чтобы получить ссылку для входа.");
+                alert("Неверный ключ доступа. Запустите бота @dalazareva_locations_bot, чтобы скопировать актуальную ссылку.");
             }
         }
 
