@@ -40,7 +40,7 @@
             inset: 0;
         }
 
-        /* ЭКРАН БЛОКИРОВКИ ДО ВХОДА (КАРТА НЕ ГРУЗИТСЯ) */
+        /* ЭКРАН БЛОКИРОВКИ ДО ВХОДА */
         #authGate {
             position: fixed;
             inset: 0;
@@ -180,7 +180,6 @@
             border-bottom: 1px solid #f0f0f0;
         }
 
-        /* ШАПКА: ПРОФИЛЬ + ССЫЛКА НА КАНАЛ */
         .header-top-row {
             display: flex;
             align-items: stretch;
@@ -404,7 +403,6 @@
         .balloon-photos { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; padding-bottom: 2px; }
         .balloon-photo-img { height: 65px; width: auto; border-radius: 6px; cursor: pointer; object-fit: cover; border: 1px solid rgba(0,0,0,0.08); flex-shrink: 0; }
 
-        /* ВЕРХНЯЯ СТРОКА КАТЕГОРИЙ */
         .top-cat-filter-bar {
             position: fixed;
             top: max(calc(env(safe-area-inset-top) + 8px), 12px);
@@ -462,7 +460,6 @@
         .cat-chip.active { background: #0f172a; color: #ffffff; border-color: #0f172a; }
         .cat-chip.disabled { opacity: 0.45; background: #f1f5f9; color: #94a3b8; }
 
-        /* ПЛАВАЮЩАЯ КНОПКА МЕТРО */
         .metro-floating-btn {
             position: fixed;
             top: max(calc(env(safe-area-inset-top) + 64px), 68px);
@@ -494,7 +491,6 @@
         }
         .metro-floating-btn.active .metro-badge-dot { display: inline-block; }
 
-        /* БОКОВОЕ МЕНЮ МЕТРО */
         .metro-sidebar-overlay {
             position: fixed;
             inset: 0;
@@ -637,7 +633,6 @@
             margin-top: auto;
         }
 
-        /* LIGHTBOX */
         .lightbox-modal {
             display: none;
             position: fixed;
@@ -762,11 +757,11 @@
                 <span>✈️ Открыть бот в Telegram</span>
             </a>
 
-            <div class="auth-divider">для входа в Safari / на ПК</div>
+            <div class="auth-divider">для входа в браузере / на ПК</div>
 
             <div class="auth-input-group">
                 <input type="text" id="accessCodeInput" class="auth-input" placeholder="Введите ключ доступа (dl_...)">
-                <button class="auth-submit-btn" onclick="submitAccessCode()">Войти в Safari</button>
+                <button class="auth-submit-btn" onclick="submitAccessCode()">Войти через браузер</button>
             </div>
         </div>
     </div>
@@ -1651,7 +1646,6 @@
             }
         }
 
-        /* LIGHTBOX */
         function openLightboxByUrl(locId, index, event) {
             if (event) event.stopPropagation();
             const loc = allLocations.find(l => l.id === locId);
