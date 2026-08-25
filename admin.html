@@ -926,7 +926,6 @@
             }
         }
 
-        // БАЗОВЫЕ КАТЕГОРИИ ДЛЯ АДМИНКИ
         const defaultCategories = [
             "☕ Кофейни", "🍽️ Заведения (рестораны)", "🍸 Бары и тусовки",
             "📷 Фотостудии", "🚪 Двери", "🏛️ Архитектура", "🎨 Музеи и культура",
@@ -1333,7 +1332,7 @@
                     let photosHtml = '';
                     if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {
                         photosHtml = `<div class="card-photos">
-                            ${loc.images.map((imgUrl, index) => `<img src="${imgUrl}" class="card-photo-thumb" onclick="openLightboxFromLoc('${loc.id}', ${index}, event)">`).join('')}
+                            ${loc.images.map((imgUrl, index) => `<img src="${imgUrl}" loading="lazy" class="card-photo-thumb" onclick="openLightboxFromLoc('${loc.id}', ${index}, event)">`).join('')}
                         </div>`;
                     }
 
@@ -1357,7 +1356,7 @@
             let photosHtml = '';
             if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {
                 photosHtml = `<div class="balloon-photos">
-                    ${loc.images.map((img, index) => `<img src="${img}" class="balloon-photo-img" onclick="openLightboxFromLoc('${loc.id}', ${index}, event)">`).join('')}
+                    ${loc.images.map((img, index) => `<img src="${img}" loading="lazy" class="balloon-photo-img" onclick="openLightboxFromLoc('${loc.id}', ${index}, event)">`).join('')}
                 </div>`;
             }
 
@@ -1472,7 +1471,7 @@
                 const item = document.createElement('div');
                 item.className = 'edit-photo-item';
                 item.innerHTML = `
-                    <img src="${url}" onclick="openLightboxDirect(editingImagesList, ${idx}, event)">
+                    <img src="${url}" loading="lazy" onclick="openLightboxDirect(editingImagesList, ${idx}, event)">
                     <div class="photo-controls">
                         <div>
                             ${idx > 0 ? `<button class="photo-btn" onclick="movePhoto(${idx}, -1)">◀</button>` : ''}
