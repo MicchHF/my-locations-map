@@ -19,8 +19,8 @@
         }
 
         html, body {
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             height: 100dvh;
             margin: 0;
             padding: 0;
@@ -343,11 +343,11 @@
             border-color: #0f172a;
         }
         .metro-floating-btn .metro-badge-dot {
-            width: 8px; height: 8px; border-radius: 50%; display: none;
+            width: 9px; height: 9px; border-radius: 50%; display: none;
         }
         .metro-floating-btn.active .metro-badge-dot { display: inline-block; }
 
-        /* КАСТОМНОЕ МЕНЮ МЕТРО (БЕЗ УРОДЛИВЫХ SELECT) */
+        /* БОКОВОЕ МЕНЮ МЕТРО */
         .metro-sidebar-overlay {
             position: fixed;
             inset: 0;
@@ -399,7 +399,6 @@
 
         .metro-section-label { font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* Список веток метро */
         .metro-lines-grid {
             display: flex;
             flex-direction: column;
@@ -435,8 +434,12 @@
             border-radius: 50%;
             flex-shrink: 0;
         }
+        /* Специфический полый стиль для МЦК */
+        .metro-line-color-dot.mck-ring {
+            border: 2.5px solid #DF4842 !important;
+            background: #ffffff !important;
+        }
 
-        /* Список станций */
         .metro-stations-list {
             display: flex;
             flex-direction: column;
@@ -488,7 +491,7 @@
             margin-top: auto;
         }
 
-        /* LIGHTBOX С ПОДДЕРЖКОЙ СВАЙПОВ */
+        /* LIGHTBOX СО СВАЙПАМИ */
         .lightbox-modal {
             display: none;
             position: fixed;
@@ -530,17 +533,12 @@
         .mobile-search-input { flex: 1; border: none; background: transparent; font-size: 16px; outline: none; color: #0f172a; padding-left: 4px; }
         .mobile-search-close { background: none; border: none; font-size: 1.1rem; color: #64748b; cursor: pointer; padding: 4px 8px; }
 
-        /* ПОЛНОЭКРАННАЯ МОБИЛЬНАЯ АДАПТАЦИЯ ДЛЯ IOS */
         @media (max-width: 768px) {
             #sidebar { width: 100vw; height: 100%; display: none; }
             
             #map-container {
                 position: fixed !important;
                 inset: 0 !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
                 width: 100vw !important;
                 height: 100% !important;
                 height: 100dvh !important;
@@ -632,7 +630,7 @@
         </div>
     </div>
 
-    <!-- КРАСИВОЕ БОКОВОЕ МЕНЮ МЕТРО ДЛЯ IOS И ПК -->
+    <!-- МЕНЮ МЕТРО -->
     <div id="metroSidebarOverlay" class="metro-sidebar-overlay" onclick="closeMetroDrawer(event)">
         <div class="metro-sidebar-drawer" onclick="event.stopPropagation()">
             <div class="metro-drawer-header">
@@ -663,7 +661,6 @@
         <button id="btn-list-view" class="toggle-btn" onclick="switchMobileView('list')">📋 Список</button>
     </div>
 
-    <!-- LIGHTBOX С ПОДДЕРЖКОЙ СВАЙПОВ -->
     <div id="lightbox" class="lightbox-modal">
         <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
         <span class="lightbox-nav lightbox-prev" onclick="prevImage()">&#10094;</span>
@@ -745,8 +742,16 @@
                 stations: ["Савёловская (БКЛ)", "Марьина Роща (БКЛ)", "Рижская (БКЛ)", "Сокольники (БКЛ)", "Электрозаводская (БКЛ)", "Лефортово", "Авиамоторная (БКЛ)", "Нижегородская", "Текстильщики (БКЛ)", "Печатники (БКЛ)", "Нагатинский Затон", "Кленовый бульвар", "Каширская (БКЛ)", "Варшавская", "Каховская", "Зюзино", "Воронцовская", "Новаторская", "Проспект Вернадского (БКЛ)", "Мичуринский проспект (БКЛ)", "Аминьевская", "Давыдково", "Кунцевская (БКЛ)", "Терехово", "Мнёвники", "Народное Ополчение", "Хорошёвская", "ЦСКА", "Петровский парк"]
             },
             {
-                id: "line-14", name: "МЦК", color: "#E11D48",
+                id: "line-14", name: "МЦК", color: "#DF4842", isRing: true,
                 stations: ["Окружная (МЦК)", "Владыкино (МЦК)", "Ботанический сад (МЦК)", "Ростокино", "Белокаменная", "Бульвар Рокоссовского (МЦК)", "Локомотив", "Измайлово", "Соколиная Гора", "Шоссе Энтузиастов (МЦК)", "Андроновка", "Нижегородская (МЦК)", "Новохохловская", "Угрешская", "Дубровка (МЦК)", "Автозаводская (МЦК)", "ЗИЛ", "Верхние Котлы", "Крымская", "Площадь Гагарина", "Лужники", "Кутузовская (МЦК)", "Деловой центр (МЦК)", "Шелепиха", "Хорошёво", "Зорге", "Панфиловская", "Стрешнево", "Балтийская", "Коптево", "Лихоборы"]
+            },
+            {
+                id: "line-15", name: "Некрасовская", color: "#DE64A1",
+                stations: ["Нижегородская", "Стахановская", "Окская", "Юго-Восточная", "Косино", "Улица Дмитриевского", "Лухмановская", "Некрасовка"]
+            },
+            {
+                id: "line-16", name: "Троицкая", color: "#3B927D",
+                stations: ["Новаторская", "Университет Дружбы Народов", "Генерала Тюленева", "Тютчевская"]
             }
         ];
 
@@ -754,7 +759,12 @@
             return CATEGORY_COLORS[category] || "#0F172A";
         }
 
-        function getMetroSvg(color = "#EF161E") {
+        function getMetroSvg(color = "#EF161E", isMck = false) {
+            if (isMck || color === "#DF4842") {
+                return `<svg class="metro-icon-svg" viewBox="0 0 24 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0 18L7.5 0L12 9.5L16.5 0L24 18H19L15 8L12 14.5L9 8L5 18H0Z" stroke="#DF4842" stroke-width="2" fill="#FFFFFF"/>
+                </svg>`;
+            }
             return `<svg class="metro-icon-svg" viewBox="0 0 24 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M0 18L7.5 0L12 9.5L16.5 0L24 18H19L15 8L12 14.5L9 8L5 18H0Z" fill="${color}"/>
             </svg>`;
@@ -771,7 +781,6 @@
                 autoFitToViewport: 'always'
             });
 
-            // Закрытие балуна метки при клике на свободное место карты
             myMap.events.add('click', function () {
                 if (activeBalloonPlacemark) {
                     activeBalloonPlacemark.balloon.close();
@@ -791,7 +800,6 @@
             renderInterface(allLocations);
         }
 
-        /* --- БОКОВОЕ МЕНЮ МЕТРО --- */
         function openMetroDrawer() {
             document.getElementById('metroSidebarOverlay').classList.add('active');
         }
@@ -813,8 +821,9 @@
             MOSCOW_METRO_DATA.forEach(line => {
                 const item = document.createElement('div');
                 item.className = `metro-line-item ${selectedLineName === line.name ? 'selected' : ''}`;
+                const dotClass = line.isRing ? 'metro-line-color-dot mck-ring' : 'metro-line-color-dot';
                 item.innerHTML = `
-                    <span class="metro-line-color-dot" style="background:${line.color};"></span>
+                    <span class="${dotClass}" style="${!line.isRing ? `background:${line.color};` : ''}"></span>
                     <span>${line.name}</span>
                 `;
                 item.onclick = () => selectMetroLine(line.name);
@@ -887,13 +896,21 @@
                 label.innerText = `🚇 ${selectedMetroFilter}`;
                 
                 let foundColor = "#EF161E";
+                let isMck = false;
                 for (let line of MOSCOW_METRO_DATA) {
                     if (line.stations.includes(selectedMetroFilter)) {
                         foundColor = line.color;
+                        isMck = !!line.isRing;
                         break;
                     }
                 }
-                dot.style.background = foundColor;
+                if (isMck) {
+                    dot.className = 'metro-badge-dot mck-ring';
+                    dot.style.background = '#ffffff';
+                } else {
+                    dot.className = 'metro-badge-dot';
+                    dot.style.background = foundColor;
+                }
             } else {
                 btn.classList.remove('active');
                 label.innerText = "🚇 Метро";
@@ -979,12 +996,14 @@
 
         function renderMetroBadges(metroList) {
             if (!metroList || !Array.isArray(metroList) || metroList.length === 0) return '';
-            return `<div class="card-metro-block">${metroList.map(m => `
+            return `<div class="card-metro-block">${metroList.map(m => {
+                const isMck = (m.name && m.name.includes('МЦК')) || m.color === '#DF4842';
+                return `
                 <span class="metro-badge">
-                    ${getMetroSvg(m.color || '#EF161E')}
+                    ${getMetroSvg(m.color || '#EF161E', isMck)}
                     ${m.name} ${m.time ? `<span style="color:#64748b; font-weight:400;">(${m.time} мин)</span>` : ''}
                 </span>
-            `).join('')}</div>`;
+            `}).join('')}</div>`;
         }
 
         function renderInterface(locationsToRender) {
@@ -1112,12 +1131,14 @@
 
             let metroHtml = '';
             if (loc.metro && Array.isArray(loc.metro) && loc.metro.length > 0) {
-                metroHtml = `<div class="balloon-metro-block">${loc.metro.map(m => `
+                metroHtml = `<div class="balloon-metro-block">${loc.metro.map(m => {
+                    const isMck = (m.name && m.name.includes('МЦК')) || m.color === '#DF4842';
+                    return `
                     <span class="metro-badge">
-                        ${getMetroSvg(m.color || '#EF161E')}
+                        ${getMetroSvg(m.color || '#EF161E', isMck)}
                         ${m.name} ${m.time ? `<span style="color:#64748b; font-weight:400;">(${m.time} мин)</span>` : ''}
                     </span>
-                `).join('')}</div>`;
+                `}).join('')}</div>`;
             }
 
             return `
@@ -1224,7 +1245,7 @@
             }
         }
 
-        /* --- LIGHTBOX С СВАЙПАМИ НА МОБИЛКЕ --- */
+        /* --- LIGHTBOX СО СВАЙПАМИ --- */
         function openLightboxByUrl(locId, index, event) {
             if (event) event.stopPropagation();
             const loc = allLocations.find(l => l.id === locId);
@@ -1243,7 +1264,6 @@
         function nextImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx + 1) % currentGallery.length; updateLightboxImage(); }
         function prevImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx - 1 + currentGallery.length) % currentGallery.length; updateLightboxImage(); }
 
-        // Добавление обработки свайпов
         let touchStartX = 0;
         let touchEndX = 0;
         const lightboxEl = document.getElementById('lightbox');
@@ -1254,8 +1274,8 @@
 
         lightboxEl.addEventListener('touchend', e => {
             touchEndX = e.changedTouches[0].screenX;
-            if (touchEndX < touchStartX - 45) nextImage(); // свайп влево -> следующее фото
-            if (touchEndX > touchStartX + 45) prevImage(); // свайп вправо -> предыдущее фото
+            if (touchEndX < touchStartX - 45) nextImage();
+            if (touchEndX > touchStartX + 45) prevImage();
         }, { passive: true });
 
         function switchMobileView(view) {
