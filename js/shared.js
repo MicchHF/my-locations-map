@@ -1,4 +1,4 @@
-// js/shared.js - Общие данные, настройки и утилиты
+// js/shared.js - Общая база данных и утилиты проекта
 
 // 1. Инициализация Supabase
 const SUPABASE_URL = "https://cwkgylbtcjfmweoldhyb.supabase.co";
@@ -7,7 +7,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const BOT_USERNAME = "dalazareva_locations_bot";
 
-// 2. Цвета категорий
+// 2. Цвета и список категорий
 const CATEGORY_COLORS = {
     "☕ Кофейни": "#8B4513",
     "🍽️ Заведения (рестораны)": "#059669",
@@ -24,7 +24,7 @@ const CATEGORY_COLORS = {
 
 const DEFAULT_CATEGORIES = Object.keys(CATEGORY_COLORS);
 
-// 3. Полная база Московского Метро и МЦК
+// 3. Полная база станций метро с координатами
 const MOSCOW_METRO_DATA = [
     {
         id: "line-1", name: "1. Сокольническая", color: "#EF161E",
@@ -434,7 +434,9 @@ function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
 function findNearestMetroStations(lat, lng) {
     const allStationsWithDistance = [];
     MOSCOW_METRO_DATA.forEach(line => {
+        if (!line.stations) return;
         line.stations.forEach(st => {
+            if (!st.lat || !st.lng) return;
             const distMeters = calculateDistanceMeters(lat, lng, st.lat, st.lng);
             const walkTime = Math.max(1, Math.round(distMeters / 75));
             allStationsWithDistance.push({
