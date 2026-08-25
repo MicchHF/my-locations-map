@@ -6,7 +6,12 @@
     <meta name="theme-color" content="#f4f3f0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>локации от @dalazareva</title>
+    <title>@dalazareva локации</title>
+    
+    <!-- Иконка сайта и приложения -->
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.svg">
+    
     <script src="https://api-maps.yandex.ru/2.1/?apikey=7370bad5-a627-4414-a1e8-b2023bda7a61&lang=ru_RU"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -434,7 +439,6 @@
             border-radius: 50%;
             flex-shrink: 0;
         }
-        /* Специфический полый стиль для МЦК */
         .metro-line-color-dot.mck-ring {
             border: 2.5px solid #DF4842 !important;
             background: #ffffff !important;
@@ -491,7 +495,7 @@
             margin-top: auto;
         }
 
-        /* LIGHTBOX СО СВАЙПАМИ */
+        /* LIGHTBOX */
         .lightbox-modal {
             display: none;
             position: fixed;
@@ -539,6 +543,10 @@
             #map-container {
                 position: fixed !important;
                 inset: 0 !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
                 width: 100vw !important;
                 height: 100% !important;
                 height: 100dvh !important;
@@ -604,7 +612,7 @@
         <div id="sidebar">
             <div class="sidebar-header">
                 <a href="https://t.me/dalazareva" target="_blank" rel="noopener" class="tg-badge">
-                    <span class="tg-badge-text">локации от <strong>@dalazareva</strong></span>
+                    <span class="tg-badge-text"><strong>@dalazareva</strong> локации</span>
                     <span class="tg-badge-icon">↗</span>
                 </a>
                 <div class="search-container">
@@ -1245,7 +1253,7 @@
             }
         }
 
-        /* --- LIGHTBOX СО СВАЙПАМИ --- */
+        /* LIGHTBOX СО СВАЙПАМИ */
         function openLightboxByUrl(locId, index, event) {
             if (event) event.stopPropagation();
             const loc = allLocations.find(l => l.id === locId);
