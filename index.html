@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- Полноэкранный режим для iOS Safari -->
+    <!-- Цвет для плавного слияния со строками Safari -->
+    <meta id="themeColorMeta" name="theme-color" content="#f4f3f0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
@@ -36,7 +37,7 @@
             --border-color: #e2e8f0;
             --accent-btn: #0f172a;
             --accent-btn-text: #ffffff;
-            --glass-bg: rgba(255, 255, 255, 0.94);
+            --glass-bg: rgba(255, 255, 255, 0.92);
             --glass-border: rgba(0, 0, 0, 0.08);
             --card-sub-bg: #f1f5f9;
         }
@@ -54,7 +55,6 @@
             --card-sub-bg: #1e293b;
         }
 
-        /* Полная растяжка страницы на весь экран устройства без отступов */
         html, body {
             width: 100% !important;
             height: 100% !important;
@@ -62,16 +62,13 @@
             padding: 0 !important;
             overflow: hidden !important;
             position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
+            inset: 0 !important;
             background-color: var(--bg-main);
             color: var(--text-main);
             -webkit-text-size-adjust: 100%;
         }
 
-        /* ТЕМНАЯ ТЕМА ДЛЯ ПЛИТОК КАРТЫ */
+        /* ТЕМНАЯ ТЕМА ДЛЯ КАРТЫ */
         body.dark-mode #map [class*="ground-pane"] {
             filter: invert(90%) hue-rotate(180deg) brightness(90%) contrast(110%) saturate(80%);
         }
@@ -79,10 +76,7 @@
         /* ЭКРАН БЛОКИРОВКИ */
         #authGate {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            inset: 0;
             width: 100%;
             height: 100%;
             background: #0f172a;
@@ -190,13 +184,10 @@
             background: #e2e8f0;
         }
 
-        /* ОСНОВНОЙ КОНТЕЙНЕР ПРИЛОЖЕНИЯ */
+        /* ОСНОВНОЙ КОНТЕЙНЕР */
         #app-wrapper {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            inset: 0;
             width: 100%;
             height: 100%;
             display: none;
@@ -284,7 +275,6 @@
             pointer-events: none;
         }
 
-        /* ПОЛОСКА КАТЕГОРИЙ В СПИСКЕ */
         .sidebar-cat-scroll-wrap {
             display: flex;
             align-items: center;
@@ -419,7 +409,7 @@
         }
         .card-photo-thumb:hover { transform: scale(1.02); }
 
-        /* КОНТЕЙНЕР КАРТЫ НА ВЕСЬ ЭКРАН */
+        /* КОНТЕЙНЕР КАРТЫ */
         #map-container {
             position: absolute;
             top: 0;
@@ -431,10 +421,23 @@
             z-index: 1;
             background: var(--bg-main);
         }
+
+        /* Полная растяжка холста Яндекс.Карт без нижних зазоров */
         #map { 
             width: 100% !important; 
             height: 100% !important; 
+            position: absolute !important;
+            inset: 0 !important;
             background: var(--bg-main); 
+        }
+
+        #map ymaps, 
+        #map [class*="ymaps-2-1-map"],
+        #map [class*="inner-panes"] {
+            width: 100% !important;
+            height: 100% !important;
+            position: absolute !important;
+            inset: 0 !important;
         }
 
         .custom-map-pin {
@@ -454,7 +457,6 @@
         }
         .custom-map-pin:hover { transform: scale(1.1); }
 
-        /* ПУЛЬСИРУЮЩАЯ МЕТКА ГЕОЛОКАЦИИ */
         .user-loc-pin-wrap {
             position: relative;
             width: 24px;
@@ -501,10 +503,10 @@
         .balloon-photos { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; padding-bottom: 2px; }
         .balloon-photo-img { height: 65px; width: auto; border-radius: 6px; cursor: pointer; object-fit: cover; border: 1px solid rgba(0,0,0,0.08); flex-shrink: 0; }
 
-        /* ВЕРХНЯЯ СТРОКА КАТЕГОРИЙ (НА КАРТЕ) */
+        /* ВЕРХНЯЯ СТРОКА КАТЕГОРИЙ (Смещена ниже статус-бара iOS) */
         .top-cat-filter-bar {
             position: fixed;
-            top: max(calc(env(safe-area-inset-top) + 8px), 12px);
+            top: max(calc(env(safe-area-inset-top) + 14px), 20px);
             left: 50%;
             transform: translateX(-50%);
             width: calc(100% - 24px);
@@ -562,7 +564,7 @@
         /* ПЛАВАЮЩАЯ КНОПКА МЕТРО */
         .metro-floating-btn {
             position: fixed;
-            top: max(calc(env(safe-area-inset-top) + 64px), 68px);
+            top: max(calc(env(safe-area-inset-top) + 70px), 76px);
             left: max(calc(env(safe-area-inset-left) + 16px), 16px);
             z-index: 1000;
             background: var(--glass-bg);
@@ -593,7 +595,7 @@
         /* ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ */
         .theme-toggle-floating-btn {
             position: fixed;
-            top: max(calc(env(safe-area-inset-top) + 64px), 68px);
+            top: max(calc(env(safe-area-inset-top) + 70px), 76px);
             right: max(calc(env(safe-area-inset-right) + 16px), 16px);
             z-index: 1000;
             background: var(--glass-bg);
@@ -614,7 +616,7 @@
         }
         .theme-toggle-floating-btn:active { transform: scale(0.92); }
 
-        /* КНОПКА ГЕОЛОКАЦИИ СО СТРЕЛКОЙ НАВИГАЦИИ */
+        /* КНОПКА ГЕОЛОКАЦИИ */
         .custom-geoloc-btn {
             position: fixed;
             bottom: max(calc(env(safe-area-inset-bottom) + 78px), 82px);
@@ -647,10 +649,7 @@
         /* МЕНЮ МЕТРО */
         .metro-sidebar-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            inset: 0;
             background: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(4px);
             z-index: 2000;
@@ -794,10 +793,7 @@
         .lightbox-modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            inset: 0;
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.94);
@@ -835,24 +831,16 @@
         .mobile-search-input { flex: 1; border: none; background: transparent; font-size: 16px; outline: none; color: var(--text-main); padding-left: 4px; }
         .mobile-search-close { background: none; border: none; font-size: 1.1rem; color: var(--text-muted); cursor: pointer; padding: 4px 8px; }
 
-        /* МОБИЛЬНАЯ АДАПТАЦИЯ (РАСТЯЖКА КАРТЫ НА ВЕСЬ ЭКРАН) */
+        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
         @media (max-width: 768px) {
             #sidebar { width: 100%; height: 100%; display: none; }
             
             #map-container {
                 position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
+                inset: 0 !important;
                 width: 100% !important;
                 height: 100% !important;
                 z-index: 1 !important;
-                background-color: var(--bg-main) !important;
-            }
-            #map {
-                width: 100% !important;
-                height: 100% !important;
                 background-color: var(--bg-main) !important;
             }
 
@@ -865,21 +853,6 @@
             
             body:not(.show-list) #sidebar { display: none !important; }
             body:not(.show-list) #map-container { display: block !important; }
-
-            .metro-floating-btn {
-                left: 12px;
-                top: max(calc(env(safe-area-inset-top) + 60px), 64px);
-            }
-
-            .theme-toggle-floating-btn {
-                right: 12px;
-                top: max(calc(env(safe-area-inset-top) + 60px), 64px);
-            }
-
-            .custom-geoloc-btn {
-                right: 12px;
-                bottom: max(calc(env(safe-area-inset-bottom) + 78px), 82px);
-            }
 
             .mobile-toggle-bar {
                 display: flex;
@@ -969,7 +942,6 @@
                     <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, адресу, метро..." oninput="handleSearch()">
                 </div>
 
-                <!-- ПОЛОСКА КАТЕГОРИЙ В РЕЖИМЕ СПИСКА -->
                 <div class="sidebar-cat-scroll-wrap">
                     <button id="sidebarToggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
                     <div id="sidebarCatChipsScroll" class="cat-chips-scroll"></div>
@@ -982,7 +954,7 @@
         <div id="map-container">
             <div id="map"></div>
             
-            <!-- ВЕРХНИЙ ФИЛЬТР КАТЕГОРИЙ (НА КАРТЕ) -->
+            <!-- ВЕРХНИЙ ФИЛЬТР КАТЕГОРИЙ -->
             <div id="topCatFilterBar" class="top-cat-filter-bar">
                 <button id="toggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
                 <div id="catChipsScroll" class="cat-chips-scroll"></div>
@@ -999,7 +971,7 @@
                 🌓
             </button>
 
-            <!-- КАСТОМНАЯ КНОПКА ГЕОЛОКАЦИИ СО СТРЕЛКОЙ НАВИГАЦИИ -->
+            <!-- КАСТОМНАЯ КНОПКА ГЕОЛОКАЦИИ -->
             <button id="customGeolocBtn" class="custom-geoloc-btn" onclick="locateUserPosition()" title="Мое местоположение">
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="3 11 22 2 13 21 11 13 3 11" fill="currentColor"/>
@@ -1083,11 +1055,10 @@
         let selectedMetroFilter = "";
         let selectedLineName = "";
 
-        // АВТООПРЕДЕЛЕНИЕ ТЕМЫ
         function getInitialTheme() {
             const saved = localStorage.getItem('dalazareva_theme');
             if (saved) return saved === 'dark';
-            return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            return false;
         }
 
         let isDarkMode = getInitialTheme();
@@ -1190,12 +1161,20 @@
 
         function applyTheme(dark) {
             isDarkMode = dark;
+            const themeColor = dark ? '#090d16' : '#f4f3f0';
+            
             if (dark) {
                 document.body.classList.add('dark-mode');
                 document.getElementById('themeToggleBtn').innerText = '☀️';
             } else {
                 document.body.classList.remove('dark-mode');
                 document.getElementById('themeToggleBtn').innerText = '🌙';
+            }
+
+            // Окрашиваем статус-бар и адресную строку Safari в цвет карты
+            const meta = document.getElementById('themeColorMeta');
+            if (meta) {
+                meta.setAttribute('content', themeColor);
             }
         }
 
@@ -1421,23 +1400,23 @@
 
                 loadLocations();
                 
-                myMap.container.fitToViewport();
-                setTimeout(() => { if (myMap) myMap.container.fitToViewport(); }, 200);
-                setTimeout(() => { if (myMap) myMap.container.fitToViewport(); }, 500);
+                // Гарантированная подгонка размеров карты
+                const triggerResize = () => {
+                    if (myMap) myMap.container.fitToViewport();
+                };
 
-                window.addEventListener('resize', () => { 
-                    if (myMap) myMap.container.fitToViewport(); 
-                });
+                triggerResize();
+                setTimeout(triggerResize, 150);
+                setTimeout(triggerResize, 400);
+                setTimeout(triggerResize, 1000);
 
+                window.addEventListener('resize', triggerResize);
                 if (window.visualViewport) {
-                    window.visualViewport.addEventListener('resize', () => {
-                        if (myMap) myMap.container.fitToViewport();
-                    });
+                    window.visualViewport.addEventListener('resize', triggerResize);
                 }
             });
         }
 
-        // КАСТОМНАЯ ГЕОЛОКАЦИЯ
         function locateUserPosition() {
             const btn = document.getElementById('customGeolocBtn');
             if (!navigator.geolocation) {
@@ -1850,7 +1829,6 @@
             `;
         }
 
-        // РЕНДЕР ОБЕИХ ПОЛОСОК КАТЕГОРИЙ (НА КАРТЕ И В СПИСКЕ)
         function renderBothCatFilterBars(categories) {
             const mapContainer = document.getElementById('catChipsScroll');
             const sidebarContainer = document.getElementById('sidebarCatChipsScroll');
@@ -1957,7 +1935,6 @@
             }
         }
 
-        /* LIGHTBOX */
         function openLightboxByUrl(locId, index, event) {
             if (event) event.stopPropagation();
             const loc = allLocations.find(l => l.id === locId);
