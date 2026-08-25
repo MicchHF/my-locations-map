@@ -50,7 +50,7 @@
             background: #f4f3f0;
         }
 
-        /* ЭКРАН БЛОКИРОВКИ БЕЗ АВТОРИЗАЦИИ */
+        /* ЭКРАН БЛОКИРОВКИ ДО ВХОДА */
         .auth-gate-overlay {
             position: fixed;
             inset: 0;
@@ -68,7 +68,7 @@
         .auth-gate-card {
             background: #ffffff;
             width: 100%;
-            max-width: 380px;
+            max-width: 360px;
             border-radius: 24px;
             padding: 32px 24px;
             text-align: center;
@@ -76,7 +76,7 @@
             flex-direction: column;
             align-items: center;
             gap: 16px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
             animation: fadeIn 0.3s ease;
         }
         @keyframes fadeIn {
@@ -91,7 +91,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 30px;
+            font-size: 32px;
             box-shadow: 0 8px 20px rgba(15, 23, 42, 0.2);
         }
         .auth-gate-title { font-size: 1.25rem; font-weight: 800; color: #0f172a; line-height: 1.3; }
@@ -103,33 +103,18 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            background: #0284c7;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
             color: #ffffff;
             text-decoration: none;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 0.92rem;
-            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+            padding: 14px 18px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            box-shadow: 0 6px 18px rgba(2, 132, 199, 0.35);
             cursor: pointer;
-            transition: background 0.15s ease;
+            transition: transform 0.15s ease;
         }
-        .tg-direct-btn:hover { background: #0369a1; }
-        
-        .auth-divider {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            color: #94a3b8;
-            font-size: 0.75rem;
-            gap: 10px;
-        }
-        .auth-divider::before, .auth-divider::after {
-            content: "";
-            flex: 1;
-            height: 1px;
-            background: #e2e8f0;
-        }
+        .tg-direct-btn:active { transform: scale(0.98); }
 
         #sidebar {
             width: 390px;
@@ -150,23 +135,46 @@
             border-bottom: 1px solid #f0f0f0;
         }
 
+        /* ШАПКА: ПРОФИЛЬ + КНОПКА КАНАЛА */
+        .header-top-row {
+            display: flex;
+            align-items: stretch;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
         .tg-badge {
+            flex: 1;
             display: flex;
             align-items: center;
             justify-content: space-between;
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             color: #ffffff;
             text-decoration: none;
-            padding: 12px 14px;
+            padding: 10px 14px;
             border-radius: 14px;
-            margin-bottom: 12px;
             box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
             cursor: pointer;
             user-select: none;
+            transition: transform 0.15s ease;
+        }
+        .tg-badge:active { transform: scale(0.98); }
+
+        .channel-link-btn {
+            width: 48px;
+            background: #0284c7;
+            color: #ffffff;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+            flex-shrink: 0;
             transition: transform 0.15s ease, background 0.15s ease;
         }
-        .tg-badge:hover { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); }
-        .tg-badge:active { transform: scale(0.98); }
+        .channel-link-btn:hover { background: #0369a1; }
+        .channel-link-btn:active { transform: scale(0.95); }
 
         .search-container { position: relative; width: 100%; }
         .search-input {
@@ -702,38 +710,42 @@
         <div class="auth-gate-card">
             <div class="auth-gate-icon">📍</div>
             <div class="auth-gate-title">@dalazareva локации📍</div>
-            <div class="auth-gate-desc">Гид по лучшим кофейням, фото-спотам и локациям Москвы. Для доступа к карте подтвердите вход через Telegram:</div>
+            <div class="auth-gate-desc">Гид по лучшим кофейням, фото-спотам и локациям Москвы. Для доступа откройте карту в Telegram:</div>
             
-            <!-- Вариант 1: Быстрый запуск внутри Telegram -->
+            <!-- Прямой вход через Telegram Mini App -->
             <a href="https://t.me/dalazareva_locations_bot/map" class="tg-direct-btn">
-                <span>✈️ Открыть в приложении Telegram</span>
+                <span>✈️ Открыть карту в Telegram</span>
             </a>
-
-            <div class="auth-divider">или вход на этом устройстве</div>
-
-            <!-- Вариант 2: Официальный виджет авторизации -->
-            <div id="tgWidgetStatic"></div>
         </div>
     </div>
 
     <div id="app-wrapper">
         <div id="sidebar">
             <div class="sidebar-header">
-                <!-- ОБНОВЛЕННАЯ ШАПКА С РАЗДЕЛЕНИЕМ НА ДВЕ СТРОКИ -->
-                <div class="tg-badge" onclick="handleBadgeClick()" title="Нажмите для управления тарифом в боте">
-                    <div style="display: flex; flex-direction: column; gap: 4px; width: 100%;">
-                        <!-- Верхняя строка: Название проекта -->
-                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                            <span style="font-size: 0.92rem; font-weight: 800; color: #ffffff; letter-spacing: -0.2px;">@dalazareva локации📍</span>
-                            <span class="tg-badge-icon" id="badgeActionIcon" style="font-size: 0.82rem; color: #94a3b8;">↗</span>
-                        </div>
-                        <!-- Нижняя строка: Никнейм и статус тарифа в одну строку -->
-                        <div id="userProfileSubRow" style="font-size: 0.75rem; color: #94a3b8; display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                            <span id="userDisplayName" style="color: #e2e8f0; font-weight: 600;">👤 Пользователь</span>
-                            <span>•</span>
-                            <span id="userPlanLabel" style="color: #38bdf8; font-weight: 600;">Тариф: FREE</span>
+                <!-- ШАПКА: ПРОФИЛЬ + ССЫЛКА НА КАНАЛ -->
+                <div class="header-top-row">
+                    <div class="tg-badge" onclick="handleBadgeClick()" title="Нажмите для управления тарифом в боте">
+                        <div style="display: flex; flex-direction: column; gap: 3px; width: 100%;">
+                            <!-- Верхняя строка: Название -->
+                            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                                <span style="font-size: 0.92rem; font-weight: 800; color: #ffffff; letter-spacing: -0.2px;">@dalazareva локации📍</span>
+                                <span class="tg-badge-icon" id="badgeActionIcon" style="font-size: 0.8rem; color: #94a3b8;">↗</span>
+                            </div>
+                            <!-- Нижняя строка: Никнейм и тариф в одну строку -->
+                            <div id="userProfileSubRow" style="font-size: 0.74rem; color: #94a3b8; display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                <span id="userDisplayName" style="color: #e2e8f0; font-weight: 600;">👤 Пользователь</span>
+                                <span>•</span>
+                                <span id="userPlanLabel" style="color: #38bdf8; font-weight: 600;">Тариф: FREE</span>
+                            </div>
                         </div>
                     </div>
+                    
+                    <!-- Кнопка перехода в Telegram-канал -->
+                    <a href="https://t.me/dalazareva" target="_blank" rel="noopener" class="channel-link-btn" title="Перейти в Telegram-канал @dalazareva">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+                        </svg>
+                    </a>
                 </div>
 
                 <div class="search-container">
@@ -802,7 +814,7 @@
     <script>
         const BOT_USERNAME = "dalazareva_locations_bot";
 
-        // Проверка открытия внутри Telegram Mini App
+        // Проверка запуска внутри Telegram Mini App
         const isInsideTelegram = !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe?.user);
         if (isInsideTelegram) {
             const tg = window.Telegram.WebApp;
@@ -916,17 +928,12 @@
             </svg>`;
         }
 
-        // Авторизация и проверка доступа
+        // Авторизация пользователя через Telegram
         async function checkAuthAndInit() {
             let tgUser = null;
 
             if (isInsideTelegram) {
                 tgUser = window.Telegram.WebApp.initDataUnsafe.user;
-            } else {
-                const saved = localStorage.getItem('tg_web_user');
-                if (saved) {
-                    try { tgUser = JSON.parse(saved); } catch(e) {}
-                }
             }
 
             if (tgUser && tgUser.id) {
@@ -966,31 +973,10 @@
                 renderUserPlanBadge();
                 initMap();
             } else {
-                // Пользователь не авторизован -> держим экран блокировки
+                // Если открыто вне Telegram -> блокируем интерфейс и предлагаем войти
                 document.getElementById('authGate').style.display = 'flex';
-                renderTelegramWidget();
             }
         }
-
-        // Отрисовка виджета на ПК
-        function renderTelegramWidget() {
-            const container = document.getElementById('tgWidgetStatic');
-            if (container && !container.hasChildNodes()) {
-                const script = document.createElement('script');
-                script.async = true;
-                script.src = "https://telegram.org/js/telegram-widget.js?22";
-                script.setAttribute('data-telegram-login', BOT_USERNAME);
-                script.setAttribute('data-size', 'large');
-                script.setAttribute('data-onauth', 'onTelegramAuth(user)');
-                script.setAttribute('data-request-access', 'write');
-                container.appendChild(script);
-            }
-        }
-
-        window.onTelegramAuth = async function (user) {
-            localStorage.setItem('tg_web_user', JSON.stringify(user));
-            await checkAuthAndInit();
-        };
 
         // Клик по профилю -> открывает бота для смены тарифа
         function handleBadgeClick() {
@@ -1557,7 +1543,7 @@
             }
         }
 
-        // Старт проверки авторизации
+        // Запуск проверки авторизации
         checkAuthAndInit();
     </script>
 </body>
