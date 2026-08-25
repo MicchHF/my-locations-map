@@ -5,10 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#f4f3f0">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Панель управления | @dalazareva локации</title>
     
-    <!-- Иконка сайта и приложения -->
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <link rel="apple-touch-icon" href="icon.svg">
     
@@ -18,7 +17,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; touch-action: manipulation; }
         
         html, body { 
-            width: 100vw; height: 100vh; height: 100dvh;
+            width: 100vw; height: 100%; height: 100dvh;
             margin: 0; padding: 0; background: #f4f3f0; color: #1a1a1a; 
             overflow: hidden; position: fixed; inset: 0; overscroll-behavior: none;
         }
@@ -112,7 +111,6 @@
         .metro-badge { display: inline-flex; align-items: center; gap: 5px; background: #ffffff; color: #1e293b; font-size: 0.74rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
         .metro-icon-svg { width: 14px; height: 11px; flex-shrink: 0; }
 
-        /* Фотографии без жесткой обрезки */
         .card-photos { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 8px; margin-top: 4px; }
         .card-photo-thumb { 
             height: 75px; width: auto; max-width: 140px; 
@@ -170,7 +168,6 @@
         .photo-btn { background: rgba(0,0,0,0.75); color: #fff; border: none; border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; cursor: pointer; pointer-events: auto; }
         .photo-btn-delete { background: rgba(239,68,68,0.9); }
 
-        /* Полноэкранный Lightbox со свайпами */
         .lightbox-modal {
             display: none; position: fixed; inset: 0; width: 100vw; height: 100%;
             background: rgba(0, 0, 0, 0.94); z-index: 10005;
@@ -430,9 +427,10 @@
             return CATEGORY_COLORS[category] || "#0F172A";
         }
 
+        // ПОЛНАЯ БАЗА МЕТРО С КООРДИНАТАМИ ДЛЯ АВТО-РАСЧЕТА
         const MOSCOW_METRO_DATA = [
             {
-                id: "line-1", name: "Сокольническая", color: "#EF161E",
+                id: "line-1", name: "1. Сокольническая", color: "#EF161E",
                 stations: [
                     { name: "Бульвар Рокоссовского", lat: 55.8143, lng: 37.7351 },
                     { name: "Черкизовская", lat: 55.8030, lng: 37.7448 },
@@ -459,11 +457,12 @@
                     { name: "Филатов Луг", lat: 55.6019, lng: 37.4097 },
                     { name: "Прокшино", lat: 55.5861, lng: 37.4339 },
                     { name: "Ольховая", lat: 55.5706, lng: 37.4747 },
-                    { name: "Коммунарка", lat: 55.5606, lng: 37.4878 }
+                    { name: "Коммунарка", lat: 55.5606, lng: 37.4878 },
+                    { name: "Потапово", lat: 55.5398, lng: 37.4975 }
                 ]
             },
             {
-                id: "line-2", name: "Замоскворецкая", color: "#2DBE2C",
+                id: "line-2", name: "2. Замоскворецкая", color: "#2DBE2C",
                 stations: [
                     { name: "Ховрино", lat: 55.8778, lng: 37.4881 },
                     { name: "Беломорская", lat: 55.8647, lng: 37.4764 },
@@ -492,7 +491,7 @@
                 ]
             },
             {
-                id: "line-3", name: "Арбатско-Покровская", color: "#0078BF",
+                id: "line-3", name: "3. Арбатско-Покровская", color: "#0078BF",
                 stations: [
                     { name: "Пятницкое шоссе", lat: 55.8561, lng: 37.3547 },
                     { name: "Митино", lat: 55.8456, lng: 37.3628 },
@@ -519,7 +518,7 @@
                 ]
             },
             {
-                id: "line-4", name: "Филёвская", color: "#00BFFF",
+                id: "line-4", name: "4. Филёвская", color: "#00BFFF",
                 stations: [
                     { name: "Александровский сад", lat: 55.7523, lng: 37.6086 },
                     { name: "Арбатская (ФЛ)", lat: 55.7520, lng: 37.6000 },
@@ -531,12 +530,13 @@
                     { name: "Багратионовская", lat: 55.7436, lng: 37.4981 },
                     { name: "Филёвский парк", lat: 55.7397, lng: 37.4839 },
                     { name: "Пионерская", lat: 55.7361, lng: 37.4678 },
+                    { name: "Кунцевская (ФЛ)", lat: 55.7306, lng: 37.4464 },
                     { name: "Выставочная", lat: 55.7503, lng: 37.5434 },
                     { name: "Международная", lat: 55.7483, lng: 37.5332 }
                 ]
             },
             {
-                id: "line-5", name: "Кольцевая", color: "#8D5B2D",
+                id: "line-5", name: "5. Кольцевая", color: "#8D5B2D",
                 stations: [
                     { name: "Парк культуры (Кольцевая)", lat: 55.7354, lng: 37.5937 },
                     { name: "Октябрьская (Кольцевая)", lat: 55.7301, lng: 37.6119 },
@@ -553,7 +553,7 @@
                 ]
             },
             {
-                id: "line-6", name: "Калужско-Рижская", color: "#ED9121",
+                id: "line-6", name: "6. Калужско-Рижская", color: "#ED9121",
                 stations: [
                     { name: "Медведково", lat: 55.8872, lng: 37.6617 },
                     { name: "Бабушкинская", lat: 55.8700, lng: 37.6644 },
@@ -574,12 +574,25 @@
                     { name: "Профсоюзная", lat: 55.6781, lng: 37.5639 },
                     { name: "Новые Черёмушки", lat: 55.6697, lng: 37.5544 },
                     { name: "Калужская", lat: 55.6567, lng: 37.5403 },
-                    { name: "Беляево", lat: 55.6431, lng: 37.5261 }
+                    { name: "Воронцовская", lat: 55.6586, lng: 37.5381 },
+                    { name: "Беляево", lat: 55.6431, lng: 37.5261 },
+                    { name: "Коньково", lat: 55.6336, lng: 37.5197 },
+                    { name: "Тёплый Стан", lat: 55.6189, lng: 37.5069 },
+                    { name: "Ясенево", lat: 55.6061, lng: 37.5331 },
+                    { name: "Новоясеневская", lat: 55.5956, lng: 37.5539 }
                 ]
             },
             {
-                id: "line-7", name: "Таганско-Краснопресненская", color: "#800080",
+                id: "line-7", name: "7. Таганско-Краснопресненская", color: "#800080",
                 stations: [
+                    { name: "Планерная", lat: 55.8603, lng: 37.4361 },
+                    { name: "Сходненская", lat: 55.8500, lng: 37.4397 },
+                    { name: "Тушинская", lat: 55.8267, lng: 37.4369 },
+                    { name: "Спартак", lat: 55.8178, lng: 37.4358 },
+                    { name: "Щукинская", lat: 55.8094, lng: 37.4647 },
+                    { name: "Октябрьское Поле", lat: 55.7936, lng: 37.4939 },
+                    { name: "Полежаевская", lat: 55.7772, lng: 37.5194 },
+                    { name: "Беговая", lat: 55.7733, lng: 37.5458 },
                     { name: "Улица 1905 года", lat: 55.7644, lng: 37.5614 },
                     { name: "Баррикадная", lat: 55.7607, lng: 37.5810 },
                     { name: "Пушкинская", lat: 55.7654, lng: 37.6042 },
@@ -587,11 +600,18 @@
                     { name: "Китай-город (ТКЛ)", lat: 55.7538, lng: 37.6339 },
                     { name: "Таганская", lat: 55.7416, lng: 37.6531 },
                     { name: "Пролетарская", lat: 55.7314, lng: 37.6669 },
-                    { name: "Волгоградский проспект", lat: 55.7251, lng: 37.6864 }
+                    { name: "Волгоградский проспект", lat: 55.7251, lng: 37.6864 },
+                    { name: "Текстильщики", lat: 55.7092, lng: 37.7317 },
+                    { name: "Кузьминки", lat: 55.7050, lng: 37.7653 },
+                    { name: "Рязанский проспект", lat: 55.7172, lng: 37.7928 },
+                    { name: "Выхино", lat: 55.7156, lng: 37.8181 },
+                    { name: "Лермонтовский проспект", lat: 55.7019, lng: 37.8522 },
+                    { name: "Жулебино", lat: 55.6858, lng: 37.8547 },
+                    { name: "Котельники", lat: 55.6744, lng: 37.8589 }
                 ]
             },
             {
-                id: "line-8", name: "Калининская / Солнцевская", color: "#FFD702",
+                id: "line-8", name: "8. Калининская (Желтая)", color: "#FFD702",
                 stations: [
                     { name: "Новокосино", lat: 55.7450, lng: 37.8642 },
                     { name: "Новогиреево", lat: 55.7519, lng: 37.8172 },
@@ -600,14 +620,38 @@
                     { name: "Авиамоторная", lat: 55.7519, lng: 37.7167 },
                     { name: "Площадь Ильича", lat: 55.7472, lng: 37.6825 },
                     { name: "Марксистская", lat: 55.7416, lng: 37.6558 },
-                    { name: "Третьяковская (Калининская)", lat: 55.7411, lng: 37.6261 },
-                    { name: "Деловой центр", lat: 55.7489, lng: 37.5389 },
-                    { name: "Парк Победы", lat: 55.7364, lng: 37.5169 }
+                    { name: "Третьяковская", lat: 55.7411, lng: 37.6261 }
                 ]
             },
             {
-                id: "line-9", name: "Серпуховско-Тимирязевская", color: "#A0A0A0",
+                id: "line-8a", name: "8А. Солнцевская (Желтая)", color: "#FFD702",
                 stations: [
+                    { name: "Деловой центр", lat: 55.7489, lng: 37.5389 },
+                    { name: "Парк Победы", lat: 55.7364, lng: 37.5169 },
+                    { name: "Минская", lat: 55.7247, lng: 37.5028 },
+                    { name: "Ломоносовский проспект", lat: 55.7069, lng: 37.5158 },
+                    { name: "Раменки", lat: 55.6989, lng: 37.4989 },
+                    { name: "Мичуринский проспект", lat: 55.6900, lng: 37.4842 },
+                    { name: "Озёрная", lat: 55.6703, lng: 37.4475 },
+                    { name: "Говорово", lat: 55.6589, lng: 37.4169 },
+                    { name: "Солнцево", lat: 55.6497, lng: 37.3808 },
+                    { name: "Боровское шоссе", lat: 55.6406, lng: 37.3556 },
+                    { name: "Новопеределкино", lat: 55.6378, lng: 37.3400 },
+                    { name: "Рассказовка", lat: 55.6342, lng: 37.3347 },
+                    { name: "Пыхтино", lat: 55.6175, lng: 37.2994 },
+                    { name: "Аэропорт Внуково", lat: 55.6053, lng: 37.2864 }
+                ]
+            },
+            {
+                id: "line-9", name: "9. Серпуховско-Тимирязевская", color: "#A0A0A0",
+                stations: [
+                    { name: "Алтуфьево", lat: 55.8981, lng: 37.5872 },
+                    { name: "Бибирево", lat: 55.8839, lng: 37.6033 },
+                    { name: "Отрадное", lat: 55.8631, lng: 37.6047 },
+                    { name: "Владыкино", lat: 55.8475, lng: 37.5897 },
+                    { name: "Петровско-Разумовская", lat: 55.8361, lng: 37.5753 },
+                    { name: "Тимирязевская", lat: 55.8189, lng: 37.5753 },
+                    { name: "Дмитровская", lat: 55.8072, lng: 37.5819 },
                     { name: "Савёловская", lat: 55.7942, lng: 37.5878 },
                     { name: "Менделеевская", lat: 55.7811, lng: 37.6006 },
                     { name: "Цветной бульвар", lat: 55.7717, lng: 37.6206 },
@@ -615,12 +659,30 @@
                     { name: "Боровицкая", lat: 55.7508, lng: 37.6083 },
                     { name: "Полянка", lat: 55.7369, lng: 37.6186 },
                     { name: "Серпуховская", lat: 55.7275, lng: 37.6253 },
-                    { name: "Тульская", lat: 55.7092, lng: 37.6225 }
+                    { name: "Тульская", lat: 55.7092, lng: 37.6225 },
+                    { name: "Нагатинская", lat: 55.6828, lng: 37.6222 },
+                    { name: "Нагорная", lat: 55.6728, lng: 37.6106 },
+                    { name: "Нахимовский проспект", lat: 55.6628, lng: 37.6053 },
+                    { name: "Севастопольская", lat: 55.6528, lng: 37.5986 },
+                    { name: "Чертановская", lat: 55.6408, lng: 37.5986 },
+                    { name: "Южная", lat: 55.6228, lng: 37.6089 },
+                    { name: "Пражская", lat: 55.6125, lng: 37.6042 },
+                    { name: "Улица Академика Янгеля", lat: 55.5947, lng: 37.5997 },
+                    { name: "Аннино", lat: 55.5828, lng: 37.5975 },
+                    { name: "Бульвар Дмитрия Донского", lat: 55.5694, lng: 37.5769 }
                 ]
             },
             {
-                id: "line-10", name: "Люблинско-Дмитровская", color: "#99CC00",
+                id: "line-10", name: "10. Люблинско-Дмитровская", color: "#99CC00",
                 stations: [
+                    { name: "Физтех", lat: 55.9189, lng: 37.5342 },
+                    { name: "Лианозово", lat: 55.8994, lng: 37.5503 },
+                    { name: "Яхромская", lat: 55.8800, lng: 37.5458 },
+                    { name: "Селигерская", lat: 55.8647, lng: 37.5469 },
+                    { name: "Верхние Лихоборы", lat: 55.8553, lng: 37.5622 },
+                    { name: "Окружная", lat: 55.8481, lng: 37.5739 },
+                    { name: "Фонвизинская", lat: 55.8239, lng: 37.5889 },
+                    { name: "Бутырская", lat: 55.8131, lng: 37.6025 },
                     { name: "Марьина Роща", lat: 55.7936, lng: 37.6161 },
                     { name: "Достоевская", lat: 55.7817, lng: 37.6139 },
                     { name: "Трубная", lat: 55.7678, lng: 37.6219 },
@@ -628,11 +690,20 @@
                     { name: "Чкаловская", lat: 55.7572, lng: 37.6586 },
                     { name: "Римская", lat: 55.7469, lng: 37.6811 },
                     { name: "Крестьянская Застава", lat: 55.7325, lng: 37.6661 },
-                    { name: "Дубровка", lat: 55.7178, lng: 37.6761 }
+                    { name: "Дубровка", lat: 55.7178, lng: 37.6761 },
+                    { name: "Кожуховская", lat: 55.7061, lng: 37.6853 },
+                    { name: "Печатники", lat: 55.6928, lng: 37.7289 },
+                    { name: "Волжская", lat: 55.6908, lng: 37.7539 },
+                    { name: "Люблино", lat: 55.6764, lng: 37.7628 },
+                    { name: "Братиславская", lat: 55.6592, lng: 37.7503 },
+                    { name: "Марьино", lat: 55.6500, lng: 37.7442 },
+                    { name: "Борисово", lat: 55.6400, lng: 37.7431 },
+                    { name: "Шипиловская", lat: 55.6200, lng: 37.7447 },
+                    { name: "Зябликово", lat: 55.6189, lng: 37.7450 }
                 ]
             },
             {
-                id: "line-11", name: "Большая кольцевая (БКЛ)", color: "#70C9C7",
+                id: "line-11", name: "11. Большая кольцевая (БКЛ)", color: "#70C9C7",
                 stations: [
                     { name: "Савёловская (БКЛ)", lat: 55.7936, lng: 37.5889 },
                     { name: "Марьина Роща (БКЛ)", lat: 55.7944, lng: 37.6169 },
@@ -642,22 +713,97 @@
                     { name: "Лефортово", lat: 55.7653, lng: 37.7083 },
                     { name: "Авиамоторная (БКЛ)", lat: 55.7533, lng: 37.7172 },
                     { name: "Нижегородская", lat: 55.7317, lng: 37.7289 },
+                    { name: "Текстильщики (БКЛ)", lat: 55.7089, lng: 37.7311 },
+                    { name: "Печатники (БКЛ)", lat: 55.6931, lng: 37.7281 },
+                    { name: "Нагатинский Затон", lat: 55.6836, lng: 37.7011 },
+                    { name: "Кленовый бульвар", lat: 55.6747, lng: 37.6792 },
+                    { name: "Каширская (БКЛ)", lat: 55.6553, lng: 37.6489 },
+                    { name: "Варшавская", lat: 55.6531, lng: 37.6206 },
+                    { name: "Каховская", lat: 55.6528, lng: 37.5986 },
+                    { name: "Зюзино", lat: 55.6575, lng: 37.5689 },
+                    { name: "Воронцовская", lat: 55.6586, lng: 37.5381 },
+                    { name: "Новаторская", lat: 55.6703, lng: 37.5206 },
+                    { name: "Проспект Вернадского (БКЛ)", lat: 55.6766, lng: 37.5054 },
+                    { name: "Мичуринский проспект (БКЛ)", lat: 55.6900, lng: 37.4842 },
+                    { name: "Аминьевская", lat: 55.7003, lng: 37.4658 },
+                    { name: "Давыдково", lat: 55.7147, lng: 37.4519 },
+                    { name: "Кунцевская (БКЛ)", lat: 55.7306, lng: 37.4464 },
+                    { name: "Терехово", lat: 55.7489, lng: 37.4611 },
+                    { name: "Мнёвники", lat: 55.7600, lng: 37.4722 },
+                    { name: "Народное Ополчение", lat: 55.7761, lng: 37.4858 },
+                    { name: "Хорошёвская", lat: 55.7772, lng: 37.5194 },
                     { name: "ЦСКА", lat: 55.7867, lng: 37.5333 },
                     { name: "Петровский парк", lat: 55.7917, lng: 37.5583 }
                 ]
             },
             {
-                id: "line-14", name: "МЦК", color: "#DF4842", isRing: true,
+                id: "line-12", name: "12. Бутовская", color: "#A1B2C8",
+                stations: [
+                    { name: "Битцевский парк", lat: 55.5956, lng: 37.5539 },
+                    { name: "Лесопарковая", lat: 55.5819, lng: 37.5647 },
+                    { name: "Улица Старокачаловская", lat: 55.5694, lng: 37.5769 },
+                    { name: "Улица Скобелевская", lat: 55.5492, lng: 37.5547 },
+                    { name: "Бульвар Адмирала Ушакова", lat: 55.5456, lng: 37.5428 },
+                    { name: "Улица Горчакова", lat: 55.5417, lng: 37.5308 },
+                    { name: "Бунинская аллея", lat: 55.5381, lng: 37.5158 }
+                ]
+            },
+            {
+                id: "line-14", name: "14. МЦК", color: "#DF4842", isRing: true,
                 stations: [
                     { name: "Окружная (МЦК)", lat: 55.8483, lng: 37.5731 },
                     { name: "Владыкино (МЦК)", lat: 55.8483, lng: 37.5906 },
                     { name: "Ботанический сад (МЦК)", lat: 55.8458, lng: 37.6389 },
+                    { name: "Ростокино", lat: 55.8389, lng: 37.6694 },
+                    { name: "Белокаменная", lat: 55.8297, lng: 37.7019 },
+                    { name: "Бульвар Рокоссовского (МЦК)", lat: 55.8153, lng: 37.7342 },
+                    { name: "Локомотив", lat: 55.8039, lng: 37.7456 },
+                    { name: "Измайлово", lat: 55.7892, lng: 37.7431 },
+                    { name: "Соколиная Гора", lat: 55.7728, lng: 37.7456 },
+                    { name: "Шоссе Энтузиастов (МЦК)", lat: 55.7589, lng: 37.7508 },
+                    { name: "Андроновка", lat: 55.7447, lng: 37.7342 },
+                    { name: "Нижегородская (МЦК)", lat: 55.7317, lng: 37.7289 },
+                    { name: "Новохохловская", lat: 55.7239, lng: 37.7167 },
+                    { name: "Угрешская", lat: 55.7178, lng: 37.6975 },
+                    { name: "Дубровка (МЦК)", lat: 55.7161, lng: 37.6778 },
+                    { name: "Автозаводская (МЦК)", lat: 55.7067, lng: 37.6611 },
+                    { name: "ЗИЛ", lat: 55.6989, lng: 37.6481 },
+                    { name: "Верхние Котлы", lat: 55.6900, lng: 37.6186 },
+                    { name: "Крымская", lat: 55.6900, lng: 37.6047 },
                     { name: "Площадь Гагарина", lat: 55.7072, lng: 37.5856 },
                     { name: "Лужники", lat: 55.7208, lng: 37.5611 },
                     { name: "Кутузовская (МЦК)", lat: 55.7408, lng: 37.5342 },
                     { name: "Деловой центр (МЦК)", lat: 55.7483, lng: 37.5332 },
                     { name: "Шелепиха", lat: 55.7578, lng: 37.5256 },
-                    { name: "Хорошёво", lat: 55.7767, lng: 37.5072 }
+                    { name: "Хорошёво", lat: 55.7767, lng: 37.5072 },
+                    { name: "Зорге", lat: 55.7881, lng: 37.5039 },
+                    { name: "Панфиловская", lat: 55.7989, lng: 37.4989 },
+                    { name: "Стрешнево", lat: 55.8131, lng: 37.4858 },
+                    { name: "Балтийская", lat: 55.8253, lng: 37.4961 },
+                    { name: "Коптево", lat: 55.8394, lng: 37.5194 },
+                    { name: "Лихоборы", lat: 55.8467, lng: 37.5458 }
+                ]
+            },
+            {
+                id: "line-15", name: "15. Некрасовская", color: "#DE64A1",
+                stations: [
+                    { name: "Нижегородская", lat: 55.7317, lng: 37.7289 },
+                    { name: "Стахановская", lat: 55.7289, lng: 37.7675 },
+                    { name: "Окская", lat: 55.7178, lng: 37.7847 },
+                    { name: "Юго-Восточная", lat: 55.7050, lng: 37.8189 },
+                    { name: "Косино", lat: 55.7019, lng: 37.8522 },
+                    { name: "Улица Дмитриевского", lat: 55.7103, lng: 37.8789 },
+                    { name: "Лухмановская", lat: 55.7089, lng: 37.9003 },
+                    { name: "Некрасовка", lat: 55.7028, lng: 37.9306 }
+                ]
+            },
+            {
+                id: "line-16", name: "16. Троицкая", color: "#3B927D",
+                stations: [
+                    { name: "Новаторская", lat: 55.6703, lng: 37.5206 },
+                    { name: "Университет Дружбы Народов", lat: 55.6517, lng: 37.5031 },
+                    { name: "Генерала Тюленева", lat: 55.6347, lng: 37.4878 },
+                    { name: "Тютчевская", lat: 55.6175, lng: 37.4767 }
                 ]
             }
         ];
@@ -1432,7 +1578,6 @@
         function nextImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx + 1) % currentGallery.length; updateLightboxImage(); }
         function prevImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx - 1 + currentGallery.length) % currentGallery.length; updateLightboxImage(); }
 
-        /* Обработка свайпов для админки */
         let touchStartX = 0;
         let touchEndX = 0;
         const lightboxEl = document.getElementById('lightbox');
