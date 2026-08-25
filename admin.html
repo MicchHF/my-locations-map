@@ -10,20 +10,13 @@
     
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <link rel="apple-touch-icon" href="icon.svg">
+    <link rel="stylesheet" href="style.css">
     
     <script src="https://api-maps.yandex.ru/2.1/?apikey=7370bad5-a627-4414-a1e8-b2023bda7a61&lang=ru_RU"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/shared.js"></script>
 
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; touch-action: manipulation; }
-        
-        html, body { 
-            width: 100vw; height: 100%; height: 100dvh;
-            margin: 0; padding: 0; background: #f4f3f0; color: #1a1a1a; 
-            overflow: hidden; position: fixed; inset: 0;
-        }
-
         .auth-overlay {
             position: fixed; inset: 0; width: 100vw; height: 100%;
             background: #09090b; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;
@@ -35,22 +28,6 @@
         .auth-title { font-size: 1.15rem; font-weight: 700; color: #0f172a; text-align: center; }
         .auth-desc { font-size: 0.8rem; color: #64748b; text-align: center; margin-top: -6px; margin-bottom: 4px; }
         .auth-error { font-size: 0.78rem; color: #ef4444; background: #fee2e2; padding: 8px 10px; border-radius: 8px; display: none; }
-
-        #app-wrapper { 
-            position: fixed; inset: 0; width: 100vw; height: 100%;
-            display: none; background: #f4f3f0; 
-        }
-
-        #sidebar { 
-            width: 440px; height: 100%; background: #fff; border-right: 1px solid #e5e7eb; 
-            display: flex; flex-direction: column; z-index: 10; flex-shrink: 0; 
-            overflow: hidden; position: relative;
-        }
-        
-        .sidebar-header { 
-            padding: max(calc(env(safe-area-inset-top) + 12px), 16px) 16px 8px 16px; 
-            background: #fff; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;
-        }
 
         .admin-badge { display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; padding: 10px 14px; border-radius: 12px; margin-bottom: 8px; font-size: 0.88rem; font-weight: 600; }
         .logout-btn { background: rgba(255,255,255,0.15); border: none; color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; }
@@ -84,78 +61,6 @@
         .submit-btn { background: #0f172a; color: #fff; border: none; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
         .submit-btn:hover { background: #1e293b; }
 
-        .search-container { position: relative; width: 100%; margin-top: 4px; }
-        .search-input { width: 100%; padding: 9px 12px 9px 34px; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 0.88rem; outline: none; background: #f9fafb; }
-        .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 0.85rem; color: #9ca3af; pointer-events: none; }
-
-        #locations-list { 
-            flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; 
-            padding: 12px; padding-bottom: calc(env(safe-area-inset-bottom) + 80px); 
-        }
-
-        .category-group { margin-bottom: 12px; background: #fff; border: 1px solid #eef0f2; border-radius: 12px; overflow: hidden; }
-        .category-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: #f9fafb; }
-        .category-title-wrap { display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1; }
-        .category-title { font-weight: 600; font-size: 0.92rem; color: #1f2937; }
-        .category-count { font-size: 0.75rem; background: #e5e7eb; color: #4b5563; padding: 2px 7px; border-radius: 10px; font-weight: 600; }
-        .category-controls { display: flex; align-items: center; gap: 10px; }
-        .toggle-visibility-btn { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 4px; }
-        .chevron { font-size: 0.8rem; transition: transform 0.2s; color: #9ca3af; cursor: pointer; padding: 4px; }
-        .category-group.collapsed .chevron { transform: rotate(-90deg); }
-        .category-group.collapsed .category-content { display: none; }
-        .category-content { padding: 8px; }
-
-        .location-card { background: #fff; border: 1px solid #f3f4f6; border-radius: 10px; padding: 12px; margin-bottom: 8px; cursor: pointer; }
-        .card-title { font-size: 1rem; font-weight: 600; color: #111827; margin-bottom: 8px; }
-        .card-address { background: #f1f5f9; color: #475569; font-size: 0.78rem; padding: 6px 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 8px; }
-        .card-metro-block { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
-        
-        .metro-badge { display: inline-flex; align-items: center; gap: 5px; background: #ffffff; color: #1e293b; font-size: 0.74rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
-        .metro-icon-svg { width: 14px; height: 11px; flex-shrink: 0; }
-
-        .card-photos { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 8px; margin-top: 4px; }
-        .card-photo-thumb { 
-            height: 75px; width: auto; max-width: 140px; 
-            border-radius: 6px; object-fit: cover; flex-shrink: 0; 
-            border: 1px solid rgba(0,0,0,0.08); cursor: pointer; 
-            transition: transform 0.15s ease;
-        }
-        .card-photo-thumb:hover { transform: scale(1.03); }
-
-        .card-actions-row { display: flex; gap: 6px; }
-        .edit-btn, .delete-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 6px 8px; font-size: 0.75rem; font-weight: 500; border-radius: 8px; cursor: pointer; border: 1px solid #cbd5e1; }
-        .edit-btn { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
-        .delete-btn { background: #fee2e2; border-color: #ef4444; color: #991b1b; }
-
-        #map-container { position: absolute; inset: 0 0 0 440px; width: calc(100vw - 440px); height: 100%; z-index: 1; background: #f4f3f0; }
-        #map { width: 100%; height: 100%; background: #f4f3f0; }
-
-        .custom-map-pin { 
-            width: 38px; height: 38px; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 18px; box-shadow: 0 4px 14px rgba(0,0,0,0.35); 
-            border: 2px solid #fff; cursor: pointer; color: #fff;
-            transition: transform 0.2s;
-        }
-
-        .balloon-wrapper { min-width: 210px; max-width: 260px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
-        .balloon-title { font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
-        .balloon-address { font-size: 0.78rem; color: #475569; background: #f1f5f9; padding: 6px 8px; border-radius: 6px; margin-bottom: 6px; border: 1px solid #e2e8f0; }
-        .balloon-metro-block { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
-        .balloon-btn { width: 100%; padding: 6px 8px; font-size: 0.75rem; font-weight: 600; border-radius: 6px; cursor: pointer; background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; text-align: center; }
-        .balloon-desc { font-size: 0.82rem; color: #334155; margin-top: 8px; white-space: pre-line; border-top: 1px solid #f1f5f9; padding-top: 6px; }
-        .balloon-photos { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; }
-        .balloon-photo-img { height: 65px; width: auto; max-width: 120px; border-radius: 6px; object-fit: cover; cursor: pointer; flex-shrink: 0; }
-
-        .top-cat-filter-bar { position: absolute; top: max(calc(env(safe-area-inset-top) + 14px), 16px); left: 50%; transform: translateX(-50%); width: calc(100% - 32px); max-width: 600px; display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); border-radius: 9999px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 500; }
-        .toggle-all-btn { padding: 6px 12px; border-radius: 9999px; background: #0f172a; color: #fff; font-size: 0.78rem; font-weight: 600; border: none; cursor: pointer; flex-shrink: 0; }
-        .toggle-all-btn.off { background: #e2e8f0; color: #64748b; }
-        .cat-chips-scroll { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; width: 100%; }
-        .cat-chips-scroll::-webkit-scrollbar { display: none; }
-        .cat-chip { padding: 6px 12px; border-radius: 9999px; background: #fff; border: 1px solid #e2e8f0; font-size: 0.78rem; font-weight: 500; color: #334155; white-space: nowrap; cursor: pointer; flex-shrink: 0; }
-        .cat-chip.active { background: #0f172a; color: #fff; border-color: #0f172a; }
-        .cat-chip.disabled { opacity: 0.45; background: #f1f5f9; color: #94a3b8; }
-
         .modal-overlay { position: fixed; inset: 0; width: 100vw; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         .modal-overlay.active { display: flex; }
         .modal-content { background: #fff; width: 92%; max-width: 520px; max-height: 90vh; border-radius: 16px; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
@@ -169,32 +74,6 @@
         .photo-controls { position: absolute; top: 3px; right: 3px; left: 3px; display: flex; justify-content: space-between; gap: 4px; pointer-events: none; }
         .photo-btn { background: rgba(0,0,0,0.75); color: #fff; border: none; border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; cursor: pointer; pointer-events: auto; }
         .photo-btn-delete { background: rgba(239,68,68,0.9); }
-
-        .lightbox-modal {
-            display: none; position: fixed; inset: 0; width: 100vw; height: 100%;
-            background: rgba(0, 0, 0, 0.94); z-index: 10005;
-            justify-content: center; align-items: center; backdrop-filter: blur(8px);
-            touch-action: none;
-        }
-        .lightbox-modal.active { display: flex; }
-        .lightbox-img { max-width: 92vw; max-height: 85vh; object-fit: contain; border-radius: 8px; user-select: none; }
-        .lightbox-close { position: absolute; top: max(calc(env(safe-area-inset-top) + 12px), 20px); right: 20px; color: #ffffff; font-size: 32px; cursor: pointer; padding: 10px; z-index: 10006; }
-        .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); color: #ffffff; font-size: 36px; cursor: pointer; padding: 16px; opacity: 0.7; z-index: 10006; user-select: none; }
-        .lightbox-prev { left: 10px; } .lightbox-next { right: 10px; }
-        .lightbox-counter { position: absolute; bottom: max(calc(env(safe-area-inset-bottom) + 16px), 24px); color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; }
-
-        .mobile-toggle-bar { display: none; }
-        @media (max-width: 768px) {
-            #sidebar { width: 100vw; height: 100%; display: none; }
-            #map-container { inset: 0; width: 100vw; height: 100%; position: absolute; }
-            .show-list #map-container { display: none; }
-            .show-list #sidebar { display: flex; }
-            body:not(.show-list) #sidebar { display: none; }
-            body:not(.show-list) #map-container { display: block; }
-            .mobile-toggle-bar { display: flex; position: fixed; bottom: max(calc(env(safe-area-inset-bottom) + 12px), 20px); left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); padding: 4px; border-radius: 9999px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 1000; gap: 4px; }
-            .toggle-btn { padding: 9px 18px; border-radius: 9999px; border: none; background: transparent; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: #64748b; }
-            .toggle-btn.active { background: #0f172a; color: #fff; }
-        }
     </style>
 </head>
 <body>
@@ -211,7 +90,7 @@
     </div>
 
     <div id="app-wrapper">
-        <div id="sidebar">
+        <div id="sidebar" style="width: 440px;">
             <div class="sidebar-header">
                 <div class="admin-badge">
                     <span>⚡ Панель Администратора</span>
@@ -229,20 +108,8 @@
                     <div class="admin-form-body">
                         <input type="text" id="addTitle" class="form-input" placeholder="Название точки *">
                         
-                        <select id="addCategorySelect" class="form-select" onchange="handleCategorySelectChange(this)">
-                            <option value="☕ Кофейни">☕ Кофейни</option>
-                            <option value="🍽️ Заведения (рестораны)">🍽️ Заведения (рестораны)</option>
-                            <option value="🍸 Бары и тусовки">🍸 Бары и тусовки</option>
-                            <option value="📷 Фотостудии">📷 Фотостудии</option>
-                            <option value="🚪 Двери">🚪 Двери</option>
-                            <option value="🏛️ Архитектура">🏛️ Архитектура</option>
-                            <option value="🎨 Музеи и культура">🎨 Музеи и культура</option>
-                            <option value="🏞️ Парки и природа">🏞️ Парки и природа</option>
-                            <option value="🛍️ Шопинг">🛍️ Шопинг</option>
-                            <option value="🏨 Отели">🏨 Отели</option>
-                            <option value="📍 Другое" selected>📍 Другое</option>
-                            <option value="__NEW__">＋ Создать новую категорию...</option>
-                        </select>
+                        <!-- Список категорий наполняется динамически из shared.js -->
+                        <select id="addCategorySelect" class="form-select" onchange="handleCategorySelectChange(this)"></select>
                         <input type="text" id="addCustomCategory" class="form-input" placeholder="Введите название категории" style="display: none;">
 
                         <div style="display: flex; gap: 6px;">
@@ -300,7 +167,7 @@
             <div id="locations-list"></div>
         </div>
 
-        <div id="map-container">
+        <div id="map-container" style="inset: 0 0 0 440px; width: calc(100vw - 440px);">
             <div id="map"></div>
             <div id="topCatFilterBar" class="top-cat-filter-bar">
                 <button id="toggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
@@ -497,6 +364,7 @@
                 if (session) {
                     overlay.style.display = 'none';
                     wrapper.style.display = 'flex';
+                    updateCategorySelectOptions();
                     ymaps.ready(() => {
                         initMap();
                         populateMetroLineSelects();
@@ -536,6 +404,7 @@
             } else {
                 document.getElementById('authOverlay').style.display = 'none';
                 document.getElementById('app-wrapper').style.display = 'flex';
+                updateCategorySelectOptions();
                 ymaps.ready(() => {
                     initMap();
                     populateMetroLineSelects();
@@ -726,6 +595,7 @@
 
         function updateCategorySelectOptions() {
             const select = document.getElementById('addCategorySelect');
+            if (!select) return;
             const customCategoriesFromDb = allLocations.map(l => l.category).filter(Boolean);
             const mergedCategories = Array.from(new Set([...DEFAULT_CATEGORIES, ...customCategoriesFromDb]));
             
@@ -953,10 +823,8 @@
 
         function renderTopCatFilter(categories) {
             const container = document.getElementById('catChipsScroll');
-            if (!container) return;
             container.innerHTML = '';
             categories.forEach(catName => {
-                if (categoryVisibility[catName] === undefined) categoryVisibility[catName] = true;
                 const isVis = categoryVisibility[catName] !== false;
                 const chip = document.createElement('div');
                 chip.className = `cat-chip ${isVis ? 'active' : 'disabled'}`;
@@ -966,10 +834,8 @@
             });
 
             const toggleAllBtn = document.getElementById('toggleAllBtn');
-            if (toggleAllBtn) {
-                toggleAllBtn.className = `toggle-all-btn ${allVisibleState ? '' : 'off'}`;
-                toggleAllBtn.innerText = allVisibleState ? '👁️ Все' : '🙈 Все';
-            }
+            toggleAllBtn.className = `toggle-all-btn ${allVisibleState ? '' : 'off'}`;
+            toggleAllBtn.innerText = allVisibleState ? '👁️ Все' : '🙈 Все';
         }
 
         function toggleCategoryMap(catName, event) {
