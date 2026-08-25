@@ -184,32 +184,20 @@
     </div>
 
     <script>
-        // iOS Safari: сохраняем размеры большого viewport и обновляем их при
-        // изменении панели браузера/ориентации. Саму карту держим на 100lvh,
-        // а visualViewport используем только для корректного перерасчёта карты.
+        // iOS Safari / PWA viewport: не пытаемся двигать страницу или
+        // принудительно скрывать панели браузера. Это вызывает скачки на iOS 26.
+        // Меняем только CSS-переменные для отладки/вспомогательных компонентов.
         function syncIOSViewport() {
             const root = document.documentElement;
-            if (!root) return;
-
             const vv = window.visualViewport;
-            const visualHeight = vv ? vv.height : window.innerHeight;
-            const visualWidth = vv ? vv.width : window.innerWidth;
-
-            root.style.setProperty('--visual-vh', `${visualHeight}px`);
-            root.style.setProperty('--visual-vw', `${visualWidth}px`);
-
-            if (window.myMap && window.myMap.container) {
-                requestAnimationFrame(() => window.myMap.container.fitToViewport());
+            if (vv) {
+                root.style.setProperty('--visual-vh', `${vv.height}px`);
+                root.style.setProperty('--visual-vw', `${vv.width}px`);
             }
         }
 
         syncIOSViewport();
-        window.addEventListener('resize', syncIOSViewport, { passive: true });
-        window.addEventListener('orientationchange', () => setTimeout(syncIOSViewport, 180), { passive: true });
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', syncIOSViewport, { passive: true });
-        }
-
+        window.addEventListener('orientationchange', () => setTimeout(syncIOSViewport, 200), { passive: true });
         const isInsideTelegram = !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe?.user);
         if (isInsideTelegram) {
             const tg = window.Telegram.WebApp;
@@ -541,9 +529,6 @@
                 window.addEventListener('resize', refitMapViewport, { passive: true });
                 window.addEventListener('orientationchange', () => setTimeout(refitMapViewport, 150), { passive: true });
 
-                if (window.visualViewport) {
-                    window.visualViewport.addEventListener('resize', refitMapViewport, { passive: true });
-                }
             });
         }
 
