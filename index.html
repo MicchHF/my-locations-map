@@ -7,7 +7,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>локации от @dalazareva</title>
-    <link rel="stylesheet" href="style.css">
     <script src="https://api-maps.yandex.ru/2.1/?apikey=7370bad5-a627-4414-a1e8-b2023bda7a61&lang=ru_RU"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -30,14 +29,12 @@
             -webkit-text-size-adjust: 100%;
             overflow: hidden;
             position: fixed;
-            top: 0;
-            left: 0;
+            inset: 0;
         }
 
         #app-wrapper {
             position: fixed;
-            top: 0;
-            left: 0;
+            inset: 0;
             width: 100vw;
             height: 100vh;
             height: 100dvh;
@@ -222,16 +219,13 @@
 
         #map-container {
             position: absolute;
-            top: 0;
-            left: 390px;
-            right: 0;
-            bottom: 0;
+            inset: 0 0 0 390px;
             width: calc(100vw - 390px);
             height: 100%;
             z-index: 1;
             background: #f4f3f0;
         }
-        #map { width: 100%; height: 100%; }
+        #map { width: 100%; height: 100%; background: #f4f3f0; }
 
         .custom-map-pin {
             width: 38px;
@@ -263,6 +257,7 @@
         .balloon-photos { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; padding-bottom: 2px; }
         .balloon-photo-img { height: 65px; width: auto; border-radius: 6px; cursor: pointer; object-fit: cover; border: 1px solid rgba(0,0,0,0.08); flex-shrink: 0; }
 
+        /* ВЕРХНЯЯ СТРОКА КАТЕГОРИЙ */
         .top-cat-filter-bar {
             position: fixed;
             top: max(calc(env(safe-area-inset-top) + 12px), 16px);
@@ -320,6 +315,7 @@
         .cat-chip.active { background: #0f172a; color: #ffffff; border-color: #0f172a; }
         .cat-chip.disabled { opacity: 0.45; background: #f1f5f9; color: #94a3b8; }
 
+        /* ПЛАВАЮЩАЯ КНОПКА МЕТРО */
         .metro-floating-btn {
             position: fixed;
             top: max(calc(env(safe-area-inset-top) + 72px), 76px);
@@ -351,6 +347,7 @@
         }
         .metro-floating-btn.active .metro-badge-dot { display: inline-block; }
 
+        /* КАСТОМНОЕ МЕНЮ МЕТРО (БЕЗ УРОДЛИВЫХ SELECT) */
         .metro-sidebar-overlay {
             position: fixed;
             inset: 0;
@@ -365,15 +362,15 @@
         
         .metro-sidebar-drawer {
             background: #ffffff;
-            width: 340px;
+            width: 360px;
             max-width: 90vw;
             height: 100%;
             display: flex;
             flex-direction: column;
             box-shadow: 10px 0 25px rgba(0,0,0,0.15);
-            animation: slideIn 0.25s ease-out;
             padding-top: max(calc(env(safe-area-inset-top) + 10px), 16px);
             padding-bottom: max(calc(env(safe-area-inset-bottom) + 10px), 16px);
+            animation: slideIn 0.25s ease-out;
         }
 
         @keyframes slideIn {
@@ -388,44 +385,110 @@
             align-items: center;
             justify-content: space-between;
         }
-        .metro-drawer-title { font-weight: 700; font-size: 1.05rem; color: #0f172a; display: flex; align-items: center; gap: 6px; }
+        .metro-drawer-title { font-weight: 700; font-size: 1.05rem; color: #0f172a; }
         .metro-drawer-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #64748b; padding: 4px; }
         
         .metro-drawer-body {
             flex: 1;
             overflow-y: auto;
-            padding: 16px;
+            padding: 14px;
             display: flex;
             flex-direction: column;
             gap: 12px;
         }
-        
-        .metro-step-label { font-size: 0.8rem; font-weight: 600; color: #64748b; }
-        .metro-select-box {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 10px;
-            font-size: 0.88rem;
-            font-weight: 500;
-            background: #fff;
-            outline: none;
+
+        .metro-section-label { font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Список веток метро */
+        .metro-lines-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 6px;
+            background: #f8fafc;
+        }
+        .metro-line-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 8px;
             cursor: pointer;
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: #1e293b;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            transition: all 0.15s ease;
+        }
+        .metro-line-item:hover, .metro-line-item.selected {
+            border-color: #0f172a;
+            background: #f1f5f9;
+        }
+        .metro-line-color-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* Список станций */
+        .metro-stations-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: 260px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 6px;
+            background: #ffffff;
+        }
+        .metro-station-item {
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            cursor: pointer;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .metro-station-item:hover, .metro-station-item.active {
+            background: #0f172a;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        .metro-station-count {
+            font-size: 0.72rem;
+            background: rgba(0,0,0,0.06);
+            padding: 2px 6px;
+            border-radius: 999px;
+        }
+        .metro-station-item.active .metro-station-count {
+            background: rgba(255,255,255,0.2);
+            color: #ffffff;
         }
 
         .metro-reset-btn {
-            background: #f1f5f9;
-            color: #ef4444;
-            border: 1px solid #e2e8f0;
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
             border-radius: 10px;
             padding: 10px;
             font-weight: 600;
             font-size: 0.85rem;
             cursor: pointer;
             text-align: center;
-            margin-top: 6px;
+            margin-top: auto;
         }
 
+        /* LIGHTBOX С ПОДДЕРЖКОЙ СВАЙПОВ */
         .lightbox-modal {
             display: none;
             position: fixed;
@@ -437,11 +500,12 @@
             justify-content: center;
             align-items: center;
             backdrop-filter: blur(8px);
+            touch-action: none;
         }
         .lightbox-modal.active { display: flex; }
-        .lightbox-img { max-width: 92vw; max-height: 85vh; object-fit: contain; border-radius: 8px; }
+        .lightbox-img { max-width: 92vw; max-height: 85vh; object-fit: contain; border-radius: 8px; user-select: none; }
         .lightbox-close { position: absolute; top: max(calc(env(safe-area-inset-top) + 12px), 20px); right: 20px; color: #ffffff; font-size: 32px; cursor: pointer; padding: 10px; z-index: 10001; }
-        .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); color: #ffffff; font-size: 36px; cursor: pointer; padding: 16px; opacity: 0.7; z-index: 10001; }
+        .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); color: #ffffff; font-size: 36px; cursor: pointer; padding: 16px; opacity: 0.7; z-index: 10001; user-select: none; }
         .lightbox-prev { left: 10px; } .lightbox-next { right: 10px; }
         .lightbox-counter { position: absolute; bottom: max(calc(env(safe-area-inset-bottom) + 16px), 24px); color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; }
 
@@ -466,14 +530,19 @@
         .mobile-search-input { flex: 1; border: none; background: transparent; font-size: 16px; outline: none; color: #0f172a; padding-left: 4px; }
         .mobile-search-close { background: none; border: none; font-size: 1.1rem; color: #64748b; cursor: pointer; padding: 4px 8px; }
 
+        /* ПОЛНОЭКРАННАЯ МОБИЛЬНАЯ АДАПТАЦИЯ ДЛЯ IOS */
         @media (max-width: 768px) {
             #sidebar { width: 100vw; height: 100%; display: none; }
             
             #map-container {
                 position: fixed !important;
                 inset: 0 !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
                 width: 100vw !important;
-                height: 100vh !important;
+                height: 100% !important;
                 height: 100dvh !important;
                 z-index: 1;
             }
@@ -563,27 +632,20 @@
         </div>
     </div>
 
+    <!-- КРАСИВОЕ БОКОВОЕ МЕНЮ МЕТРО ДЛЯ IOS И ПК -->
     <div id="metroSidebarOverlay" class="metro-sidebar-overlay" onclick="closeMetroDrawer(event)">
         <div class="metro-sidebar-drawer" onclick="event.stopPropagation()">
             <div class="metro-drawer-header">
-                <div class="metro-drawer-title">
-                    <span>🚇 Фильтр по метро</span>
-                </div>
+                <div class="metro-drawer-title">🚇 Фильтр по метро</div>
                 <button class="metro-drawer-close" onclick="closeMetroDrawer()">✕</button>
             </div>
             <div class="metro-drawer-body">
-                <div>
-                    <div class="metro-step-label">Шаг 1: Выберите ветку метро</div>
-                    <select id="drawerMetroLine" class="metro-select-box" onchange="onDrawerLineChange(this.value)">
-                        <option value="">-- Все линии --</option>
-                    </select>
-                </div>
-                <div>
-                    <div class="metro-step-label">Шаг 2: Выберите станцию</div>
-                    <select id="drawerMetroStation" class="metro-select-box" onchange="onDrawerStationChange(this.value)">
-                        <option value="">-- Выберите станцию --</option>
-                    </select>
-                </div>
+                <div class="metro-section-label">1. Выберите ветку</div>
+                <div id="metroLinesGrid" class="metro-lines-grid"></div>
+
+                <div class="metro-section-label">2. Выберите станцию</div>
+                <div id="metroStationsList" class="metro-stations-list"></div>
+
                 <button class="metro-reset-btn" onclick="resetMetroFilter()">✕ Сбросить фильтр метро</button>
             </div>
         </div>
@@ -601,6 +663,7 @@
         <button id="btn-list-view" class="toggle-btn" onclick="switchMobileView('list')">📋 Список</button>
     </div>
 
+    <!-- LIGHTBOX С ПОДДЕРЖКОЙ СВАЙПОВ -->
     <div id="lightbox" class="lightbox-modal">
         <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
         <span class="lightbox-nav lightbox-prev" onclick="prevImage()">&#10094;</span>
@@ -612,6 +675,7 @@
     <script src="js/supabase.js"></script>
     <script>
         let myMap;
+        let activeBalloonPlacemark = null;
         let allLocations = [];
         let categoryCollections = {};
         let categoryVisibility = {};
@@ -619,6 +683,7 @@
         let currentGallery = [];
         let currentImageIdx = 0;
         let selectedMetroFilter = "";
+        let selectedLineName = "";
 
         const CATEGORY_COLORS = {
             "☕ Кофейни": "#8B4513",
@@ -702,6 +767,16 @@
                 center: [55.751574, 37.573856],
                 zoom: 12,
                 controls: ['zoomControl', 'geolocationControl']
+            }, {
+                autoFitToViewport: 'always'
+            });
+
+            // Закрытие балуна метки при клике на свободное место карты
+            myMap.events.add('click', function () {
+                if (activeBalloonPlacemark) {
+                    activeBalloonPlacemark.balloon.close();
+                    activeBalloonPlacemark = null;
+                }
             });
 
             loadLocations();
@@ -712,10 +787,11 @@
             const { data, error } = await supabaseClient.from('Location').select('*');
             if (error) { console.error("Ошибка загрузки:", error); return; }
             allLocations = data || [];
-            initMetroDrawerData();
+            initMetroDrawer();
             renderInterface(allLocations);
         }
 
+        /* --- БОКОВОЕ МЕНЮ МЕТРО --- */
         function openMetroDrawer() {
             document.getElementById('metroSidebarOverlay').classList.add('active');
         }
@@ -725,58 +801,77 @@
             document.getElementById('metroSidebarOverlay').classList.remove('active');
         }
 
-        function initMetroDrawerData() {
-            const lineSelect = document.getElementById('drawerMetroLine');
-            lineSelect.innerHTML = '<option value="">-- Все линии --</option>';
+        function initMetroDrawer() {
+            const linesGrid = document.getElementById('metroLinesGrid');
+            linesGrid.innerHTML = `
+                <div class="metro-line-item ${!selectedLineName ? 'selected' : ''}" onclick="selectMetroLine('')">
+                    <span class="metro-line-color-dot" style="background:#0f172a;"></span>
+                    <span>Все ветки метро</span>
+                </div>
+            `;
 
             MOSCOW_METRO_DATA.forEach(line => {
-                const opt = document.createElement('option');
-                opt.value = line.name;
-                opt.innerText = `● ${line.name}`;
-                opt.style.color = line.color;
-                lineSelect.appendChild(opt);
+                const item = document.createElement('div');
+                item.className = `metro-line-item ${selectedLineName === line.name ? 'selected' : ''}`;
+                item.innerHTML = `
+                    <span class="metro-line-color-dot" style="background:${line.color};"></span>
+                    <span>${line.name}</span>
+                `;
+                item.onclick = () => selectMetroLine(line.name);
+                linesGrid.appendChild(item);
             });
 
-            populateStationSelect("");
+            renderMetroStationsList();
         }
 
-        function onDrawerLineChange(selectedLineName) {
-            populateStationSelect(selectedLineName);
+        function selectMetroLine(lineName) {
+            selectedLineName = lineName;
+            initMetroDrawer();
         }
 
-        function populateStationSelect(lineName) {
-            const stationSelect = document.getElementById('drawerMetroStation');
-            stationSelect.innerHTML = '<option value="">-- Выберите станцию --</option>';
+        function renderMetroStationsList() {
+            const listEl = document.getElementById('metroStationsList');
+            listEl.innerHTML = '';
 
-            let stationsToRender = [];
-            if (lineName) {
-                const found = MOSCOW_METRO_DATA.find(l => l.name === lineName);
-                if (found) stationsToRender = found.stations;
+            let stations = [];
+            if (selectedLineName) {
+                const found = MOSCOW_METRO_DATA.find(l => l.name === selectedLineName);
+                if (found) stations = found.stations;
             } else {
                 const set = new Set();
                 MOSCOW_METRO_DATA.forEach(l => l.stations.forEach(s => set.add(s)));
-                stationsToRender = Array.from(set).sort((a, b) => a.localeCompare(b));
+                stations = Array.from(set).sort((a, b) => a.localeCompare(b));
             }
 
-            stationsToRender.forEach(stName => {
-                const opt = document.createElement('option');
-                opt.value = stName;
-                opt.innerText = stName;
-                stationSelect.appendChild(opt);
+            stations.forEach(stName => {
+                let count = 0;
+                allLocations.forEach(loc => {
+                    if (loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => m.name === stName)) count++;
+                });
+
+                const item = document.createElement('div');
+                item.className = `metro-station-item ${selectedMetroFilter === stName ? 'active' : ''}`;
+                item.innerHTML = `
+                    <span>${stName}</span>
+                    ${count > 0 ? `<span class="metro-station-count">${count}</span>` : ''}
+                `;
+                item.onclick = () => selectMetroStation(stName);
+                listEl.appendChild(item);
             });
         }
 
-        function onDrawerStationChange(stationName) {
+        function selectMetroStation(stationName) {
             selectedMetroFilter = stationName;
             updateMetroButtonUI();
             applyCombinedFilters();
-            if (stationName) closeMetroDrawer();
+            renderMetroStationsList();
+            closeMetroDrawer();
         }
 
         function resetMetroFilter() {
             selectedMetroFilter = "";
-            document.getElementById('drawerMetroLine').value = "";
-            populateStationSelect("");
+            selectedLineName = "";
+            initMetroDrawer();
             updateMetroButtonUI();
             applyCombinedFilters();
             closeMetroDrawer();
@@ -962,7 +1057,10 @@
                         cursor: 'pointer'
                     });
 
-                    placemark.events.add('click', () => highlightLocationCard(loc.id));
+                    placemark.events.add('click', () => {
+                        activeBalloonPlacemark = placemark;
+                        highlightLocationCard(loc.id);
+                    });
                     collection.add(placemark);
 
                     const cardEl = document.createElement('div');
@@ -1107,6 +1205,7 @@
         function toggleAccordion(element) { element.closest('.category-group').classList.toggle('collapsed'); }
 
         function selectLocationOnMap(loc, placemark) {
+            activeBalloonPlacemark = placemark;
             myMap.setCenter([loc.lat, loc.lng], 15, { duration: 300 }).then(() => placemark.balloon.open());
             document.querySelectorAll('.location-card').forEach(c => c.classList.remove('active'));
             const card = document.getElementById(`card-${loc.id}`);
@@ -1125,6 +1224,7 @@
             }
         }
 
+        /* --- LIGHTBOX С СВАЙПАМИ НА МОБИЛКЕ --- */
         function openLightboxByUrl(locId, index, event) {
             if (event) event.stopPropagation();
             const loc = allLocations.find(l => l.id === locId);
@@ -1142,6 +1242,21 @@
         function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
         function nextImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx + 1) % currentGallery.length; updateLightboxImage(); }
         function prevImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx - 1 + currentGallery.length) % currentGallery.length; updateLightboxImage(); }
+
+        // Добавление обработки свайпов
+        let touchStartX = 0;
+        let touchEndX = 0;
+        const lightboxEl = document.getElementById('lightbox');
+        
+        lightboxEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        lightboxEl.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            if (touchEndX < touchStartX - 45) nextImage(); // свайп влево -> следующее фото
+            if (touchEndX > touchStartX + 45) prevImage(); // свайп вправо -> предыдущее фото
+        }, { passive: true });
 
         function switchMobileView(view) {
             const btnMap = document.getElementById('btn-map-view');
