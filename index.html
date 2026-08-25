@@ -68,18 +68,9 @@
             inset: 0;
         }
 
-        /* ТЕМНАЯ ТЕМА ДЛЯ ПЛИТОК ЯНДЕКС.КАРТ */
+        /* ТЕМНАЯ ТЕМА ДЛЯ ПЛИТОК КАРТЫ */
         body.dark-mode #map [class*="ground-pane"] {
             filter: invert(90%) hue-rotate(180deg) brightness(90%) contrast(110%) saturate(80%);
-        }
-
-        /* ЖЕСТКОЕ РАСТЯГИВАНИЕ ВСЕХ СЛОЕВ ЯНДЕКС КАРТ НА 100% ЭКРАНА */
-        #map ymaps,
-        #map [class*="ymaps-2-1-"][class*="-map"],
-        #map [class*="ymaps-2-1-"][class*="-inner-panes"],
-        #map [class*="ymaps-2-1-"][class*="-events-pane"] {
-            width: 100% !important;
-            height: 100% !important;
         }
 
         /* ЭКРАН БЛОКИРОВКИ */
@@ -408,7 +399,7 @@
         }
         .card-photo-thumb:hover { transform: scale(1.02); }
 
-        /* ПОЛНОЭКРАННАЯ КАРТА БЕЗ ОГРАНИЧЕНИЙ */
+        /* КОНТЕЙНЕР КАРТЫ */
         #map-container {
             position: absolute;
             inset: 0 0 0 390px;
@@ -418,8 +409,8 @@
             background: var(--bg-main);
         }
         #map { 
-            width: 100% !important; 
-            height: 100% !important; 
+            width: 100%; 
+            height: 100%; 
             background: var(--bg-main); 
         }
 
@@ -440,7 +431,7 @@
         }
         .custom-map-pin:hover { transform: scale(1.1); }
 
-        /* КАСТОМНЫЙ ПУЛЬСИРУЮЩИЙ МАРКЕР ГЕОЛОКАЦИИ ПОЛЬЗОВАТЕЛЯ */
+        /* ПУЛЬСИРУЮЩАЯ МЕТКА ГЕОЛОКАЦИИ */
         .user-loc-pin-wrap {
             position: relative;
             width: 24px;
@@ -576,7 +567,7 @@
         }
         .metro-floating-btn.active .metro-badge-dot { display: inline-block; }
 
-        /* ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ (СВЕТЛАЯ / ТЕМНАЯ) */
+        /* ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ */
         .theme-toggle-floating-btn {
             position: fixed;
             top: max(calc(env(safe-area-inset-top) + 64px), 68px);
@@ -600,7 +591,7 @@
         }
         .theme-toggle-floating-btn:active { transform: scale(0.92); }
 
-        /* КАСТОМНАЯ КНОПКА ГЕОЛОКАЦИИ СО СТРЕЛКОЙ НАВИГАЦИИ */
+        /* КНОПКА ГЕОЛОКАЦИИ СО СТРЕЛКОЙ НАВИГАЦИИ */
         .custom-geoloc-btn {
             position: fixed;
             bottom: max(calc(env(safe-area-inset-bottom) + 78px), 82px);
@@ -815,7 +806,7 @@
         .mobile-search-input { flex: 1; border: none; background: transparent; font-size: 16px; outline: none; color: var(--text-main); padding-left: 4px; }
         .mobile-search-close { background: none; border: none; font-size: 1.1rem; color: var(--text-muted); cursor: pointer; padding: 4px 8px; }
 
-        /* МОБИЛЬНАЯ АДАПТАЦИЯ (ЧЕСТНЫЙ FULLSCREEN) */
+        /* МОБИЛЬНАЯ АДАПТАЦИЯ (FULLSCREEN) */
         @media (max-width: 768px) {
             #sidebar { width: 100vw; height: 100%; display: none; }
             
@@ -1398,7 +1389,6 @@
 
                 loadLocations();
                 
-                // Подгоняем размеры карты под экран сразу и через небольшую задержку
                 myMap.container.fitToViewport();
                 setTimeout(() => { if (myMap) myMap.container.fitToViewport(); }, 200);
                 setTimeout(() => { if (myMap) myMap.container.fitToViewport(); }, 500);
@@ -1415,7 +1405,7 @@
             });
         }
 
-        // КАСТОМНАЯ ГЕОЛОКАЦИЯ «ГДЕ Я»
+        // КАСТОМНАЯ ГЕОЛОКАЦИЯ
         function locateUserPosition() {
             const btn = document.getElementById('customGeolocBtn');
             if (!navigator.geolocation) {
