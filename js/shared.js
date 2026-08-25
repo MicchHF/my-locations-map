@@ -11,8 +11,8 @@ const BOT_USERNAME = "dalazareva_locations_bot";
 const CATEGORY_COLORS = {
     "☕ Кофейни": "#8B4513",
     "🍽️ Заведения (рестораны)": "#059669",
-    "🍸 Бары и тусовки": "#7C3AED",
     "📷 Фотостудии": "#EC4899",
+    "📸 Фотобудки": "#06B6D4",
     "🚪 Двери": "#EA580C",
     "🏛️ Архитектура": "#4F46E5",
     "🎨 Музеи и культура": "#9333EA",
@@ -24,7 +24,7 @@ const CATEGORY_COLORS = {
 
 const DEFAULT_CATEGORIES = Object.keys(CATEGORY_COLORS);
 
-// 3. Полная база станций метро с координатами
+// 3. База станций метро
 const MOSCOW_METRO_DATA = [
     {
         id: "line-1", name: "1. Сокольническая", color: "#EF161E",
