@@ -50,72 +50,6 @@
             background: #f4f3f0;
         }
 
-        /* ЭКРАН БЛОКИРОВКИ ДО ВХОДА */
-        .auth-gate-overlay {
-            position: fixed;
-            inset: 0;
-            width: 100vw;
-            height: 100%;
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .auth-gate-card {
-            background: #ffffff;
-            width: 100%;
-            max-width: 360px;
-            border-radius: 24px;
-            padding: 32px 24px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
-            animation: fadeIn 0.3s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .auth-gate-icon {
-            width: 64px;
-            height: 64px;
-            border-radius: 20px;
-            background: #0f172a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.2);
-        }
-        .auth-gate-title { font-size: 1.25rem; font-weight: 800; color: #0f172a; line-height: 1.3; }
-        .auth-gate-desc { font-size: 0.88rem; color: #64748b; line-height: 1.45; }
-        
-        .tg-direct-btn {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-            color: #ffffff;
-            text-decoration: none;
-            padding: 14px 18px;
-            border-radius: 14px;
-            font-weight: 700;
-            font-size: 0.95rem;
-            box-shadow: 0 6px 18px rgba(2, 132, 199, 0.35);
-            cursor: pointer;
-            transition: transform 0.15s ease;
-        }
-        .tg-direct-btn:active { transform: scale(0.98); }
-
         #sidebar {
             width: 390px;
             height: 100%;
@@ -592,6 +526,79 @@
             margin-top: auto;
         }
 
+        /* МОДАЛЬНОЕ ОКНО ПРОСТОГО ВХОДА */
+        .simple-auth-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .simple-auth-modal.active { display: flex; }
+        .simple-auth-card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 360px;
+            border-radius: 22px;
+            padding: 26px 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+            position: relative;
+        }
+        .auth-close-btn {
+            position: absolute;
+            top: 12px;
+            right: 14px;
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 4px;
+        }
+        .auth-card-title { font-size: 1.15rem; font-weight: 800; color: #0f172a; }
+        .auth-card-desc { font-size: 0.82rem; color: #64748b; line-height: 1.4; }
+        .auth-input {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            outline: none;
+            background: #f8fafc;
+        }
+        .auth-submit-btn {
+            background: #0f172a;
+            color: #ffffff;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+        }
+        .auth-bot-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: #f1f5f9;
+            color: #0284c7;
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.82rem;
+        }
+
         /* LIGHTBOX */
         .lightbox-modal {
             display: none;
@@ -705,16 +712,20 @@
 </head>
 <body>
 
-    <!-- ЭКРАН БЛОКИРОВКИ ДО ВХОДА ЧЕРЕЗ TELEGRAM -->
-    <div id="authGate" class="auth-gate-overlay">
-        <div class="auth-gate-card">
-            <div class="auth-gate-icon">📍</div>
-            <div class="auth-gate-title">@dalazareva локации📍</div>
-            <div class="auth-gate-desc">Гид по лучшим кофейням, фото-спотам и локациям Москвы. Для доступа откройте карту в Telegram:</div>
+    <!-- ОКНО ПРОСТОЙ АВТОРИЗАЦИИ В SAFARI -->
+    <div id="simpleAuthModal" class="simple-auth-modal" onclick="closeAuthModal(event)">
+        <div class="simple-auth-card" onclick="event.stopPropagation()">
+            <button class="auth-close-btn" onclick="closeAuthModal()">✕</button>
+            <div class="auth-card-title">Авторизация в карте</div>
+            <div class="auth-card-desc">Введите ваш никнейм в Telegram для сохранения подписки и доступа к локациям:</div>
             
-            <!-- Прямой вход через Telegram Mini App -->
-            <a href="https://t.me/dalazareva_locations_bot/map" class="tg-direct-btn">
-                <span>✈️ Открыть карту в Telegram</span>
+            <input type="text" id="usernameInput" class="auth-input" placeholder="@ваш_никнейм или имя">
+            <button class="auth-submit-btn" onclick="submitUsernameAuth()">Войти в аккаунт</button>
+
+            <div style="font-size: 0.75rem; color: #94a3b8; margin: 2px 0;">или</div>
+
+            <a href="https://t.me/dalazareva_locations_bot/map" class="auth-bot-btn">
+                <span>✈️ Открыть приложение в Telegram</span>
             </a>
         </div>
     </div>
@@ -724,7 +735,7 @@
             <div class="sidebar-header">
                 <!-- ШАПКА: ПРОФИЛЬ + ССЫЛКА НА КАНАЛ -->
                 <div class="header-top-row">
-                    <div class="tg-badge" onclick="handleBadgeClick()" title="Нажмите для управления тарифом в боте">
+                    <div class="tg-badge" onclick="handleBadgeClick()" title="Нажмите для управления тарифом">
                         <div style="display: flex; flex-direction: column; gap: 3px; width: 100%;">
                             <!-- Верхняя строка: Название -->
                             <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
@@ -733,7 +744,7 @@
                             </div>
                             <!-- Нижняя строка: Никнейм и тариф в одну строку -->
                             <div id="userProfileSubRow" style="font-size: 0.74rem; color: #94a3b8; display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                <span id="userDisplayName" style="color: #e2e8f0; font-weight: 600;">👤 Пользователь</span>
+                                <span id="userDisplayName" style="color: #e2e8f0; font-weight: 600;">👤 Гость</span>
                                 <span>•</span>
                                 <span id="userPlanLabel" style="color: #38bdf8; font-weight: 600;">Тариф: FREE</span>
                             </div>
@@ -741,7 +752,7 @@
                     </div>
                     
                     <!-- Кнопка перехода в Telegram-канал -->
-                    <a href="https://t.me/dalazareva" target="_blank" rel="noopener" class="channel-link-btn" title="Перейти в Telegram-канал @dalazareva">
+                    <a href="https://t.me/dalazareva" target="_blank" rel="noopener" class="channel-link-btn" title="Перейти в канал @dalazareva">
                         <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
                         </svg>
@@ -928,122 +939,155 @@
             </svg>`;
         }
 
-        // Авторизация пользователя через Telegram
-        async function checkAuthAndInit() {
-            let tgUser = null;
+        // Авторизация пользователя
+        async function initAuth() {
+            let savedUsername = localStorage.getItem('safari_user_name');
 
             if (isInsideTelegram) {
-                tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+                const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+                if (tgUser) {
+                    await syncUserWithSupabase(tgUser.id, tgUser.username, tgUser.first_name);
+                }
+            } else if (savedUsername) {
+                await syncUserWithSupabase(null, savedUsername, savedUsername);
             }
 
-            if (tgUser && tgUser.id) {
-                const tgId = tgUser.id;
-                try {
-                    let { data: profile } = await supabaseClient
-                        .from('app_users')
-                        .select('*')
-                        .eq('telegram_id', tgId)
-                        .maybeSingle();
+            renderUserPlanBadge();
+        }
 
-                    if (!profile) {
-                        const newProfile = {
-                            telegram_id: tgId,
-                            username: tgUser.username || '',
-                            first_name: tgUser.first_name || 'Пользователь',
-                            plan: 'free',
-                            expires_at: null
-                        };
+        async function syncUserWithSupabase(tgId, username, firstName) {
+            const cleanUser = (username || firstName || '').replace(/^@/, '').trim();
+            if (!cleanUser) return;
 
-                        const { data: createdUser } = await supabaseClient
-                            .from('app_users')
-                            .insert([newProfile])
-                            .select()
-                            .single();
-
-                        profile = createdUser || newProfile;
-                    }
-
-                    currentUser = profile;
-                } catch (e) {
-                    console.error("Ошибка Supabase auth:", e);
+            try {
+                let query = supabaseClient.from('app_users').select('*');
+                if (tgId) {
+                    query = query.eq('telegram_id', tgId);
+                } else {
+                    query = query.ilike('username', cleanUser);
                 }
 
-                // Скрываем экран блокировки и запускаем карту
-                document.getElementById('authGate').style.display = 'none';
+                let { data: profile } = await query.maybeSingle();
+
+                if (!profile) {
+                    const fallbackId = tgId || Math.floor(100000000 + Math.random() * 900000000);
+                    const newProfile = {
+                        telegram_id: fallbackId,
+                        username: cleanUser,
+                        first_name: firstName || cleanUser,
+                        plan: 'free',
+                        expires_at: null
+                    };
+
+                    const { data: created } = await supabaseClient
+                        .from('app_users')
+                        .insert([newProfile])
+                        .select()
+                        .single();
+
+                    profile = created || newProfile;
+                }
+
+                currentUser = profile;
                 renderUserPlanBadge();
-                initMap();
-            } else {
-                // Если открыто вне Telegram -> блокируем интерфейс и предлагаем войти
-                document.getElementById('authGate').style.display = 'flex';
+            } catch (e) {
+                console.error("Ошибка авторизации Supabase:", e);
+                currentUser.username = cleanUser;
+                currentUser.first_name = firstName || cleanUser;
             }
         }
 
-        // Клик по профилю -> открывает бота для смены тарифа
         function handleBadgeClick() {
-            const botUrl = `https://t.me/${BOT_USERNAME}`;
-            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
-                window.Telegram.WebApp.openTelegramLink(botUrl);
+            if (isInsideTelegram) {
+                const botUrl = `https://t.me/${BOT_USERNAME}`;
+                if (window.Telegram.WebApp.openTelegramLink) window.Telegram.WebApp.openTelegramLink(botUrl);
+                else window.open(botUrl, "_blank");
             } else {
-                window.open(botUrl, "_blank");
+                openAuthModal();
             }
+        }
+
+        function openAuthModal() {
+            document.getElementById('simpleAuthModal').classList.add('active');
+        }
+
+        function closeAuthModal(e) {
+            if (e && e.target !== e.currentTarget && !e.target.classList.contains('auth-close-btn')) return;
+            document.getElementById('simpleAuthModal').classList.remove('active');
+        }
+
+        async function submitUsernameAuth() {
+            const input = document.getElementById('usernameInput');
+            const val = input.value.trim();
+            if (!val) {
+                alert("Пожалуйста, введите ваш @username или имя");
+                return;
+            }
+
+            localStorage.setItem('safari_user_name', val);
+            await syncUserWithSupabase(null, val, val);
+            closeAuthModal();
         }
 
         function renderUserPlanBadge() {
             const nameEl = document.getElementById('userDisplayName');
             const planEl = document.getElementById('userPlanLabel');
+            const iconEl = document.getElementById('badgeActionIcon');
             if (!nameEl || !planEl) return;
 
-            let userTag = "";
-            if (currentUser.username) {
-                userTag = `@${currentUser.username}`;
-            } else if (currentUser.first_name) {
-                userTag = currentUser.first_name;
+            if (currentUser.username || currentUser.first_name) {
+                const display = currentUser.username ? `@${currentUser.username}` : currentUser.first_name;
+                nameEl.innerText = `👤 ${display}`;
+                
+                let planLabel = "Тариф: FREE";
+                let planColor = "#38bdf8";
+
+                if (currentUser.plan === 'premium' || currentUser.plan === 'vip') {
+                    planLabel = "Тариф: PREMIUM ✨";
+                    planColor = "#fbbf24";
+                } else if (currentUser.plan === 'trial') {
+                    planLabel = "Тариф: ТЕСТ 🎁";
+                    planColor = "#34d399";
+                }
+
+                planEl.innerText = planLabel;
+                planEl.style.color = planColor;
+                iconEl.innerText = isInsideTelegram ? "↗" : "⚙️";
             } else {
-                userTag = "Пользователь";
+                nameEl.innerText = `🔑 Войти по никнейму`;
+                planEl.innerText = "Тариф: FREE";
+                planEl.style.color = "#38bdf8";
+                iconEl.innerText = "→";
             }
-
-            nameEl.innerText = `👤 ${userTag}`;
-
-            let planLabel = "Тариф: FREE";
-            let planColor = "#38bdf8";
-
-            if (currentUser.plan === 'premium' || currentUser.plan === 'vip') {
-                planLabel = "Тариф: PREMIUM ✨";
-                planColor = "#fbbf24";
-            } else if (currentUser.plan === 'trial') {
-                planLabel = "Тариф: ТЕСТ 🎁";
-                planColor = "#34d399";
-            }
-
-            planEl.innerText = planLabel;
-            planEl.style.color = planColor;
         }
+
+        ymaps.ready(initMap);
 
         function initMap() {
             if (myMap) return;
 
-            ymaps.ready(() => {
-                myMap = new ymaps.Map("map", {
-                    center: [55.751574, 37.573856],
-                    zoom: 12,
-                    controls: ['zoomControl', 'geolocationControl']
-                }, {
-                    autoFitToViewport: 'always'
-                });
-
-                myMap.events.add('click', function () {
-                    if (activeBalloonPlacemark) {
-                        activeBalloonPlacemark.balloon.close();
-                        activeBalloonPlacemark = null;
-                    }
-                });
-
-                loadLocations();
-                window.addEventListener('resize', () => { if (myMap) myMap.container.fitToViewport(); });
+            myMap = new ymaps.Map("map", {
+                center: [55.751574, 37.573856],
+                zoom: 12,
+                controls: ['zoomControl', 'geolocationControl']
+            }, {
+                autoFitToViewport: 'always'
             });
+
+            myMap.events.add('click', function () {
+                if (activeBalloonPlacemark) {
+                    activeBalloonPlacemark.balloon.close();
+                    activeBalloonPlacemark = null;
+                }
+            });
+
+            loadLocations();
+            window.addEventListener('resize', () => { if (myMap) myMap.container.fitToViewport(); });
         }
 
         async function loadLocations() {
+            initAuth();
+
             const { data, error } = await supabaseClient.from('Location').select('*');
             if (error) { console.error("Ошибка загрузки:", error); return; }
             allLocations = data || [];
@@ -1542,9 +1586,6 @@
                 toggleMobileSearch(false);
             }
         }
-
-        // Запуск проверки авторизации
-        checkAuthAndInit();
     </script>
 </body>
 </html>
