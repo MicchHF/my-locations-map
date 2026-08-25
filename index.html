@@ -867,6 +867,10 @@
             const tg = window.Telegram.WebApp;
             tg.ready();
             tg.expand();
+            
+            // Закрашиваем системный заголовок и низ Telegram в цвет карты
+            if (tg.setHeaderColor) tg.setHeaderColor('#f4f3f0');
+            if (tg.setBackgroundColor) tg.setBackgroundColor('#f4f3f0');
         }
 
         let currentUser = {
