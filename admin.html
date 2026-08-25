@@ -107,7 +107,6 @@
         .metro-badge { display: inline-flex; align-items: center; gap: 5px; background: #ffffff; color: #1e293b; font-size: 0.74rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
         .metro-icon-svg { width: 14px; height: 11px; flex-shrink: 0; }
 
-        /* Фотографии без обрезки до квадрата */
         .card-photos { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 8px; margin-top: 4px; }
         .card-photo-thumb { 
             height: 75px; width: auto; max-width: 140px; 
@@ -165,7 +164,6 @@
         .photo-btn { background: rgba(0,0,0,0.75); color: #fff; border: none; border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; cursor: pointer; pointer-events: auto; }
         .photo-btn-delete { background: rgba(239,68,68,0.9); }
 
-        /* Полноэкранный Lightbox */
         .lightbox-modal {
             display: none; position: fixed; inset: 0; width: 100vw; height: 100%;
             background: rgba(0, 0, 0, 0.94); z-index: 10005;
@@ -374,7 +372,7 @@
         </div>
     </div>
 
-    <!-- ПОЛНОЭКРАННЫЙ ПРОСМОТР ФОТО (LIGHTBOX) -->
+    <!-- LIGHTBOX -->
     <div id="lightbox" class="lightbox-modal">
         <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
         <span class="lightbox-nav lightbox-prev" onclick="prevImage()">&#10094;</span>
@@ -516,6 +514,9 @@
                 id: "line-4", name: "Филёвская", color: "#00BFFF",
                 stations: [
                     { name: "Александровский сад", lat: 55.7523, lng: 37.6086 },
+                    { name: "Арбатская (ФЛ)", lat: 55.7520, lng: 37.6000 },
+                    { name: "Смоленская (ФЛ)", lat: 55.7490, lng: 37.5820 },
+                    { name: "Киевская (ФЛ)", lat: 55.7445, lng: 37.5665 },
                     { name: "Студенческая", lat: 55.7388, lng: 37.5484 },
                     { name: "Кутузовская", lat: 55.7408, lng: 37.5342 },
                     { name: "Фили", lat: 55.7461, lng: 37.5146 },
@@ -638,7 +639,7 @@
                 ]
             },
             {
-                id: "line-14", name: "МЦК", color: "#E11D48",
+                id: "line-14", name: "МЦК", color: "#DF4842", isRing: true,
                 stations: [
                     { name: "Окружная (МЦК)", lat: 55.8483, lng: 37.5731 },
                     { name: "Владыкино (МЦК)", lat: 55.8483, lng: 37.5906 },
@@ -684,7 +685,12 @@
             return allStationsWithDistance.slice(0, 3);
         }
 
-        function getMetroSvg(color = "#EF161E") {
+        function getMetroSvg(color = "#EF161E", isMck = false) {
+            if (isMck || color === "#DF4842") {
+                return `<svg class="metro-icon-svg" viewBox="0 0 24 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0 18L7.5 0L12 9.5L16.5 0L24 18H19L15 8L12 14.5L9 8L5 18H0Z" stroke="#DF4842" stroke-width="2" fill="#FFFFFF"/>
+                </svg>`;
+            }
             return `<svg class="metro-icon-svg" viewBox="0 0 24 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M0 18L7.5 0L12 9.5L16.5 0L24 18H19L15 8L12 14.5L9 8L5 18H0Z" fill="${color}"/>
             </svg>`;
@@ -912,6 +918,8 @@
                 center: [55.751574, 37.573856],
                 zoom: 12,
                 controls: ['zoomControl', 'geolocationControl']
+            }, {
+                autoFitToViewport: 'always'
             });
 
             myMap.events.add('click', async function (e) {
@@ -1085,12 +1093,14 @@
 
         function renderMetroBadges(metroList) {
             if (!metroList || !Array.isArray(metroList) || metroList.length === 0) return '';
-            return `<div class="card-metro-block">${metroList.map(m => `
+            return `<div class="card-metro-block">${metroList.map(m => {
+                const isMck = (m.name && m.name.includes('МЦК')) || m.color === '#DF4842';
+                return `
                 <span class="metro-badge">
-                    ${getMetroSvg(m.color || '#EF161E')}
+                    ${getMetroSvg(m.color || '#EF161E', isMck)}
                     ${m.name} ${m.time ? `<span style="color:#64748b; font-weight:400;">(${m.time} мин)</span>` : ''}
                 </span>
-            `).join('')}</div>`;
+            `}).join('')}</div>`;
         }
 
         function renderInterface(locationsToRender) {
@@ -1199,12 +1209,14 @@
 
             let metroHtml = '';
             if (loc.metro && Array.isArray(loc.metro) && loc.metro.length > 0) {
-                metroHtml = `<div class="balloon-metro-block">${loc.metro.map(m => `
+                metroHtml = `<div class="balloon-metro-block">${loc.metro.map(m => {
+                    const isMck = (m.name && m.name.includes('МЦК')) || m.color === '#DF4842';
+                    return `
                     <span class="metro-badge">
-                        ${getMetroSvg(m.color || '#EF161E')}
+                        ${getMetroSvg(m.color || '#EF161E', isMck)}
                         ${m.name} ${m.time ? `<span style="color:#64748b; font-weight:400;">(${m.time} мин)</span>` : ''}
                     </span>
-                `).join('')}</div>`;
+                `}).join('')}</div>`;
             }
 
             return `
