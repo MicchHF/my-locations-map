@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <meta id="themeColorMeta" name="theme-color" content="#f4f3f0">
+    <!-- Синхронизация системных панелей с темой карты -->
+    <meta name="color-scheme" content="light dark">
+    <meta id="themeColorLight" name="theme-color" content="#f4f3f0" media="(prefers-color-scheme: light)">
+    <meta id="themeColorDark" name="theme-color" content="#090d16" media="(prefers-color-scheme: dark)">
+    
+    <!-- Режим PWA во весь экран без адресной строки -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
@@ -55,13 +60,15 @@
         }
 
         html, body {
-            width: 100% !important;
-            height: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: hidden !important;
-            position: fixed !important;
-            inset: 0 !important;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            min-height: -webkit-fill-available;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            position: fixed;
+            inset: 0;
             background-color: var(--bg-main);
             color: var(--text-main);
             -webkit-text-size-adjust: 100%;
@@ -76,8 +83,8 @@
         #authGate {
             position: fixed;
             inset: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100dvh;
             background: #0f172a;
             z-index: 10000;
             display: flex;
@@ -187,8 +194,9 @@
         #app-wrapper {
             position: fixed;
             inset: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
             display: none;
             background: var(--bg-main);
         }
@@ -408,14 +416,11 @@
         }
         .card-photo-thumb:hover { transform: scale(1.02); }
 
-        /* ДЕСКТОПНЫЙ КОНТЕЙНЕР КАРТЫ */
+        /* КОНТЕЙНЕР КАРТЫ */
         #map-container {
             position: absolute;
-            top: 0;
-            left: 390px;
-            right: 0;
-            bottom: 0;
-            width: auto;
+            inset: 0 0 0 390px;
+            width: calc(100vw - 390px);
             height: 100%;
             z-index: 1;
             background: var(--bg-main);
@@ -489,10 +494,10 @@
         .balloon-photos { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; padding-bottom: 2px; }
         .balloon-photo-img { height: 65px; width: auto; border-radius: 6px; cursor: pointer; object-fit: cover; border: 1px solid rgba(0,0,0,0.08); flex-shrink: 0; }
 
-        /* ВЕРХНЯЯ СТРОКА КАТЕГОРИЙ */
+        /* ВЕРХНЯЯ СТРОКА КАТЕГОРИЙ (сдвинута ниже челки) */
         .top-cat-filter-bar {
             position: fixed;
-            top: max(calc(env(safe-area-inset-top) + 16px), 22px);
+            top: max(calc(env(safe-area-inset-top) + 16px), 24px);
             left: 50%;
             transform: translateX(-50%);
             width: calc(100% - 24px);
@@ -550,7 +555,7 @@
         /* ПЛАВАЮЩАЯ КНОПКА МЕТРО */
         .metro-floating-btn {
             position: fixed;
-            top: max(calc(env(safe-area-inset-top) + 72px), 78px);
+            top: max(calc(env(safe-area-inset-top) + 74px), 82px);
             left: max(calc(env(safe-area-inset-left) + 16px), 16px);
             z-index: 1000;
             background: var(--glass-bg);
@@ -581,7 +586,7 @@
         /* ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ */
         .theme-toggle-floating-btn {
             position: fixed;
-            top: max(calc(env(safe-area-inset-top) + 72px), 78px);
+            top: max(calc(env(safe-area-inset-top) + 74px), 82px);
             right: max(calc(env(safe-area-inset-right) + 16px), 16px);
             z-index: 1000;
             background: var(--glass-bg);
@@ -780,8 +785,8 @@
             display: none;
             position: fixed;
             inset: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100dvh;
             background: rgba(0, 0, 0, 0.94);
             z-index: 9999;
             justify-content: center;
@@ -817,19 +822,16 @@
         .mobile-search-input { flex: 1; border: none; background: transparent; font-size: 16px; outline: none; color: var(--text-main); padding-left: 4px; }
         .mobile-search-close { background: none; border: none; font-size: 1.1rem; color: var(--text-muted); cursor: pointer; padding: 4px 8px; }
 
-        /* ОВЕРСКАН ДЛЯ КАРТЫ НА iOS (ВЫЛЕТ СВЕРХУ И СНИЗУ) */
+        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
         @media (max-width: 768px) {
-            #sidebar { width: 100%; height: 100%; display: none; }
+            #sidebar { width: 100vw; height: 100%; display: none; }
             
             #map-container {
                 position: fixed !important;
-                top: -80px !important;
-                bottom: -100px !important;
-                left: 0 !important;
-                right: 0 !important;
+                inset: 0 !important;
                 width: 100vw !important;
-                height: calc(100vh + 180px) !important;
-                height: calc(100dvh + 180px) !important;
+                height: 100% !important;
+                height: 100dvh !important;
                 z-index: 1 !important;
                 background-color: var(--bg-main) !important;
             }
@@ -1157,19 +1159,12 @@
 
         function applyTheme(dark) {
             isDarkMode = dark;
-            const themeColor = dark ? '#090d16' : '#f4f3f0';
-            
             if (dark) {
                 document.body.classList.add('dark-mode');
                 document.getElementById('themeToggleBtn').innerText = '☀️';
             } else {
                 document.body.classList.remove('dark-mode');
                 document.getElementById('themeToggleBtn').innerText = '🌙';
-            }
-
-            const meta = document.getElementById('themeColorMeta');
-            if (meta) {
-                meta.setAttribute('content', themeColor);
             }
         }
 
@@ -1395,18 +1390,22 @@
 
                 loadLocations();
                 
-                const triggerResize = () => {
-                    if (myMap) myMap.container.fitToViewport();
+                // Каскадный пересчет высоты для предотвращения белой полосы снизу в PWA
+                const resizeHandler = () => {
+                    if (myMap && myMap.container) {
+                        myMap.container.fitToViewport();
+                    }
                 };
 
-                triggerResize();
-                setTimeout(triggerResize, 150);
-                setTimeout(triggerResize, 400);
-                setTimeout(triggerResize, 1000);
+                resizeHandler();
+                setTimeout(resizeHandler, 100);
+                setTimeout(resizeHandler, 300);
+                setTimeout(resizeHandler, 600);
+                setTimeout(resizeHandler, 1200);
 
-                window.addEventListener('resize', triggerResize);
+                window.addEventListener('resize', resizeHandler);
                 if (window.visualViewport) {
-                    window.visualViewport.addEventListener('resize', triggerResize);
+                    window.visualViewport.addEventListener('resize', resizeHandler);
                 }
             });
         }
@@ -1929,6 +1928,7 @@
             }
         }
 
+        /* LIGHTBOX */
         function openLightboxByUrl(locId, index, event) {
             if (event) event.stopPropagation();
             const loc = allLocations.find(l => l.id === locId);
