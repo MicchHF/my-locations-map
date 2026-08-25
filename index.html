@@ -81,6 +81,8 @@
             margin-bottom: 12px;
             font-size: 0.88rem;
             box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+            cursor: pointer;
+            user-select: none;
             transition: transform 0.15s ease;
         }
         .tg-badge:active { transform: scale(0.98); }
@@ -501,6 +503,48 @@
             margin-top: auto;
         }
 
+        /* МОДАЛЬНОЕ ОКНО АВТОРИЗАЦИИ ЧЕРЕЗ TELEGRAM */
+        .auth-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .auth-modal-overlay.active { display: flex; }
+        .auth-modal-card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 360px;
+            border-radius: 20px;
+            padding: 26px 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+            position: relative;
+        }
+        .auth-modal-close {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 4px;
+        }
+        .auth-modal-title { font-size: 1.15rem; font-weight: 700; color: #0f172a; }
+        .auth-modal-desc { font-size: 0.84rem; color: #64748b; line-height: 1.4; }
+        .auth-widget-container { margin-top: 6px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+
         /* LIGHTBOX */
         .lightbox-modal {
             display: none;
@@ -543,6 +587,7 @@
         .mobile-search-input { flex: 1; border: none; background: transparent; font-size: 16px; outline: none; color: #0f172a; padding-left: 4px; }
         .mobile-search-close { background: none; border: none; font-size: 1.1rem; color: #64748b; cursor: pointer; padding: 4px 8px; }
 
+        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
         @media (max-width: 768px) {
             #sidebar { width: 100vw; height: 100%; display: none; }
             
@@ -617,13 +662,13 @@
     <div id="app-wrapper">
         <div id="sidebar">
             <div class="sidebar-header">
-                <a href="https://t.me/dalazareva" target="_blank" rel="noopener" class="tg-badge">
+                <div class="tg-badge" onclick="handleBadgeClick()">
                     <div style="display: flex; flex-direction: column; gap: 2px;">
                         <span style="font-size: 0.88rem; font-weight: 700; color: #ffffff;" id="userProfileName"><strong>@dalazareva</strong> локации</span>
                         <span style="font-size: 0.72rem; color: #38bdf8; font-weight: 600;" id="userPlanLabel">Тариф: FREE</span>
                     </div>
-                    <span class="tg-badge-icon">↗</span>
-                </a>
+                    <span class="tg-badge-icon" id="badgeActionIcon">↗</span>
+                </div>
                 <div class="search-container">
                     <span class="search-icon">🔍</span>
                     <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, адресу, метро..." oninput="handleSearch()">
@@ -666,6 +711,19 @@
         </div>
     </div>
 
+    <!-- МОДАЛЬНОЕ ОКНО АВТОРИЗАЦИИ ТЕЛЕГРАМ -->
+    <div id="tgAuthModal" class="auth-modal-overlay" onclick="closeAuthModal(event)">
+        <div class="auth-modal-card" onclick="event.stopPropagation()">
+            <button class="auth-modal-close" onclick="closeAuthModal()">✕</button>
+            <div class="auth-modal-title">Вход через Telegram</div>
+            <div class="auth-modal-desc">Войдите, чтобы синхронизировать ваш тариф и доступ к закрытым спотам</div>
+            
+            <div class="auth-widget-container" id="tgWidgetContainer">
+                <!-- Сюда динамически монтируется официальный Telegram Login Widget -->
+            </div>
+        </div>
+    </div>
+
     <div id="mobileSearchOverlay" class="mobile-search-overlay">
         <span>🔍</span>
         <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="Поиск..." oninput="syncMobileSearch(this.value)">
@@ -688,8 +746,12 @@
 
     <script src="js/supabase.js"></script>
     <script>
-        // Инициализация Telegram WebApp
-        if (window.Telegram && window.Telegram.WebApp) {
+        // Имя бота для авторизации
+        const BOT_USERNAME = "dalazareva_locations_bot";
+
+        // Инициализация Telegram WebApp при открытии внутри мессенджера
+        const isInsideTelegram = !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe?.user);
+        if (isInsideTelegram) {
             const tg = window.Telegram.WebApp;
             tg.ready();
             tg.expand();
@@ -801,14 +863,23 @@
             </svg>`;
         }
 
-        // Авторизация пользователя и определение тарифа в Telegram Mini App
-        async function initTelegramAuth() {
-            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe?.user) {
-                const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
-                const tgId = tgUser.id;
+        // Авторизация: Telegram Mini App или сохраненный вход через веб-виджет
+        async function initAuth() {
+            let tgUser = null;
 
+            if (isInsideTelegram) {
+                tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+            } else {
+                const saved = localStorage.getItem('tg_web_user');
+                if (saved) {
+                    try { tgUser = JSON.parse(saved); } catch(e) {}
+                }
+            }
+
+            if (tgUser && tgUser.id) {
+                const tgId = tgUser.id;
                 try {
-                    let { data: profile, error } = await supabaseClient
+                    let { data: profile } = await supabaseClient
                         .from('app_users')
                         .select('*')
                         .eq('telegram_id', tgId)
@@ -834,37 +905,78 @@
 
                     currentUser = profile;
                 } catch (e) {
-                    console.error("Ошибка авторизации пользователя:", e);
+                    console.error("Ошибка Supabase auth:", e);
                 }
             }
 
             renderUserPlanBadge();
         }
 
+        // Колбэк официального виджета Telegram Login Widget
+        window.onTelegramAuth = async function (user) {
+            localStorage.setItem('tg_web_user', JSON.stringify(user));
+            closeAuthModal();
+            await initAuth();
+        };
+
+        function handleBadgeClick() {
+            if (isInsideTelegram || currentUser.telegram_id) {
+                window.open("https://t.me/dalazareva", "_blank");
+            } else {
+                openAuthModal();
+            }
+        }
+
+        function openAuthModal() {
+            const modal = document.getElementById('tgAuthModal');
+            const container = document.getElementById('tgWidgetContainer');
+            modal.classList.add('active');
+
+            if (!container.hasChildNodes()) {
+                const script = document.createElement('script');
+                script.async = true;
+                script.src = "https://telegram.org/js/telegram-widget.js?22";
+                script.setAttribute('data-telegram-login', BOT_USERNAME);
+                script.setAttribute('data-size', 'large');
+                script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+                script.setAttribute('data-request-access', 'write');
+                container.appendChild(script);
+            }
+        }
+
+        function closeAuthModal(e) {
+            if (e && e.target !== e.currentTarget && !e.target.classList.contains('auth-modal-close')) return;
+            document.getElementById('tgAuthModal').classList.remove('active');
+        }
+
         function renderUserPlanBadge() {
             const nameEl = document.getElementById('userProfileName');
             const planEl = document.getElementById('userPlanLabel');
+            const iconEl = document.getElementById('badgeActionIcon');
             if (!nameEl || !planEl) return;
 
-            if (currentUser.first_name) {
-                nameEl.innerHTML = `<strong>👤 ${currentUser.first_name}</strong>`;
+            if (currentUser.telegram_id) {
+                nameEl.innerHTML = `<strong>👤 ${currentUser.first_name || 'Пользователь'}</strong>`;
+                let planLabel = "Тариф: FREE";
+                let planColor = "#38bdf8";
+
+                if (currentUser.plan === 'premium' || currentUser.plan === 'vip') {
+                    planLabel = "Тариф: PREMIUM ✨";
+                    planColor = "#fbbf24";
+                } else if (currentUser.plan === 'trial') {
+                    planLabel = "Тариф: ТЕСТ 🎁";
+                    planColor = "#34d399";
+                }
+
+                planEl.innerText = planLabel;
+                planEl.style.color = planColor;
+                iconEl.innerText = "↗";
             } else {
                 nameEl.innerHTML = `<strong>@dalazareva</strong> локации`;
+                planEl.innerText = "🔑 Войти через Telegram";
+                planEl.style.color = "#38bdf8";
+                iconEl.innerText = "→";
             }
-
-            let planLabel = "Тариф: FREE";
-            let planColor = "#38bdf8";
-
-            if (currentUser.plan === 'premium' || currentUser.plan === 'vip') {
-                planLabel = "Тариф: PREMIUM ✨";
-                planColor = "#fbbf24";
-            } else if (currentUser.plan === 'trial') {
-                planLabel = "Тариф: ТЕСТ 🎁";
-                planColor = "#34d399";
-            }
-
-            planEl.innerText = planLabel;
-            planEl.style.color = planColor;
         }
 
         ymaps.ready(initMap);
@@ -890,7 +1002,7 @@
         }
 
         async function loadLocations() {
-            initTelegramAuth();
+            initAuth();
 
             const { data, error } = await supabaseClient.from('Location').select('*');
             if (error) { console.error("Ошибка загрузки:", error); return; }
