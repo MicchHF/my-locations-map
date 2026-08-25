@@ -13,7 +13,6 @@
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <link rel="apple-touch-icon" href="icon.svg">
     
-    <!-- Telegram WebApp SDK, Яндекс.Карты, Supabase -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://api-maps.yandex.ru/2.1/?apikey=7370bad5-a627-4414-a1e8-b2023bda7a61&lang=ru_RU"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -72,7 +71,6 @@
             filter: invert(90%) hue-rotate(180deg) brightness(90%) contrast(110%) saturate(80%);
         }
 
-        /* ЭКРАН БЛОКИРОВКИ */
         #authGate {
             position: fixed;
             inset: 0;
@@ -193,7 +191,6 @@
             background: var(--bg-main);
         }
 
-        /* БОКОВОЙ СПИСОК */
         #sidebar {
             width: 390px;
             height: 100%;
@@ -408,7 +405,6 @@
         }
         .card-photo-thumb:hover { transform: scale(1.02); }
 
-        /* КНОПКА ЛАЙКА / ИЗБРАННОГО */
         .fav-btn {
             background: none;
             border: none;
@@ -433,7 +429,6 @@
             color: #ffffff !important;
         }
 
-        /* КОНТЕЙНЕР КАРТЫ */
         #map-container {
             position: absolute;
             inset: 0 0 0 390px;
@@ -511,7 +506,6 @@
         .balloon-photos { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; padding-bottom: 2px; }
         .balloon-photo-img { height: 65px; width: auto; border-radius: 6px; cursor: pointer; object-fit: cover; border: 1px solid rgba(0,0,0,0.08); flex-shrink: 0; }
 
-        /* ВЕРХНЯЯ СТРОКА КАТЕГОРИЙ (НА КАРТЕ) */
         .top-cat-filter-bar {
             position: fixed;
             top: max(calc(env(safe-area-inset-top) + 8px), 12px);
@@ -569,7 +563,6 @@
         .cat-chip.active { background: var(--accent-btn); color: var(--accent-btn-text); border-color: var(--accent-btn); }
         .cat-chip.disabled { opacity: 0.45; background: var(--card-sub-bg); color: var(--text-muted); }
 
-        /* ПЛАВАЮЩИЕ КНОПКИ */
         .metro-floating-btn {
             position: fixed;
             top: max(calc(env(safe-area-inset-top) + 64px), 68px);
@@ -652,7 +645,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* МЕНЮ МЕТРО */
         .metro-sidebar-overlay {
             position: fixed;
             inset: 0;
@@ -837,7 +829,6 @@
         .mobile-search-input { flex: 1; border: none; background: transparent; font-size: 16px; outline: none; color: var(--text-main); padding-left: 4px; }
         .mobile-search-close { background: none; border: none; font-size: 1.1rem; color: var(--text-muted); cursor: pointer; padding: 4px 8px; }
 
-        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
         @media (max-width: 768px) {
             #sidebar { width: 100vw; height: 100%; display: none; }
             
@@ -923,7 +914,6 @@
 </head>
 <body>
 
-    <!-- ЭКРАН БЛОКИРОВКИ -->
     <div id="authGate">
         <div class="auth-gate-card">
             <div class="auth-gate-icon">📍</div>
@@ -973,7 +963,6 @@
                     <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, адресу, метро..." oninput="handleSearch()">
                 </div>
 
-                <!-- ПОЛОСКА КАТЕГОРИЙ В РЕЖИМЕ СПИСКА -->
                 <div class="sidebar-cat-scroll-wrap">
                     <button id="sidebarToggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
                     <div id="sidebarCatChipsScroll" class="cat-chips-scroll"></div>
@@ -986,24 +975,20 @@
         <div id="map-container">
             <div id="map"></div>
             
-            <!-- ВЕРХНИЙ ФИЛЬТР КАТЕГОРИЙ (НА КАРТЕ) -->
             <div id="topCatFilterBar" class="top-cat-filter-bar">
                 <button id="toggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
                 <div id="catChipsScroll" class="cat-chips-scroll"></div>
             </div>
 
-            <!-- ПЛАВАЮЩАЯ КНОПКА МЕТРО -->
             <button id="metroFloatingBtn" class="metro-floating-btn" onclick="openMetroDrawer()">
                 <span class="metro-badge-dot" id="activeMetroDot"></span>
                 <span id="metroBtnLabel">🚇 Метро</span>
             </button>
 
-            <!-- ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ -->
             <button id="themeToggleBtn" class="theme-toggle-floating-btn" onclick="toggleTheme()" title="Переключить тему">
                 🌓
             </button>
 
-            <!-- КАСТОМНАЯ КНОПКА ГЕОЛОКАЦИИ СО СТРЕЛКОЙ НАВИГАЦИИ -->
             <button id="customGeolocBtn" class="custom-geoloc-btn" onclick="locateUserPosition()" title="Мое местоположение">
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="3 11 22 2 13 21 11 13 3 11" fill="currentColor"/>
@@ -1087,8 +1072,8 @@
         let currentImageIdx = 0;
         let selectedMetroFilter = "";
         let selectedLineName = "";
+        let searchDebounceTimer = null;
 
-        // АВТООПРЕДЕЛЕНИЕ ТЕМЫ
         function getInitialTheme() {
             const saved = localStorage.getItem('dalazareva_theme');
             if (saved) return saved === 'dark';
@@ -1097,7 +1082,6 @@
 
         let isDarkMode = getInitialTheme();
 
-        // ОБНОВЛЕННАЯ ЦВЕТОВАЯ ПАЛИТРА КАТЕГОРИЙ
         const CATEGORY_COLORS = {
             "☕ Кофейни": "#8B4513",
             "🍽️ Заведения (рестораны)": "#059669",
@@ -1213,7 +1197,6 @@
             applyTheme(nextMode);
         }
 
-        // ЛОГИКА ИЗБРАННОГО / ЛАЙКОВ
         function getFavorites() {
             try {
                 const favs = localStorage.getItem('dalazareva_favorites');
@@ -1232,20 +1215,18 @@
             }
             localStorage.setItem('dalazareva_favorites', JSON.stringify(favs));
             
-            // Обновляем иконки лайка в интерфейсе
             document.querySelectorAll(`.fav-btn-loc-${idStr}`).forEach(btn => {
-                const isFav = favs.includes(idStr);
-                btn.innerHTML = isFav ? '❤️' : '🤍';
+                btn.innerHTML = favs.includes(idStr) ? '❤️' : '🤍';
             });
 
-            renderBothCatFilterBars(Object.keys(categoryCollections));
+            renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
             if (showFavoritesOnly) applyCombinedFilters();
         }
 
         function toggleFavoritesFilter() {
             showFavoritesOnly = !showFavoritesOnly;
             applyCombinedFilters();
-            renderBothCatFilterBars(Object.keys(categoryCollections));
+            renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
         }
 
         function getOrCreateDeviceId() {
@@ -1480,7 +1461,6 @@
             });
         }
 
-        // КАСТОМНАЯ ГЕОЛОКАЦИЯ
         function locateUserPosition() {
             const btn = document.getElementById('customGeolocBtn');
             if (!navigator.geolocation) {
@@ -1651,7 +1631,8 @@
         }
 
         function handleSearch() {
-            applyCombinedFilters();
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(applyCombinedFilters, 120);
         }
 
         function applyCombinedFilters() {
@@ -1832,7 +1813,7 @@
                     let photosHtml = '';
                     if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {
                         photosHtml = `<div class="card-photos">
-                            ${loc.images.map((imgUrl, index) => `<img src="${imgUrl}" class="card-photo-thumb" onclick="openLightboxByUrl('${loc.id}', ${index}, event)">`).join('')}
+                            ${loc.images.map((imgUrl, index) => `<img src="${imgUrl}" loading="lazy" class="card-photo-thumb" onclick="openLightboxByUrl('${loc.id}', ${index}, event)">`).join('')}
                         </div>`;
                     }
 
@@ -1867,7 +1848,7 @@
             let photosHtml = '';
             if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {
                 photosHtml = `<div class="balloon-photos">
-                    ${loc.images.map((img, idx) => `<img src="${img}" class="balloon-photo-img" onclick="openLightboxByUrl('${loc.id}', ${idx}, event)">`).join('')}
+                    ${loc.images.map((img, idx) => `<img src="${img}" loading="lazy" class="balloon-photo-img" onclick="openLightboxByUrl('${loc.id}', ${idx}, event)">`).join('')}
                 </div>`;
             }
             const routeUrl = `https://yandex.ru/maps/?rtext=~${loc.lat},${loc.lng}`;
@@ -1908,7 +1889,6 @@
             `;
         }
 
-        // РЕНДЕР ПОЛОСОК КАТЕГОРИЙ + ИЗБРАННОГО
         function renderBothCatFilterBars(categories) {
             const mapContainer = document.getElementById('catChipsScroll');
             const sidebarContainer = document.getElementById('sidebarCatChipsScroll');
@@ -1919,7 +1899,6 @@
             const uniqueCats = Array.from(new Set(categories)).filter(Boolean);
             const favCount = getFavorites().length;
 
-            // Кнопка «❤️ Избранное»
             const favChipMap = createFavChip(favCount);
             const favChipSidebar = createFavChip(favCount);
 
@@ -2028,7 +2007,6 @@
             }
         }
 
-        /* LIGHTBOX */
         function openLightboxByUrl(locId, index, event) {
             if (event) event.stopPropagation();
             const loc = allLocations.find(l => l.id === locId);
