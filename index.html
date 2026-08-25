@@ -250,7 +250,7 @@
 
         async function toggleFavorite(locId, event) {
             if (event) { event.stopPropagation(); event.preventDefault(); }
-            let favs = getFavorites();
+            let favs = getFavorites().map(String);
             const idStr = String(locId);
             
             if (favs.includes(idStr)) {
@@ -268,7 +268,7 @@
             renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
             if (showFavoritesOnly) applyCombinedFilters();
 
-            // Облачная синхронизация избранного в Supabase
+            // Облачная синхронизация в Supabase
             if (currentUser && (currentUser.telegram_id || currentUser.access_token)) {
                 try {
                     const query = currentUser.telegram_id
@@ -283,9 +283,15 @@
 
         function syncUserFavorites(profile) {
             if (profile && Array.isArray(profile.favorites)) {
-                const localFavs = getFavorites();
-                const mergedFavs = Array.from(new Set([...localFavs, ...profile.favorites.map(String)]));
-                localStorage.setItem('dalazareva_favorites', JSON.stringify(mergedFavs));
+                const cloudFavs = profile.favorites.map(String);
+                localStorage.setItem('dalazareva_favorites', JSON.stringify(cloudFavs));
+                
+                document.querySelectorAll('.fav-btn').forEach(btn => {
+                    const locId = btn.className.match(/fav-btn-loc-(\S+)/)?.[1];
+                    if (locId) {
+                        btn.innerHTML = cloudFavs.includes(String(locId)) ? '❤️' : '🤍';
+                    }
+                });
             }
         }
 
@@ -1078,6 +1084,7 @@
             }
         }
 
+        /* Lightbox */
         function openLightboxByUrl(locId, index, event) {
             if (event) event.stopPropagation();
             const loc = allLocations.find(l => l.id === locId);
