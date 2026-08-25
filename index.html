@@ -6,7 +6,7 @@
     
     <meta id="themeColorMeta" name="theme-color" content="#f4f3f0">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <title>@dalazareva локации📍</title>
     
@@ -23,7 +23,28 @@
     <script src="js/shared.js"></script>
 
     <style>
-        /* Чистая кнопка лайка без рамок и фона */
+        /* Снимаем блокировку со страницы для скрытия панелей Safari */
+        html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-main);
+        }
+
+        body {
+            width: 100%;
+            min-height: calc(100% + 1px); /* Дает Safari повод скрыть адресную строку */
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            -webkit-text-size-adjust: 100%;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Кнопка лайка без рамок и фона */
         .fav-btn {
             background: transparent !important;
             border: none !important;
@@ -188,6 +209,15 @@
             tg.expand();
         }
 
+        // Авто-сворачивание панелей Safari при загрузке и первом клике
+        function triggerSafariFullscreen() {
+            if (window.innerWidth <= 768) {
+                window.scrollTo(0, 1);
+            }
+        }
+        window.addEventListener('load', () => setTimeout(triggerSafariFullscreen, 300));
+        document.addEventListener('touchstart', triggerSafariFullscreen, { once: true, passive: true });
+
         let currentUser = {
             telegram_id: null,
             first_name: "",
@@ -268,7 +298,6 @@
             renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
             if (showFavoritesOnly) applyCombinedFilters();
 
-            // Облачная синхронизация в Supabase
             if (currentUser && (currentUser.telegram_id || currentUser.access_token)) {
                 try {
                     const query = currentUser.telegram_id
@@ -1084,7 +1113,6 @@
             }
         }
 
-        /* Lightbox */
         function openLightboxByUrl(locId, index, event) {
             if (event) event.stopPropagation();
             const loc = allLocations.find(l => l.id === locId);
