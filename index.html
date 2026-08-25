@@ -4,15 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- Синхронизация системных панелей с темой карты -->
-    <meta name="color-scheme" content="light dark">
-    <meta id="themeColorLight" name="theme-color" content="#f4f3f0" media="(prefers-color-scheme: light)">
-    <meta id="themeColorDark" name="theme-color" content="#090d16" media="(prefers-color-scheme: dark)">
-    
-    <!-- Режим PWA во весь экран без адресной строки -->
+    <meta id="themeColorMeta" name="theme-color" content="#f4f3f0">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     
     <title>@dalazareva локации📍</title>
     
@@ -61,20 +55,19 @@
 
         html, body {
             width: 100vw;
-            height: 100vh;
+            height: 100%;
             height: 100dvh;
             min-height: -webkit-fill-available;
             margin: 0;
             padding: 0;
-            overflow: hidden;
-            position: fixed;
-            inset: 0;
             background-color: var(--bg-main);
             color: var(--text-main);
             -webkit-text-size-adjust: 100%;
+            overflow: hidden;
+            position: fixed;
+            inset: 0;
         }
 
-        /* ТЕМНАЯ ТЕМА ДЛЯ КАРТЫ */
         body.dark-mode #map [class*="ground-pane"] {
             filter: invert(90%) hue-rotate(180deg) brightness(90%) contrast(110%) saturate(80%);
         }
@@ -84,7 +77,7 @@
             position: fixed;
             inset: 0;
             width: 100vw;
-            height: 100dvh;
+            height: 100%;
             background: #0f172a;
             z-index: 10000;
             display: flex;
@@ -190,12 +183,11 @@
             background: #e2e8f0;
         }
 
-        /* ОСНОВНОЙ КОНТЕЙНЕР */
         #app-wrapper {
             position: fixed;
             inset: 0;
             width: 100vw;
-            height: 100vh;
+            height: 100%;
             height: 100dvh;
             display: none;
             background: var(--bg-main);
@@ -362,7 +354,7 @@
             cursor: pointer;
         }
         .location-card.active { border-color: var(--accent-btn); background-color: var(--card-sub-bg); }
-        .card-title { font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 8px; line-height: 1.3; }
+        .card-title { font-size: 1rem; font-weight: 600; color: var(--text-main); line-height: 1.3; }
         .card-address-block { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; width: 100%; }
         .card-address {
             display: flex;
@@ -415,6 +407,31 @@
             transition: transform 0.15s ease;
         }
         .card-photo-thumb:hover { transform: scale(1.02); }
+
+        /* КНОПКА ЛАЙКА / ИЗБРАННОГО */
+        .fav-btn {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 2px 4px;
+            transition: transform 0.15s ease;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .fav-btn:active { transform: scale(1.25); }
+
+        .cat-chip.fav-chip {
+            border-color: #f43f5e !important;
+            color: #f43f5e !important;
+        }
+        .cat-chip.fav-chip.active {
+            background: #f43f5e !important;
+            color: #ffffff !important;
+        }
 
         /* КОНТЕЙНЕР КАРТЫ */
         #map-container {
@@ -494,10 +511,10 @@
         .balloon-photos { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; padding-bottom: 2px; }
         .balloon-photo-img { height: 65px; width: auto; border-radius: 6px; cursor: pointer; object-fit: cover; border: 1px solid rgba(0,0,0,0.08); flex-shrink: 0; }
 
-        /* ВЕРХНЯЯ СТРОКА КАТЕГОРИЙ (сдвинута ниже челки) */
+        /* ВЕРХНЯЯ СТРОКА КАТЕГОРИЙ (НА КАРТЕ) */
         .top-cat-filter-bar {
             position: fixed;
-            top: max(calc(env(safe-area-inset-top) + 16px), 24px);
+            top: max(calc(env(safe-area-inset-top) + 8px), 12px);
             left: 50%;
             transform: translateX(-50%);
             width: calc(100% - 24px);
@@ -552,10 +569,10 @@
         .cat-chip.active { background: var(--accent-btn); color: var(--accent-btn-text); border-color: var(--accent-btn); }
         .cat-chip.disabled { opacity: 0.45; background: var(--card-sub-bg); color: var(--text-muted); }
 
-        /* ПЛАВАЮЩАЯ КНОПКА МЕТРО */
+        /* ПЛАВАЮЩИЕ КНОПКИ */
         .metro-floating-btn {
             position: fixed;
-            top: max(calc(env(safe-area-inset-top) + 74px), 82px);
+            top: max(calc(env(safe-area-inset-top) + 64px), 68px);
             left: max(calc(env(safe-area-inset-left) + 16px), 16px);
             z-index: 1000;
             background: var(--glass-bg);
@@ -583,10 +600,9 @@
         }
         .metro-floating-btn.active .metro-badge-dot { display: inline-block; }
 
-        /* ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ */
         .theme-toggle-floating-btn {
             position: fixed;
-            top: max(calc(env(safe-area-inset-top) + 74px), 82px);
+            top: max(calc(env(safe-area-inset-top) + 64px), 68px);
             right: max(calc(env(safe-area-inset-right) + 16px), 16px);
             z-index: 1000;
             background: var(--glass-bg);
@@ -607,7 +623,6 @@
         }
         .theme-toggle-floating-btn:active { transform: scale(0.92); }
 
-        /* КНОПКА ГЕОЛОКАЦИИ */
         .custom-geoloc-btn {
             position: fixed;
             bottom: max(calc(env(safe-area-inset-bottom) + 78px), 82px);
@@ -786,7 +801,7 @@
             position: fixed;
             inset: 0;
             width: 100vw;
-            height: 100dvh;
+            height: 100%;
             background: rgba(0, 0, 0, 0.94);
             z-index: 9999;
             justify-content: center;
@@ -828,14 +843,17 @@
             
             #map-container {
                 position: fixed !important;
-                inset: 0 !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
                 width: 100vw !important;
                 height: 100% !important;
                 height: 100dvh !important;
+                min-height: -webkit-fill-available !important;
                 z-index: 1 !important;
                 background-color: var(--bg-main) !important;
             }
-
             #map {
                 width: 100% !important;
                 height: 100% !important;
@@ -851,6 +869,21 @@
             
             body:not(.show-list) #sidebar { display: none !important; }
             body:not(.show-list) #map-container { display: block !important; }
+
+            .metro-floating-btn {
+                left: 12px;
+                top: max(calc(env(safe-area-inset-top) + 60px), 64px);
+            }
+
+            .theme-toggle-floating-btn {
+                right: 12px;
+                top: max(calc(env(safe-area-inset-top) + 60px), 64px);
+            }
+
+            .custom-geoloc-btn {
+                right: 12px;
+                bottom: max(calc(env(safe-area-inset-bottom) + 78px), 82px);
+            }
 
             .mobile-toggle-bar {
                 display: flex;
@@ -940,6 +973,7 @@
                     <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, адресу, метро..." oninput="handleSearch()">
                 </div>
 
+                <!-- ПОЛОСКА КАТЕГОРИЙ В РЕЖИМЕ СПИСКА -->
                 <div class="sidebar-cat-scroll-wrap">
                     <button id="sidebarToggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
                     <div id="sidebarCatChipsScroll" class="cat-chips-scroll"></div>
@@ -952,7 +986,7 @@
         <div id="map-container">
             <div id="map"></div>
             
-            <!-- ВЕРХНИЙ ФИЛЬТР КАТЕГОРИЙ -->
+            <!-- ВЕРХНИЙ ФИЛЬТР КАТЕГОРИЙ (НА КАРТЕ) -->
             <div id="topCatFilterBar" class="top-cat-filter-bar">
                 <button id="toggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
                 <div id="catChipsScroll" class="cat-chips-scroll"></div>
@@ -969,7 +1003,7 @@
                 🌓
             </button>
 
-            <!-- КАСТОМНАЯ КНОПКА ГЕОЛОКАЦИИ -->
+            <!-- КАСТОМНАЯ КНОПКА ГЕОЛОКАЦИИ СО СТРЕЛКОЙ НАВИГАЦИИ -->
             <button id="customGeolocBtn" class="custom-geoloc-btn" onclick="locateUserPosition()" title="Мое местоположение">
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="3 11 22 2 13 21 11 13 3 11" fill="currentColor"/>
@@ -1048,28 +1082,31 @@
         let categoryCollections = {};
         let categoryVisibility = {};
         let allVisibleState = true;
+        let showFavoritesOnly = false;
         let currentGallery = [];
         let currentImageIdx = 0;
         let selectedMetroFilter = "";
         let selectedLineName = "";
 
+        // АВТООПРЕДЕЛЕНИЕ ТЕМЫ
         function getInitialTheme() {
             const saved = localStorage.getItem('dalazareva_theme');
             if (saved) return saved === 'dark';
-            return false;
+            return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
         }
 
         let isDarkMode = getInitialTheme();
 
+        // ОБНОВЛЕННАЯ ЦВЕТОВАЯ ПАЛИТРА КАТЕГОРИЙ
         const CATEGORY_COLORS = {
             "☕ Кофейни": "#8B4513",
             "🍽️ Заведения (рестораны)": "#059669",
             "🍸 Бары и тусовки": "#7C3AED",
             "📷 Фотостудии": "#EC4899",
-            "🚪 Двери и архитектура": "#EA580C",
+            "🚪 Двери": "#EA580C",
+            "🏛️ Архитектура": "#4F46E5",
+            "🎨 Музеи и культура": "#9333EA",
             "🏞️ Парки и природа": "#16A34A",
-            "🏛️ Культура и музеи": "#4F46E5",
-            "📸 Инсталокации": "#E11D48",
             "🛍️ Шопинг": "#D97706",
             "🏨 Отели": "#0284C7",
             "📍 Другое": "#0F172A"
@@ -1161,9 +1198,11 @@
             isDarkMode = dark;
             if (dark) {
                 document.body.classList.add('dark-mode');
+                document.getElementById('themeColorMeta').setAttribute('content', '#090d16');
                 document.getElementById('themeToggleBtn').innerText = '☀️';
             } else {
                 document.body.classList.remove('dark-mode');
+                document.getElementById('themeColorMeta').setAttribute('content', '#f4f3f0');
                 document.getElementById('themeToggleBtn').innerText = '🌙';
             }
         }
@@ -1172,6 +1211,41 @@
             const nextMode = !isDarkMode;
             localStorage.setItem('dalazareva_theme', nextMode ? 'dark' : 'light');
             applyTheme(nextMode);
+        }
+
+        // ЛОГИКА ИЗБРАННОГО / ЛАЙКОВ
+        function getFavorites() {
+            try {
+                const favs = localStorage.getItem('dalazareva_favorites');
+                return favs ? JSON.parse(favs) : [];
+            } catch(e) { return []; }
+        }
+
+        function toggleFavorite(locId, event) {
+            if (event) { event.stopPropagation(); event.preventDefault(); }
+            let favs = getFavorites();
+            const idStr = String(locId);
+            if (favs.includes(idStr)) {
+                favs = favs.filter(id => id !== idStr);
+            } else {
+                favs.push(idStr);
+            }
+            localStorage.setItem('dalazareva_favorites', JSON.stringify(favs));
+            
+            // Обновляем иконки лайка в интерфейсе
+            document.querySelectorAll(`.fav-btn-loc-${idStr}`).forEach(btn => {
+                const isFav = favs.includes(idStr);
+                btn.innerHTML = isFav ? '❤️' : '🤍';
+            });
+
+            renderBothCatFilterBars(Object.keys(categoryCollections));
+            if (showFavoritesOnly) applyCombinedFilters();
+        }
+
+        function toggleFavoritesFilter() {
+            showFavoritesOnly = !showFavoritesOnly;
+            applyCombinedFilters();
+            renderBothCatFilterBars(Object.keys(categoryCollections));
         }
 
         function getOrCreateDeviceId() {
@@ -1390,26 +1464,23 @@
 
                 loadLocations();
                 
-                // Каскадный пересчет высоты для предотвращения белой полосы снизу в PWA
-                const resizeHandler = () => {
-                    if (myMap && myMap.container) {
-                        myMap.container.fitToViewport();
-                    }
-                };
+                myMap.container.fitToViewport();
+                setTimeout(() => { if (myMap) myMap.container.fitToViewport(); }, 200);
+                setTimeout(() => { if (myMap) myMap.container.fitToViewport(); }, 500);
 
-                resizeHandler();
-                setTimeout(resizeHandler, 100);
-                setTimeout(resizeHandler, 300);
-                setTimeout(resizeHandler, 600);
-                setTimeout(resizeHandler, 1200);
+                window.addEventListener('resize', () => { 
+                    if (myMap) myMap.container.fitToViewport(); 
+                });
 
-                window.addEventListener('resize', resizeHandler);
                 if (window.visualViewport) {
-                    window.visualViewport.addEventListener('resize', resizeHandler);
+                    window.visualViewport.addEventListener('resize', () => {
+                        if (myMap) myMap.container.fitToViewport();
+                    });
                 }
             });
         }
 
+        // КАСТОМНАЯ ГЕОЛОКАЦИЯ
         function locateUserPosition() {
             const btn = document.getElementById('customGeolocBtn');
             if (!navigator.geolocation) {
@@ -1585,6 +1656,7 @@
 
         function applyCombinedFilters() {
             const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const favs = getFavorites();
             
             const filtered = allLocations.filter(loc => {
                 const titleMatch = (loc.title || '').toLowerCase().includes(query);
@@ -1594,8 +1666,9 @@
                 const textPass = !query || (titleMatch || addressMatch || descMatch || metroMatch);
 
                 const metroPass = !selectedMetroFilter || (loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => m.name === selectedMetroFilter));
+                const favPass = !showFavoritesOnly || favs.includes(String(loc.id));
 
-                return textPass && metroPass;
+                return textPass && metroPass && favPass;
             });
 
             renderInterface(filtered);
@@ -1672,6 +1745,7 @@
             const listEl = document.getElementById('locations-list');
             listEl.innerHTML = '';
             const grouped = {};
+            const favs = getFavorites();
             
             locationsToRender.forEach(loc => {
                 const cat = loc.category || '📍 Другое';
@@ -1684,12 +1758,12 @@
 
             if (locationsToRender.length === 0) {
                 listEl.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:0.9rem;">Ничего не найдено 🔍</div>';
-                renderBothCatFilterBars([]);
+                renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
                 return;
             }
 
             const activeCategoriesList = Object.keys(grouped);
-            renderBothCatFilterBars(activeCategoriesList);
+            renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
 
             activeCategoriesList.forEach(catName => {
                 if (categoryVisibility[catName] === undefined) categoryVisibility[catName] = true;
@@ -1725,6 +1799,7 @@
                 grouped[catName].forEach(loc => {
                     const categoryIcon = loc.category ? loc.category.split(' ')[0] : '📍';
                     const pinColor = getCategoryPinColor(loc.category);
+                    const isFav = favs.includes(String(loc.id));
 
                     const layout = ymaps.templateLayoutFactory.createClass(
                         `<div class="custom-map-pin" style="background: ${pinColor};"><span>${categoryIcon}</span></div>`
@@ -1749,7 +1824,7 @@
                     const cardEl = document.createElement('div');
                     cardEl.className = 'location-card'; cardEl.id = `card-${loc.id}`;
                     cardEl.onclick = (e) => {
-                        if (!e.target.classList.contains('card-photo-thumb') && !e.target.classList.contains('copy-btn') && !e.target.classList.contains('route-btn')) {
+                        if (!e.target.classList.contains('card-photo-thumb') && !e.target.classList.contains('copy-btn') && !e.target.classList.contains('route-btn') && !e.target.classList.contains('fav-btn')) {
                             selectLocationOnMap(loc, placemark);
                         }
                     };
@@ -1765,7 +1840,12 @@
                     const safeAddr = escapeQuotes(loc.address);
 
                     cardEl.innerHTML = `
-                        <div class="card-title">${loc.title}</div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px;">
+                            <div class="card-title">${loc.title}</div>
+                            <button class="fav-btn fav-btn-loc-${loc.id}" onclick="toggleFavorite('${loc.id}', event)" title="В избранное">
+                                ${isFav ? '❤️' : '🤍'}
+                            </button>
+                        </div>
                         <div class="card-address-block">
                             ${loc.address ? `<div class="card-address">📍 ${loc.address}</div>` : ''}
                             <div class="card-actions-row">
@@ -1792,6 +1872,7 @@
             }
             const routeUrl = `https://yandex.ru/maps/?rtext=~${loc.lat},${loc.lng}`;
             const safeAddr = escapeQuotes(loc.address);
+            const isFav = getFavorites().includes(String(loc.id));
 
             let metroHtml = '';
             if (loc.metro && Array.isArray(loc.metro) && loc.metro.length > 0) {
@@ -1807,7 +1888,12 @@
 
             return `
                 <div class="balloon-wrapper">
-                    <div class="balloon-title">${loc.title}</div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; margin-bottom: 6px;">
+                        <div class="balloon-title">${loc.title}</div>
+                        <button class="fav-btn fav-btn-loc-${loc.id}" onclick="toggleFavorite('${loc.id}', event)">
+                            ${isFav ? '❤️' : '🤍'}
+                        </button>
+                    </div>
                     <div class="balloon-address-block">
                         ${loc.address ? `<div class="balloon-address">📍 ${loc.address}</div>` : ''}
                         <div class="balloon-actions-row">
@@ -1822,26 +1908,39 @@
             `;
         }
 
+        // РЕНДЕР ПОЛОСОК КАТЕГОРИЙ + ИЗБРАННОГО
         function renderBothCatFilterBars(categories) {
             const mapContainer = document.getElementById('catChipsScroll');
             const sidebarContainer = document.getElementById('sidebarCatChipsScroll');
 
             if (mapContainer) mapContainer.innerHTML = '';
             if (sidebarContainer) sidebarContainer.innerHTML = '';
-            if (!categories || categories.length === 0) return;
 
-            categories.forEach(catName => {
+            const uniqueCats = Array.from(new Set(categories)).filter(Boolean);
+            const favCount = getFavorites().length;
+
+            // Кнопка «❤️ Избранное»
+            const favChipMap = createFavChip(favCount);
+            const favChipSidebar = createFavChip(favCount);
+
+            if (mapContainer) mapContainer.appendChild(favChipMap);
+            if (sidebarContainer) sidebarContainer.appendChild(favChipSidebar);
+
+            uniqueCats.forEach(catName => {
                 const isVis = categoryVisibility[catName] !== false;
-                
-                if (mapContainer) {
-                    mapContainer.appendChild(createChipElement(catName, isVis));
-                }
-                if (sidebarContainer) {
-                    sidebarContainer.appendChild(createChipElement(catName, isVis));
-                }
+                if (mapContainer) mapContainer.appendChild(createChipElement(catName, isVis));
+                if (sidebarContainer) sidebarContainer.appendChild(createChipElement(catName, isVis));
             });
 
             updateToggleAllBtnState();
+        }
+
+        function createFavChip(count) {
+            const chip = document.createElement('div');
+            chip.className = `cat-chip fav-chip ${showFavoritesOnly ? 'active' : ''}`;
+            chip.innerHTML = `<span>❤️ Избранное</span> ${count > 0 ? `<span style="font-weight:700; opacity:0.9;">(${count})</span>` : ''}`;
+            chip.onclick = () => toggleFavoritesFilter();
+            return chip;
         }
 
         function createChipElement(catName, isVis) {
@@ -1854,6 +1953,7 @@
 
         function toggleAllCategories() {
             allVisibleState = !allVisibleState;
+            showFavoritesOnly = false;
             Object.keys(categoryCollections).forEach(catName => {
                 categoryVisibility[catName] = allVisibleState;
                 if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', allVisibleState);
@@ -1865,7 +1965,7 @@
                 if (listIcon) listIcon.innerText = allVisibleState ? '👁️' : '🙈';
             });
 
-            renderBothCatFilterBars(Object.keys(categoryCollections));
+            renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
         }
 
         function updateToggleAllBtnState() {
@@ -1874,7 +1974,7 @@
 
             toggleBtns.forEach(btn => {
                 if (!btn) return;
-                if (hasActive) {
+                if (hasActive && !showFavoritesOnly) {
                     btn.classList.remove('off');
                     btn.innerText = '👁️ Все';
                 } else {
@@ -1903,7 +2003,7 @@
             const listIcon = document.getElementById(`pub-cat-icon-${encodeURIComponent(catName)}`);
             if (listIcon) listIcon.innerText = isVis ? '👁️' : '🙈';
 
-            renderBothCatFilterBars(Object.keys(categoryCollections));
+            renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
         }
 
         function toggleAccordion(element) { element.closest('.category-group').classList.toggle('collapsed'); }
