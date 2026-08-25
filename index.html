@@ -195,7 +195,7 @@
             background: var(--bg-main);
         }
 
-        /* БОКОВОЙ СПИСОК (ДЕСКТОП) */
+        /* БОКОВОЙ СПИСОК */
         #sidebar {
             width: 390px;
             height: 100%;
@@ -275,6 +275,18 @@
             color: var(--text-muted);
             pointer-events: none;
         }
+
+        /* ПОЛОСКА КАТЕГОРИЙ В СПИСКЕ */
+        .sidebar-cat-scroll-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+        .sidebar-cat-scroll-wrap::-webkit-scrollbar { display: none; }
 
         #locations-list {
             flex: 1;
@@ -478,7 +490,7 @@
         .balloon-photos { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; padding-bottom: 2px; }
         .balloon-photo-img { height: 65px; width: auto; border-radius: 6px; cursor: pointer; object-fit: cover; border: 1px solid rgba(0,0,0,0.08); flex-shrink: 0; }
 
-        /* ВЕРХНЯЯ СТРОКА КАТЕГОРИЙ */
+        /* ВЕРХНЯЯ СТРОКА КАТЕГОРИЙ (НА КАРТЕ) */
         .top-cat-filter-bar {
             position: fixed;
             top: max(calc(env(safe-area-inset-top) + 8px), 12px);
@@ -941,14 +953,21 @@
                     <span class="search-icon">🔍</span>
                     <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, адресу, метро..." oninput="handleSearch()">
                 </div>
+
+                <!-- ПОЛОСКА КАТЕГОРИЙ В РЕЖИМЕ СПИСКА -->
+                <div class="sidebar-cat-scroll-wrap">
+                    <button id="sidebarToggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
+                    <div id="sidebarCatChipsScroll" class="cat-chips-scroll"></div>
+                </div>
             </div>
+            
             <div id="locations-list"></div>
         </div>
 
         <div id="map-container">
             <div id="map"></div>
             
-            <!-- ВЕРХНИЙ ФИЛЬТР КАТЕГОРИЙ -->
+            <!-- ВЕРХНИЙ ФИЛЬТР КАТЕГОРИЙ (НА КАРТЕ) -->
             <div id="topCatFilterBar" class="top-cat-filter-bar">
                 <button id="toggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
                 <div id="catChipsScroll" class="cat-chips-scroll"></div>
@@ -960,7 +979,7 @@
                 <span id="metroBtnLabel">🚇 Метро</span>
             </button>
 
-            <!-- ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ (СВЕТЛАЯ / ТЕМНАЯ) -->
+            <!-- ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ -->
             <button id="themeToggleBtn" class="theme-toggle-floating-btn" onclick="toggleTheme()" title="Переключить тему">
                 🌓
             </button>
@@ -1049,7 +1068,7 @@
         let selectedMetroFilter = "";
         let selectedLineName = "";
 
-        // АВТООПРЕДЕЛЕНИЕ ТЕМЫ (СИСТЕМНАЯ ТЕМА ПРИ 1-М ВХОДЕ, ДАЛЕЕ ПО ВЫБОРУ ПОЛЬЗОВАТЕЛЯ)
+        // АВТООПРЕДЕЛЕНИЕ ТЕМЫ
         function getInitialTheme() {
             const saved = localStorage.getItem('dalazareva_theme');
             if (saved) return saved === 'dark';
@@ -1680,23 +1699,25 @@
 
             if (locationsToRender.length === 0) {
                 listEl.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:0.9rem;">Ничего не найдено 🔍</div>';
-                renderTopCatFilter([]);
+                renderBothCatFilterBars([]);
                 return;
             }
 
             const activeCategoriesList = Object.keys(grouped);
-            renderTopCatFilter(activeCategoriesList);
+            renderBothCatFilterBars(activeCategoriesList);
 
             activeCategoriesList.forEach(catName => {
                 if (categoryVisibility[catName] === undefined) categoryVisibility[catName] = true;
+                const isVisible = categoryVisibility[catName];
 
-                const collection = new ymaps.GeoObjectCollection({}, { visible: categoryVisibility[catName] });
+                const collection = new ymaps.GeoObjectCollection({}, { visible: isVisible });
                 categoryCollections[catName] = collection;
                 myMap.geoObjects.add(collection);
 
                 const groupEl = document.createElement('div');
                 groupEl.className = 'category-group';
-                const isVisible = categoryVisibility[catName];
+                groupEl.id = `cat-group-${encodeURIComponent(catName)}`;
+                groupEl.style.display = isVisible ? 'block' : 'none';
                 
                 groupEl.innerHTML = `
                     <div class="category-header">
@@ -1816,32 +1837,35 @@
             `;
         }
 
-        function renderTopCatFilter(categories) {
-            const container = document.getElementById('catChipsScroll');
-            container.innerHTML = '';
+        // РЕНДЕР ОБЕИХ ПОЛОСОК КАТЕГОРИЙ (НА КАРТЕ И В СПИСКЕ)
+        function renderBothCatFilterBars(categories) {
+            const mapContainer = document.getElementById('catChipsScroll');
+            const sidebarContainer = document.getElementById('sidebarCatChipsScroll');
+
+            if (mapContainer) mapContainer.innerHTML = '';
+            if (sidebarContainer) sidebarContainer.innerHTML = '';
             if (!categories || categories.length === 0) return;
 
             categories.forEach(catName => {
                 const isVis = categoryVisibility[catName] !== false;
-                const chip = document.createElement('div');
-                chip.className = `cat-chip ${isVis ? 'active' : 'disabled'}`;
-                chip.innerHTML = `<span>${catName}</span>`;
-                chip.onclick = () => {
-                    categoryVisibility[catName] = !categoryVisibility[catName];
-                    const nextState = categoryVisibility[catName];
-                    if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', nextState);
-                    
-                    if (nextState) { chip.classList.remove('disabled'); chip.classList.add('active'); }
-                    else { chip.classList.remove('active'); chip.classList.add('disabled'); }
-                    
-                    const listIcon = document.getElementById(`pub-cat-icon-${encodeURIComponent(catName)}`);
-                    if (listIcon) listIcon.innerText = nextState ? '👁️' : '🙈';
-
-                    updateToggleAllBtnState();
-                };
-                container.appendChild(chip);
+                
+                if (mapContainer) {
+                    mapContainer.appendChild(createChipElement(catName, isVis));
+                }
+                if (sidebarContainer) {
+                    sidebarContainer.appendChild(createChipElement(catName, isVis));
+                }
             });
+
             updateToggleAllBtnState();
+        }
+
+        function createChipElement(catName, isVis) {
+            const chip = document.createElement('div');
+            chip.className = `cat-chip ${isVis ? 'active' : 'disabled'}`;
+            chip.innerHTML = `<span>${catName}</span>`;
+            chip.onclick = () => toggleCategoryMap(catName);
+            return chip;
         }
 
         function toggleAllCategories() {
@@ -1850,22 +1874,31 @@
                 categoryVisibility[catName] = allVisibleState;
                 if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', allVisibleState);
 
+                const groupEl = document.getElementById(`cat-group-${encodeURIComponent(catName)}`);
+                if (groupEl) groupEl.style.display = allVisibleState ? 'block' : 'none';
+
                 const listIcon = document.getElementById(`pub-cat-icon-${encodeURIComponent(catName)}`);
                 if (listIcon) listIcon.innerText = allVisibleState ? '👁️' : '🙈';
             });
 
-            document.querySelectorAll('#catChipsScroll .cat-chip').forEach(chip => {
-                if (allVisibleState) { chip.classList.remove('disabled'); chip.classList.add('active'); }
-                else { chip.classList.remove('active'); chip.classList.add('disabled'); }
-            });
-            updateToggleAllBtnState();
+            renderBothCatFilterBars(Object.keys(categoryCollections));
         }
 
         function updateToggleAllBtnState() {
-            const toggleBtn = document.getElementById('toggleAllBtn');
+            const toggleBtns = [document.getElementById('toggleAllBtn'), document.getElementById('sidebarToggleAllBtn')];
             const hasActive = Object.values(categoryVisibility).some(v => v === true);
-            if (hasActive) { allVisibleState = true; toggleBtn.classList.remove('off'); toggleBtn.innerText = '👁️ Все'; }
-            else { allVisibleState = false; toggleBtn.classList.add('off'); toggleBtn.innerText = '🙈 Все'; }
+
+            toggleBtns.forEach(btn => {
+                if (!btn) return;
+                if (hasActive) {
+                    btn.classList.remove('off');
+                    btn.innerText = '👁️ Все';
+                } else {
+                    btn.classList.add('off');
+                    btn.innerText = '🙈 Все';
+                }
+            });
+            allVisibleState = hasActive;
         }
 
         function toggleCategoryMap(catName, btnEl, event) {
@@ -1874,11 +1907,19 @@
             const isVis = categoryVisibility[catName];
             
             if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', isVis);
+
+            const groupEl = document.getElementById(`cat-group-${encodeURIComponent(catName)}`);
+            if (groupEl) {
+                groupEl.style.display = isVis ? 'block' : 'none';
+                if (isVis && document.body.classList.contains('show-list')) {
+                    groupEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
             
             const listIcon = document.getElementById(`pub-cat-icon-${encodeURIComponent(catName)}`);
             if (listIcon) listIcon.innerText = isVis ? '👁️' : '🙈';
 
-            renderTopCatFilter(Object.keys(categoryCollections));
+            renderBothCatFilterBars(Object.keys(categoryCollections));
         }
 
         function toggleAccordion(element) { element.closest('.category-group').classList.toggle('collapsed'); }
