@@ -1,10 +1,7 @@
 {
-  "name": "@dalazareva локации",
-  "short_name": "Локации",
-  "start_url": "./",
-  "scope": "./",
+  "name": "@dalazareva локации📍",
+  "short_name": "@dalazareva",
   "display": "standalone",
-  "orientation": "portrait-primary",
   "background_color": "#f4f3f0",
   "theme_color": "#f4f3f0",
   "icons": [
@@ -15,7 +12,7 @@
       "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "apple-touch-icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
