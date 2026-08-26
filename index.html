@@ -117,34 +117,39 @@
 
         <div id="map-container">
             <div id="map"></div>
+            
+            <div id="topCatFilterBar" class="top-cat-filter-bar">
+                <button id="toggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
+                <div id="catChipsScroll" class="cat-chips-scroll"></div>
+            </div>
+
+            <button id="metroFloatingBtn" class="metro-floating-btn" onclick="openMetroDrawer(event)">
+                <span class="metro-badge-dot" id="activeMetroDot"></span>
+                <span id="metroBtnLabel">🚇 Метро</span>
+            </button>
+
+            <button id="themeToggleBtn" class="theme-toggle-floating-btn" onclick="toggleTheme(event)" title="Переключить тему">
+                🌓
+            </button>
+
+            <button id="customGeolocBtn" class="custom-geoloc-btn" onclick="locateUserPosition(event)" title="Мое местоположение">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="3 11 22 2 13 21 11 13 3 11" fill="currentColor"/>
+                </svg>
+            </button>
+
+            <div class="mobile-toggle-bar">
+                <button id="btn-search-toggle" class="toggle-btn icon-btn" title="Поиск" onclick="toggleMobileSearch()">🔍</button>
+                <button id="btn-map-view" class="toggle-btn active" onclick="switchMobileView('map')">🗺️ Карта</button>
+                <button id="btn-list-view" class="toggle-btn" onclick="switchMobileView('list')">📋 Список</button>
+            </div>
+
+            <div id="mobileSearchOverlay" class="mobile-search-overlay">
+                <span>🔍</span>
+                <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="Поиск..." oninput="syncMobileSearch(this.value)">
+                <button class="mobile-search-close" onclick="toggleMobileSearch(false)">✕</button>
+            </div>
         </div>
-    </div>
-
-    <!-- ЭЛЕМЕНТЫ ИНТЕРФЕЙСА (Вынесены из контейнера карты для надежного отклика) -->
-    <div id="topCatFilterBar" class="top-cat-filter-bar stop-map-propagation">
-        <button id="toggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
-        <div id="catChipsScroll" class="cat-chips-scroll"></div>
-    </div>
-
-    <button id="metroFloatingBtn" class="metro-floating-btn stop-map-propagation" onclick="openMetroDrawer(event)">
-        <span class="metro-badge-dot" id="activeMetroDot"></span>
-        <span id="metroBtnLabel">🚇 Метро</span>
-    </button>
-
-    <button id="themeToggleBtn" class="theme-toggle-floating-btn stop-map-propagation" onclick="toggleTheme(event)" title="Переключить тему">
-        🌓
-    </button>
-
-    <button id="customGeolocBtn" class="custom-geoloc-btn stop-map-propagation" onclick="locateUserPosition(event)" title="Мое местоположение">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="3 11 22 2 13 21 11 13 3 11" fill="currentColor"/>
-        </svg>
-    </button>
-
-    <div class="mobile-toggle-bar stop-map-propagation">
-        <button id="btn-search-toggle" class="toggle-btn icon-btn" title="Поиск" onclick="toggleMobileSearch()">🔍</button>
-        <button id="btn-map-view" class="toggle-btn active" onclick="switchMobileView('map')">🗺️ Карта</button>
-        <button id="btn-list-view" class="toggle-btn" onclick="switchMobileView('list')">📋 Список</button>
     </div>
 
     <!-- МЕНЮ МЕТРО -->
@@ -166,12 +171,6 @@
         </div>
     </div>
 
-    <div id="mobileSearchOverlay" class="mobile-search-overlay stop-map-propagation">
-        <span>🔍</span>
-        <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="Поиск..." oninput="syncMobileSearch(this.value)">
-        <button class="mobile-search-close" onclick="toggleMobileSearch(false)">✕</button>
-    </div>
-
     <div id="lightbox" class="lightbox-modal">
         <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
         <span class="lightbox-nav lightbox-prev" onclick="prevImage()">&#10094;</span>
@@ -186,15 +185,6 @@
             const tg = window.Telegram.WebApp;
             tg.ready();
             tg.expand();
-        }
-
-        // Защита от перехвата кликов картой Яндекс
-        function initTouchProtection() {
-            document.querySelectorAll('.stop-map-propagation').forEach(el => {
-                ['touchstart', 'touchend', 'pointerdown'].forEach(evt => {
-                    el.addEventListener(evt, e => e.stopPropagation(), { passive: true });
-                });
-            });
         }
 
         let currentUser = {
@@ -246,7 +236,7 @@
         }
 
         function toggleTheme(event) {
-            if (event) { event.stopPropagation(); event.preventDefault(); }
+            if (event) { event.stopPropagation(); }
             const nextMode = !isDarkMode;
             localStorage.setItem('dalazareva_theme', nextMode ? 'dark' : 'light');
             applyTheme(nextMode);
@@ -383,10 +373,7 @@
                 document.getElementById('authGate').style.display = 'none';
                 document.getElementById('app-wrapper').style.display = 'flex';
                 renderUserPlanBadge();
-                requestAnimationFrame(() => {
-                    initMap();
-                    initTouchProtection();
-                });
+                requestAnimationFrame(() => initMap());
             } else {
                 document.getElementById('authGate').style.display = 'flex';
                 document.getElementById('app-wrapper').style.display = 'none';
@@ -446,10 +433,7 @@
                     document.getElementById('authGate').style.display = 'none';
                     document.getElementById('app-wrapper').style.display = 'flex';
                     renderUserPlanBadge();
-                    requestAnimationFrame(() => {
-                        initMap();
-                        initTouchProtection();
-                    });
+                    requestAnimationFrame(() => initMap());
                 }
             } else {
                 alert("Неверный ключ доступа. Запустите бота @dalazareva_locations_bot, чтобы скопировать актуальную ссылку.");
@@ -530,7 +514,7 @@
         }
 
         function locateUserPosition(event) {
-            if (event) { event.stopPropagation(); event.preventDefault(); }
+            if (event) { event.stopPropagation(); }
             const btn = document.getElementById('customGeolocBtn');
             if (!navigator.geolocation) {
                 alert("Геолокация не поддерживается вашим браузером.");
@@ -583,7 +567,7 @@
         }
 
         function openMetroDrawer(event) {
-            if (event) { event.stopPropagation(); event.preventDefault(); }
+            if (event) { event.stopPropagation(); }
             document.getElementById('metroSidebarOverlay').classList.add('active');
         }
 
