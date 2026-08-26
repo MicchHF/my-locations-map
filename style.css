@@ -369,9 +369,9 @@ body.dark-mode #map [class*="ground-pane"] {
     align-items: center; 
     justify-content: center; 
     gap: 5px; 
-    padding: 6px 10px; 
+    padding: 8px 10px; 
     font-size: 0.78rem; 
-    font-weight: 500; 
+    font-weight: 600; 
     border-radius: 8px; 
     text-decoration: none; 
     cursor: pointer; 
@@ -479,7 +479,7 @@ body.dark-mode #map [class*="ground-pane"] {
 /* Верхний фильтр категорий */
 .top-cat-filter-bar {
     position: fixed;
-    top: max(calc(env(safe-area-inset-top) + 16px), 20px);
+    top: max(calc(env(safe-area-inset-top) + 12px), 14px);
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 24px);
@@ -537,7 +537,7 @@ body.dark-mode #map [class*="ground-pane"] {
 /* Кнопка метро */
 .metro-floating-btn {
     position: fixed;
-    top: max(calc(env(safe-area-inset-top) + 68px), 72px);
+    top: max(calc(env(safe-area-inset-top) + 64px), 68px);
     left: max(calc(env(safe-area-inset-left) + 16px), 16px);
     z-index: 1000;
     background: var(--glass-bg);
@@ -565,10 +565,10 @@ body.dark-mode #map [class*="ground-pane"] {
 }
 .metro-floating-btn.active .metro-badge-dot { display: inline-block; }
 
-/* Кнопка переключения темы */
+/* Кнопка темы */
 .theme-toggle-floating-btn {
     position: fixed;
-    top: max(calc(env(safe-area-inset-top) + 68px), 72px);
+    top: max(calc(env(safe-area-inset-top) + 64px), 68px);
     right: max(calc(env(safe-area-inset-right) + 16px), 16px);
     z-index: 1000;
     background: var(--glass-bg);
@@ -782,8 +782,8 @@ body.dark-mode #map [class*="ground-pane"] {
 }
 .lightbox-modal.active { display: flex; }
 .lightbox-img { 
-    width: 92vw;
-    height: auto;
+    width: 92vw; 
+    height: auto; 
     max-height: 85vh; 
     object-fit: contain; 
     border-radius: 8px; 
@@ -852,12 +852,12 @@ body.dark-mode #map [class*="ground-pane"] {
 
     .metro-floating-btn {
         left: 12px;
-        top: max(calc(env(safe-area-inset-top) + 68px), 72px);
+        top: max(calc(env(safe-area-inset-top) + 60px), 64px);
     }
 
     .theme-toggle-floating-btn {
         right: 12px;
-        top: max(calc(env(safe-area-inset-top) + 68px), 72px);
+        top: max(calc(env(safe-area-inset-top) + 60px), 64px);
     }
 
     .custom-geoloc-btn {
