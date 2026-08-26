@@ -1,9 +1,9 @@
 {
   "name": "@dalazareva локации📍",
-  "short_name": "@dalazareva",
+  "short_name": "@dalazareva локации📍",
   "display": "standalone",
-  "background_color": "#f4f3f0",
-  "theme_color": "#f4f3f0",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
   "icons": [
     {
       "src": "apple-touch-icon.png",
