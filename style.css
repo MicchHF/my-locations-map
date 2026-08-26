@@ -4,7 +4,6 @@
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
     -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
 }
 
 :root {
@@ -55,6 +54,7 @@ html, body {
     height: 100dvh;
     display: none;
     background: var(--bg-main);
+    overflow: hidden;
 }
 
 body.dark-mode #map [class*="ground-pane"] {
@@ -185,7 +185,7 @@ body.dark-mode #map [class*="ground-pane"] {
 }
 
 .sidebar-header { 
-    padding: max(calc(env(safe-area-inset-top) + 20px), 24px) 16px 12px 16px; 
+    padding: max(calc(env(safe-area-inset-top) + 16px), 20px) 16px 12px 16px; 
     background: var(--bg-card); 
     border-bottom: 1px solid var(--border-color); 
 }
@@ -469,8 +469,8 @@ body.dark-mode #map [class*="ground-pane"] {
 
 /* Верхний фильтр категорий */
 .top-cat-filter-bar {
-    position: fixed;
-    top: max(calc(env(safe-area-inset-top) + 32px), 38px);
+    position: absolute;
+    top: max(calc(env(safe-area-inset-top) + 22px), 26px);
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 24px);
@@ -485,8 +485,7 @@ body.dark-mode #map [class*="ground-pane"] {
     border-radius: 9999px;
     border: 1px solid var(--glass-border);
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
-    z-index: 2000;
-    pointer-events: auto;
+    z-index: 500;
 }
 
 .toggle-all-btn {
@@ -526,12 +525,12 @@ body.dark-mode #map [class*="ground-pane"] {
 .cat-chip.active { background: var(--accent-btn); color: var(--accent-btn-text); border-color: var(--accent-btn); }
 .cat-chip.disabled { opacity: 0.45; background: var(--card-sub-bg); color: var(--text-muted); }
 
-/* Плавающие кнопки интерфейса */
+/* Кнопки метро и темы */
 .metro-floating-btn {
-    position: fixed;
-    top: max(calc(env(safe-area-inset-top) + 90px), 96px);
+    position: absolute;
+    top: max(calc(env(safe-area-inset-top) + 78px), 82px);
     left: max(calc(env(safe-area-inset-left) + 16px), 16px);
-    z-index: 2000;
+    z-index: 500;
     background: var(--glass-bg);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
@@ -546,7 +545,6 @@ body.dark-mode #map [class*="ground-pane"] {
     font-size: 0.82rem;
     font-weight: 600;
     color: var(--text-main);
-    pointer-events: auto;
     transition: all 0.2s ease;
 }
 .metro-floating-btn.active {
@@ -559,10 +557,10 @@ body.dark-mode #map [class*="ground-pane"] {
 .metro-floating-btn.active .metro-badge-dot { display: inline-block; }
 
 .theme-toggle-floating-btn {
-    position: fixed;
-    top: max(calc(env(safe-area-inset-top) + 90px), 96px);
+    position: absolute;
+    top: max(calc(env(safe-area-inset-top) + 78px), 82px);
     right: max(calc(env(safe-area-inset-right) + 16px), 16px);
-    z-index: 2000;
+    z-index: 500;
     background: var(--glass-bg);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
@@ -577,16 +575,15 @@ body.dark-mode #map [class*="ground-pane"] {
     cursor: pointer;
     font-size: 1.15rem;
     color: var(--text-main);
-    pointer-events: auto;
     transition: transform 0.15s ease;
 }
 .theme-toggle-floating-btn:active { transform: scale(0.92); }
 
 .custom-geoloc-btn {
-    position: fixed;
+    position: absolute;
     bottom: max(calc(env(safe-area-inset-bottom) + 82px), 88px);
     right: max(calc(env(safe-area-inset-right) + 16px), 16px);
-    z-index: 2000;
+    z-index: 500;
     background: var(--glass-bg);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
@@ -600,7 +597,6 @@ body.dark-mode #map [class*="ground-pane"] {
     box-shadow: 0 6px 20px rgba(0,0,0,0.12);
     cursor: pointer;
     color: var(--text-main);
-    pointer-events: auto;
     transition: transform 0.15s ease, color 0.15s ease;
 }
 .custom-geoloc-btn:active { transform: scale(0.92); }
@@ -621,7 +617,6 @@ body.dark-mode #map [class*="ground-pane"] {
     display: none;
     align-items: flex-start;
     justify-content: flex-start;
-    pointer-events: auto;
 }
 .metro-sidebar-overlay.active { display: flex; }
 
@@ -766,7 +761,6 @@ body.dark-mode #map [class*="ground-pane"] {
     align-items: center;
     backdrop-filter: blur(8px);
     touch-action: none;
-    pointer-events: auto;
 }
 .lightbox-modal.active { display: flex; }
 .lightbox-img { 
@@ -785,11 +779,11 @@ body.dark-mode #map [class*="ground-pane"] {
 .mobile-toggle-bar { display: none; }
 .mobile-search-overlay {
     display: none;
-    position: fixed;
+    position: absolute;
     left: 16px;
     right: 16px;
     bottom: calc(env(safe-area-inset-bottom) + 84px);
-    z-index: 2001;
+    z-index: 600;
     background: var(--glass-bg);
     backdrop-filter: blur(20px);
     border-radius: 16px;
@@ -798,7 +792,6 @@ body.dark-mode #map [class*="ground-pane"] {
     border: 1px solid var(--glass-border);
     align-items: center;
     gap: 8px;
-    pointer-events: auto;
 }
 .mobile-search-overlay.active { display: flex; }
 .mobile-search-input { flex: 1; border: none; background: transparent; font-size: 16px; outline: none; color: var(--text-main); padding-left: 4px; }
@@ -813,7 +806,7 @@ body.dark-mode #map [class*="ground-pane"] {
     }
     
     #map-container {
-        position: fixed !important;
+        position: absolute !important;
         inset: 0 !important;
         width: 100% !important;
         height: 100% !important;
@@ -838,12 +831,12 @@ body.dark-mode #map [class*="ground-pane"] {
 
     .metro-floating-btn {
         left: 12px;
-        top: max(calc(env(safe-area-inset-top) + 86px), 92px);
+        top: max(calc(env(safe-area-inset-top) + 74px), 78px);
     }
 
     .theme-toggle-floating-btn {
         right: 12px;
-        top: max(calc(env(safe-area-inset-top) + 86px), 92px);
+        top: max(calc(env(safe-area-inset-top) + 74px), 78px);
     }
 
     .custom-geoloc-btn {
@@ -853,7 +846,7 @@ body.dark-mode #map [class*="ground-pane"] {
 
     .mobile-toggle-bar {
         display: flex;
-        position: fixed;
+        position: absolute;
         bottom: max(calc(env(safe-area-inset-bottom) + 16px), 22px);
         left: 50%;
         transform: translateX(-50%);
@@ -864,10 +857,9 @@ body.dark-mode #map [class*="ground-pane"] {
         border-radius: 9999px;
         border: 1px solid var(--glass-border);
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12);
-        z-index: 2000;
+        z-index: 500;
         gap: 4px;
         align-items: center;
-        pointer-events: auto;
     }
     .toggle-btn {
         padding: 9px 18px;
