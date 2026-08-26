@@ -467,10 +467,10 @@ body.dark-mode #map [class*="ground-pane"] {
 .balloon-photos { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; padding-bottom: 2px; }
 .balloon-photo-img { height: 65px; width: auto; border-radius: 6px; cursor: pointer; object-fit: cover; border: 1px solid rgba(0,0,0,0.08); flex-shrink: 0; }
 
-/* Верхний фильтр категорий — опущен ниже под Dynamic Island */
+/* Верхний фильтр категорий */
 .top-cat-filter-bar {
     position: fixed;
-    top: max(calc(env(safe-area-inset-top) + 26px), 32px);
+    top: max(calc(env(safe-area-inset-top) + 32px), 38px);
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 24px);
@@ -485,7 +485,8 @@ body.dark-mode #map [class*="ground-pane"] {
     border-radius: 9999px;
     border: 1px solid var(--glass-border);
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
-    z-index: 1000;
+    z-index: 2000;
+    pointer-events: auto;
 }
 
 .toggle-all-btn {
@@ -525,12 +526,12 @@ body.dark-mode #map [class*="ground-pane"] {
 .cat-chip.active { background: var(--accent-btn); color: var(--accent-btn-text); border-color: var(--accent-btn); }
 .cat-chip.disabled { opacity: 0.45; background: var(--card-sub-bg); color: var(--text-muted); }
 
-/* Кнопки метро и темы опущены ниже */
+/* Плавающие кнопки интерфейса */
 .metro-floating-btn {
     position: fixed;
-    top: max(calc(env(safe-area-inset-top) + 84px), 90px);
+    top: max(calc(env(safe-area-inset-top) + 90px), 96px);
     left: max(calc(env(safe-area-inset-left) + 16px), 16px);
-    z-index: 1000;
+    z-index: 2000;
     background: var(--glass-bg);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
@@ -545,6 +546,7 @@ body.dark-mode #map [class*="ground-pane"] {
     font-size: 0.82rem;
     font-weight: 600;
     color: var(--text-main);
+    pointer-events: auto;
     transition: all 0.2s ease;
 }
 .metro-floating-btn.active {
@@ -558,9 +560,9 @@ body.dark-mode #map [class*="ground-pane"] {
 
 .theme-toggle-floating-btn {
     position: fixed;
-    top: max(calc(env(safe-area-inset-top) + 84px), 90px);
+    top: max(calc(env(safe-area-inset-top) + 90px), 96px);
     right: max(calc(env(safe-area-inset-right) + 16px), 16px);
-    z-index: 1000;
+    z-index: 2000;
     background: var(--glass-bg);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
@@ -575,6 +577,7 @@ body.dark-mode #map [class*="ground-pane"] {
     cursor: pointer;
     font-size: 1.15rem;
     color: var(--text-main);
+    pointer-events: auto;
     transition: transform 0.15s ease;
 }
 .theme-toggle-floating-btn:active { transform: scale(0.92); }
@@ -583,7 +586,7 @@ body.dark-mode #map [class*="ground-pane"] {
     position: fixed;
     bottom: max(calc(env(safe-area-inset-bottom) + 82px), 88px);
     right: max(calc(env(safe-area-inset-right) + 16px), 16px);
-    z-index: 1000;
+    z-index: 2000;
     background: var(--glass-bg);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
@@ -597,6 +600,7 @@ body.dark-mode #map [class*="ground-pane"] {
     box-shadow: 0 6px 20px rgba(0,0,0,0.12);
     cursor: pointer;
     color: var(--text-main);
+    pointer-events: auto;
     transition: transform 0.15s ease, color 0.15s ease;
 }
 .custom-geoloc-btn:active { transform: scale(0.92); }
@@ -613,10 +617,11 @@ body.dark-mode #map [class*="ground-pane"] {
     inset: 0;
     background: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(4px);
-    z-index: 2000;
+    z-index: 3000;
     display: none;
     align-items: flex-start;
     justify-content: flex-start;
+    pointer-events: auto;
 }
 .metro-sidebar-overlay.active { display: flex; }
 
@@ -761,6 +766,7 @@ body.dark-mode #map [class*="ground-pane"] {
     align-items: center;
     backdrop-filter: blur(8px);
     touch-action: none;
+    pointer-events: auto;
 }
 .lightbox-modal.active { display: flex; }
 .lightbox-img { 
@@ -783,7 +789,7 @@ body.dark-mode #map [class*="ground-pane"] {
     left: 16px;
     right: 16px;
     bottom: calc(env(safe-area-inset-bottom) + 84px);
-    z-index: 1001;
+    z-index: 2001;
     background: var(--glass-bg);
     backdrop-filter: blur(20px);
     border-radius: 16px;
@@ -792,6 +798,7 @@ body.dark-mode #map [class*="ground-pane"] {
     border: 1px solid var(--glass-border);
     align-items: center;
     gap: 8px;
+    pointer-events: auto;
 }
 .mobile-search-overlay.active { display: flex; }
 .mobile-search-input { flex: 1; border: none; background: transparent; font-size: 16px; outline: none; color: var(--text-main); padding-left: 4px; }
@@ -831,12 +838,12 @@ body.dark-mode #map [class*="ground-pane"] {
 
     .metro-floating-btn {
         left: 12px;
-        top: max(calc(env(safe-area-inset-top) + 80px), 86px);
+        top: max(calc(env(safe-area-inset-top) + 86px), 92px);
     }
 
     .theme-toggle-floating-btn {
         right: 12px;
-        top: max(calc(env(safe-area-inset-top) + 80px), 86px);
+        top: max(calc(env(safe-area-inset-top) + 86px), 92px);
     }
 
     .custom-geoloc-btn {
@@ -857,9 +864,10 @@ body.dark-mode #map [class*="ground-pane"] {
         border-radius: 9999px;
         border: 1px solid var(--glass-border);
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12);
-        z-index: 1000;
+        z-index: 2000;
         gap: 4px;
         align-items: center;
+        pointer-events: auto;
     }
     .toggle-btn {
         padding: 9px 18px;
