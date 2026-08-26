@@ -6,16 +6,17 @@
     
     <meta id="themeColorMeta" name="theme-color" content="#f4f3f0">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="@dalazareva локации📍">
     <meta name="mobile-web-app-capable" content="yes">
     <link rel="manifest" href="manifest.json">
     
     <title>@dalazareva локации📍</title>
     
-    <link rel="icon" type="image/png" href="apple-touch-icon.png">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" href="apple-touch-icon.png?v=3">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=3">
+    <link rel="apple-touch-icon-precomposed" href="apple-touch-icon.png?v=3">
     <link rel="stylesheet" href="style.css">
     
     <!-- SDK и внешние библиотеки -->
@@ -779,13 +780,7 @@
             if (callback) callback();
         }
 
-        function escapeQuotes(str) { 
-            return (str || '')
-                .replace(/\\/g, '\\\\')
-                .replace(/'/g, "\\'")
-                .replace(/"/g, '&quot;')
-                .replace(/\r?\n/g, ' '); 
-        }
+        function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
 
         function renderMetroBadges(metroList) {
             if (!metroList || !Array.isArray(metroList) || metroList.length === 0) return '';
