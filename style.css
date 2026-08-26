@@ -4,6 +4,7 @@
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 :root {
@@ -33,25 +34,30 @@ body.dark-mode {
 }
 
 html, body {
-    width: 100vw;
+    width: 100%;
     height: 100%;
-    height: 100dvh;
     margin: 0;
     padding: 0;
     background-color: var(--bg-main);
     color: var(--text-main);
-    -webkit-text-size-adjust: 100%;
     overflow: hidden;
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior: none;
 }
 
 #app-wrapper {
-    position: fixed;
-    inset: 0;
-    width: 100vw;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
     height: 100%;
-    height: 100dvh;
     display: none;
     background: var(--bg-main);
     overflow: hidden;
@@ -63,7 +69,10 @@ body.dark-mode #map [class*="ground-pane"] {
 
 #authGate {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     width: 100%;
     height: 100%;
     background: #0f172a;
@@ -360,9 +369,9 @@ body.dark-mode #map [class*="ground-pane"] {
     align-items: center; 
     justify-content: center; 
     gap: 5px; 
-    padding: 8px 10px; 
+    padding: 6px 10px; 
     font-size: 0.78rem; 
-    font-weight: 600; 
+    font-weight: 500; 
     border-radius: 8px; 
     text-decoration: none; 
     cursor: pointer; 
@@ -454,13 +463,13 @@ body.dark-mode #map [class*="ground-pane"] {
 }
 
 /* Балун */
-.balloon-wrapper { min-width: 220px; max-width: 280px; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif; color: #1e293b; }
-.balloon-title { font-size: 1rem; font-weight: 700; color: #0f172a; line-height: 1.25; margin-bottom: 8px; }
+.balloon-wrapper { min-width: 210px; max-width: 260px; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif; color: #1e293b; }
+.balloon-title { font-size: 0.95rem; font-weight: 700; color: #0f172a; line-height: 1.25; margin-bottom: 8px; }
 .balloon-address-block { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; width: 100%; }
 .balloon-address { font-size: 0.78rem; color: #475569; background: #f1f5f9; padding: 6px 8px; border-radius: 6px; line-height: 1.35; word-break: break-word; border: 1px solid #e2e8f0; width: 100%; }
 .balloon-metro-block { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
 .balloon-actions-row { display: flex; gap: 6px; width: 100%; }
-.balloon-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 8px 8px; font-size: 0.75rem; font-weight: 600; border-radius: 6px; text-decoration: none; cursor: pointer; text-align: center; }
+.balloon-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 8px; font-size: 0.75rem; font-weight: 600; border-radius: 6px; text-decoration: none; cursor: pointer; text-align: center; }
 .balloon-copy-btn { background: #ffffff; border: 1px solid #cbd5e1; color: #334155; }
 .balloon-route-btn { background: #0f172a; border: 1px solid #0f172a; color: #ffffff; }
 .balloon-desc { font-size: 0.82rem; color: #334155; line-height: 1.4; margin-top: 8px; margin-bottom: 8px; white-space: pre-line; border-top: 1px solid #f1f5f9; padding-top: 6px; }
@@ -469,8 +478,8 @@ body.dark-mode #map [class*="ground-pane"] {
 
 /* Верхний фильтр категорий */
 .top-cat-filter-bar {
-    position: absolute;
-    top: max(calc(env(safe-area-inset-top) + 22px), 26px);
+    position: fixed;
+    top: max(calc(env(safe-area-inset-top) + 16px), 20px);
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 24px);
@@ -480,12 +489,12 @@ body.dark-mode #map [class*="ground-pane"] {
     gap: 6px;
     padding: 6px 8px;
     background: var(--glass-bg);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border-radius: 9999px;
     border: 1px solid var(--glass-border);
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
-    z-index: 500;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    z-index: 1000;
 }
 
 .toggle-all-btn {
@@ -525,12 +534,12 @@ body.dark-mode #map [class*="ground-pane"] {
 .cat-chip.active { background: var(--accent-btn); color: var(--accent-btn-text); border-color: var(--accent-btn); }
 .cat-chip.disabled { opacity: 0.45; background: var(--card-sub-bg); color: var(--text-muted); }
 
-/* Кнопки метро и темы */
+/* Кнопка метро */
 .metro-floating-btn {
-    position: absolute;
-    top: max(calc(env(safe-area-inset-top) + 78px), 82px);
+    position: fixed;
+    top: max(calc(env(safe-area-inset-top) + 68px), 72px);
     left: max(calc(env(safe-area-inset-left) + 16px), 16px);
-    z-index: 500;
+    z-index: 1000;
     background: var(--glass-bg);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
@@ -556,11 +565,12 @@ body.dark-mode #map [class*="ground-pane"] {
 }
 .metro-floating-btn.active .metro-badge-dot { display: inline-block; }
 
+/* Кнопка переключения темы */
 .theme-toggle-floating-btn {
-    position: absolute;
-    top: max(calc(env(safe-area-inset-top) + 78px), 82px);
+    position: fixed;
+    top: max(calc(env(safe-area-inset-top) + 68px), 72px);
     right: max(calc(env(safe-area-inset-right) + 16px), 16px);
-    z-index: 500;
+    z-index: 1000;
     background: var(--glass-bg);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
@@ -579,11 +589,12 @@ body.dark-mode #map [class*="ground-pane"] {
 }
 .theme-toggle-floating-btn:active { transform: scale(0.92); }
 
+/* Кастомная кнопка геолокации */
 .custom-geoloc-btn {
-    position: absolute;
-    bottom: max(calc(env(safe-area-inset-bottom) + 82px), 88px);
+    position: fixed;
+    bottom: max(calc(env(safe-area-inset-bottom) + 78px), 82px);
     right: max(calc(env(safe-area-inset-right) + 16px), 16px);
-    z-index: 500;
+    z-index: 1000;
     background: var(--glass-bg);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
@@ -608,12 +619,16 @@ body.dark-mode #map [class*="ground-pane"] {
     100% { transform: rotate(360deg); }
 }
 
+/* Боковое меню метро */
 .metro-sidebar-overlay {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(4px);
-    z-index: 3000;
+    z-index: 2000;
     display: none;
     align-items: flex-start;
     justify-content: flex-start;
@@ -628,8 +643,8 @@ body.dark-mode #map [class*="ground-pane"] {
     display: flex;
     flex-direction: column;
     box-shadow: 10px 0 25px rgba(0,0,0,0.15);
-    padding-top: max(calc(env(safe-area-inset-top) + 16px), 24px);
-    padding-bottom: max(calc(env(safe-area-inset-bottom) + 16px), 24px);
+    padding-top: max(calc(env(safe-area-inset-top) + 10px), 16px);
+    padding-bottom: max(calc(env(safe-area-inset-bottom) + 10px), 16px);
     animation: slideIn 0.25s ease-out;
 }
 @keyframes slideIn {
@@ -752,7 +767,10 @@ body.dark-mode #map [class*="ground-pane"] {
 .lightbox-modal {
     display: none;
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.94);
@@ -764,14 +782,14 @@ body.dark-mode #map [class*="ground-pane"] {
 }
 .lightbox-modal.active { display: flex; }
 .lightbox-img { 
-    width: 92vw; 
-    height: auto; 
-    max-height: 82vh; 
+    width: 92vw;
+    height: auto;
+    max-height: 85vh; 
     object-fit: contain; 
     border-radius: 8px; 
     user-select: none; 
 }
-.lightbox-close { position: absolute; top: max(calc(env(safe-area-inset-top) + 16px), 24px); right: 20px; color: #ffffff; font-size: 32px; cursor: pointer; padding: 10px; z-index: 10001; }
+.lightbox-close { position: absolute; top: max(calc(env(safe-area-inset-top) + 12px), 20px); right: 20px; color: #ffffff; font-size: 32px; cursor: pointer; padding: 10px; z-index: 10001; }
 .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); color: #ffffff; font-size: 36px; cursor: pointer; padding: 16px; opacity: 0.7; z-index: 10001; user-select: none; }
 .lightbox-prev { left: 10px; } .lightbox-next { right: 10px; }
 .lightbox-counter { position: absolute; bottom: max(calc(env(safe-area-inset-bottom) + 16px), 24px); color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; }
@@ -779,11 +797,11 @@ body.dark-mode #map [class*="ground-pane"] {
 .mobile-toggle-bar { display: none; }
 .mobile-search-overlay {
     display: none;
-    position: absolute;
+    position: fixed;
     left: 16px;
     right: 16px;
     bottom: calc(env(safe-area-inset-bottom) + 84px);
-    z-index: 600;
+    z-index: 1001;
     background: var(--glass-bg);
     backdrop-filter: blur(20px);
     border-radius: 16px;
@@ -807,7 +825,10 @@ body.dark-mode #map [class*="ground-pane"] {
     
     #map-container {
         position: absolute !important;
-        inset: 0 !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
         width: 100% !important;
         height: 100% !important;
         z-index: 1 !important;
@@ -831,23 +852,23 @@ body.dark-mode #map [class*="ground-pane"] {
 
     .metro-floating-btn {
         left: 12px;
-        top: max(calc(env(safe-area-inset-top) + 74px), 78px);
+        top: max(calc(env(safe-area-inset-top) + 68px), 72px);
     }
 
     .theme-toggle-floating-btn {
         right: 12px;
-        top: max(calc(env(safe-area-inset-top) + 74px), 78px);
+        top: max(calc(env(safe-area-inset-top) + 68px), 72px);
     }
 
     .custom-geoloc-btn {
         right: 12px;
-        bottom: max(calc(env(safe-area-inset-bottom) + 82px), 88px);
+        bottom: max(calc(env(safe-area-inset-bottom) + 78px), 82px);
     }
 
     .mobile-toggle-bar {
         display: flex;
-        position: absolute;
-        bottom: max(calc(env(safe-area-inset-bottom) + 16px), 22px);
+        position: fixed;
+        bottom: max(calc(env(safe-area-inset-bottom) + 14px), 20px);
         left: 50%;
         transform: translateX(-50%);
         background: var(--glass-bg);
@@ -857,7 +878,7 @@ body.dark-mode #map [class*="ground-pane"] {
         border-radius: 9999px;
         border: 1px solid var(--glass-border);
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12);
-        z-index: 500;
+        z-index: 1000;
         gap: 4px;
         align-items: center;
     }
