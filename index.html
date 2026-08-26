@@ -13,9 +13,9 @@
     <title>@dalazareva локации📍</title>
     
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-    <link rel="icon" type="image/png" href="apple-touch-icon.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+    <link rel="icon" type="image/png" href="/apple-touch-icon.png?v=2">
     <link rel="stylesheet" href="style.css">
     
     <!-- SDK и библиотеки -->
@@ -193,7 +193,7 @@
             username: "",
             access_token: "",
             devices: [],
-            max_devices: 2,
+            max_devices: 3,
             plan: "free"
         };
 
@@ -312,7 +312,7 @@
         async function verifyAndRegisterDevice(userProfile) {
             const currentDeviceId = getOrCreateDeviceId();
             let devices = userProfile.devices || [];
-            const maxDevices = userProfile.max_devices || 2;
+            const maxDevices = userProfile.max_devices || 3;
 
             if (devices.includes(currentDeviceId)) return true;
 
@@ -774,7 +774,13 @@
             if (callback) callback();
         }
 
-        function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+        function escapeQuotes(str) { 
+            return (str || '')
+                .replace(/\\/g, '\\\\')
+                .replace(/'/g, "\\'")
+                .replace(/"/g, '&quot;')
+                .replace(/\r?\n/g, ' '); 
+        }
 
         function renderMetroBadges(metroList) {
             if (!metroList || !Array.isArray(metroList) || metroList.length === 0) return '';
