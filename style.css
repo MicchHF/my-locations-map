@@ -32,58 +32,37 @@ body.dark-mode {
     --card-sub-bg: #1e293b;
 }
 
-/* Базовый viewport. На iOS используем динамическую высоту dvh,
-   которая корректно учитывает раскрытие/скрытие панелей Safari. */
-html {
-    width: 100%;
-    min-height: 100%;
-    margin: 0;
-    padding: 0;
-    background-color: var(--bg-main);
-    -webkit-text-size-adjust: 100%;
-}
-
-body {
-    width: 100%;
-    min-height: 100dvh;
+html, body {
+    width: 100vw;
+    height: 100%;
+    height: 100dvh;
     margin: 0;
     padding: 0;
     background-color: var(--bg-main);
     color: var(--text-main);
+    -webkit-text-size-adjust: 100%;
     overflow: hidden;
-    overscroll-behavior: none;
-    -webkit-overflow-scrolling: touch;
+    position: fixed;
+    inset: 0;
 }
 
-@supports not (height: 100dvh) {
-    body { min-height: 100vh; }
-}
-
-/* Область приложения всегда совпадает с актуальным viewport. */
 #app-wrapper {
     position: fixed;
     inset: 0;
-    width: 100%;
+    width: 100vw;
+    height: 100%;
     height: 100dvh;
-    min-height: 100dvh;
+    display: none;
+    background: var(--bg-main);
 }
 
-@supports not (height: 100dvh) {
-    #app-wrapper { height: 100vh; min-height: 100vh; }
-}
-
-/* Тёмная тема для подложки Яндекс.Карт */
 body.dark-mode #map [class*="ground-pane"] {
     filter: invert(90%) hue-rotate(180deg) brightness(90%) contrast(110%) saturate(80%);
 }
 
-/* Экран блокировки */
 #authGate {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     width: 100%;
     height: 100%;
     background: #0f172a;
@@ -191,13 +170,6 @@ body.dark-mode #map [class*="ground-pane"] {
     background: #e2e8f0;
 }
 
-/* Главный контейнер приложения */
-#app-wrapper {
-    display: none;
-    background: var(--bg-main);
-}
-
-/* Боковая панель */
 #sidebar { 
     width: 390px; 
     height: 100%;
@@ -212,7 +184,7 @@ body.dark-mode #map [class*="ground-pane"] {
 }
 
 .sidebar-header { 
-    padding: max(calc(env(safe-area-inset-top) + 12px), 16px) 16px 12px 16px; 
+    padding: max(calc(env(safe-area-inset-top) + 16px), 20px) 16px 12px 16px; 
     background: var(--bg-card); 
     border-bottom: 1px solid var(--border-color); 
 }
@@ -281,7 +253,6 @@ body.dark-mode #map [class*="ground-pane"] {
     pointer-events: none; 
 }
 
-/* Полоса категорий в сайдбаре */
 .sidebar-cat-scroll-wrap {
     display: flex;
     align-items: center;
@@ -349,7 +320,7 @@ body.dark-mode #map [class*="ground-pane"] {
     cursor: pointer;
 }
 .location-card.active { border-color: var(--accent-btn); background-color: var(--card-sub-bg); }
-.card-title { font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 8px; line-height: 1.3; }
+.card-title { font-size: 1rem; font-weight: 600; color: var(--text-main); line-height: 1.3; }
 .card-address-block { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; width: 100%; }
 .card-address {
     display: flex; 
@@ -449,7 +420,6 @@ body.dark-mode #map [class*="ground-pane"] {
 }
 .custom-map-pin:hover { transform: scale(1.1); }
 
-/* Кастомный пин геолокации */
 .user-loc-pin-wrap {
     position: relative;
     width: 24px;
@@ -497,10 +467,10 @@ body.dark-mode #map [class*="ground-pane"] {
 .balloon-photos { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; padding-bottom: 2px; }
 .balloon-photo-img { height: 65px; width: auto; border-radius: 6px; cursor: pointer; object-fit: cover; border: 1px solid rgba(0,0,0,0.08); flex-shrink: 0; }
 
-/* Фильтр категорий */
+/* Верхний фильтр категорий (смещен ниже под Dynamic Island) */
 .top-cat-filter-bar {
     position: fixed;
-    top: max(calc(env(safe-area-inset-top) + 8px), 12px);
+    top: max(calc(env(safe-area-inset-top) + 16px), 20px);
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 24px);
@@ -510,11 +480,11 @@ body.dark-mode #map [class*="ground-pane"] {
     gap: 6px;
     padding: 6px 8px;
     background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
     border-radius: 9999px;
     border: 1px solid var(--glass-border);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.09);
     z-index: 1000;
 }
 
@@ -555,10 +525,10 @@ body.dark-mode #map [class*="ground-pane"] {
 .cat-chip.active { background: var(--accent-btn); color: var(--accent-btn-text); border-color: var(--accent-btn); }
 .cat-chip.disabled { opacity: 0.45; background: var(--card-sub-bg); color: var(--text-muted); }
 
-/* Кнопка метро */
+/* Кнопки на карте под новым смещенным баром */
 .metro-floating-btn {
     position: fixed;
-    top: max(calc(env(safe-area-inset-top) + 64px), 68px);
+    top: max(calc(env(safe-area-inset-top) + 72px), 76px);
     left: max(calc(env(safe-area-inset-left) + 16px), 16px);
     z-index: 1000;
     background: var(--glass-bg);
@@ -586,10 +556,9 @@ body.dark-mode #map [class*="ground-pane"] {
 }
 .metro-floating-btn.active .metro-badge-dot { display: inline-block; }
 
-/* Кнопка переключения темы */
 .theme-toggle-floating-btn {
     position: fixed;
-    top: max(calc(env(safe-area-inset-top) + 64px), 68px);
+    top: max(calc(env(safe-area-inset-top) + 72px), 76px);
     right: max(calc(env(safe-area-inset-right) + 16px), 16px);
     z-index: 1000;
     background: var(--glass-bg);
@@ -610,7 +579,6 @@ body.dark-mode #map [class*="ground-pane"] {
 }
 .theme-toggle-floating-btn:active { transform: scale(0.92); }
 
-/* Кастомная кнопка геолокации */
 .custom-geoloc-btn {
     position: fixed;
     bottom: max(calc(env(safe-area-inset-bottom) + 78px), 82px);
@@ -640,13 +608,9 @@ body.dark-mode #map [class*="ground-pane"] {
     100% { transform: rotate(360deg); }
 }
 
-/* Боковое меню метро */
 .metro-sidebar-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(4px);
     z-index: 2000;
@@ -664,8 +628,8 @@ body.dark-mode #map [class*="ground-pane"] {
     display: flex;
     flex-direction: column;
     box-shadow: 10px 0 25px rgba(0,0,0,0.15);
-    padding-top: max(calc(env(safe-area-inset-top) + 10px), 16px);
-    padding-bottom: max(calc(env(safe-area-inset-bottom) + 10px), 16px);
+    padding-top: max(calc(env(safe-area-inset-top) + 14px), 20px);
+    padding-bottom: max(calc(env(safe-area-inset-bottom) + 14px), 20px);
     animation: slideIn 0.25s ease-out;
 }
 @keyframes slideIn {
@@ -784,14 +748,11 @@ body.dark-mode #map [class*="ground-pane"] {
     margin-top: auto;
 }
 
-/* Lightbox */
+/* Растягивание фото на полный экран в Lightbox */
 .lightbox-modal {
     display: none;
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.94);
@@ -802,7 +763,14 @@ body.dark-mode #map [class*="ground-pane"] {
     touch-action: none;
 }
 .lightbox-modal.active { display: flex; }
-.lightbox-img { max-width: 92vw; max-height: 85vh; object-fit: contain; border-radius: 8px; user-select: none; }
+.lightbox-img { 
+    width: 92vw; 
+    height: auto; 
+    max-height: 82vh; 
+    object-fit: contain; 
+    border-radius: 8px; 
+    user-select: none; 
+}
 .lightbox-close { position: absolute; top: max(calc(env(safe-area-inset-top) + 12px), 20px); right: 20px; color: #ffffff; font-size: 32px; cursor: pointer; padding: 10px; z-index: 10001; }
 .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); color: #ffffff; font-size: 36px; cursor: pointer; padding: 16px; opacity: 0.7; z-index: 10001; user-select: none; }
 .lightbox-prev { left: 10px; } .lightbox-next { right: 10px; }
@@ -829,17 +797,11 @@ body.dark-mode #map [class*="ground-pane"] {
 .mobile-search-input { flex: 1; border: none; background: transparent; font-size: 16px; outline: none; color: var(--text-main); padding-left: 4px; }
 .mobile-search-close { background: none; border: none; font-size: 1.1rem; color: var(--text-muted); cursor: pointer; padding: 4px 8px; }
 
-/* Мобильная адаптация: растяжка карты на 100% экрана под системные панели */
+/* Мобильная адаптация */
 @media (max-width: 768px) {
-    #app-wrapper {
-        height: 100dvh !important;
-        min-height: 100dvh !important;
-    }
-
     #sidebar { 
         width: 100%; 
-        height: 100dvh; 
-        min-height: 100dvh;
+        height: 100%; 
         display: none; 
     }
     
@@ -847,15 +809,13 @@ body.dark-mode #map [class*="ground-pane"] {
         position: fixed !important;
         inset: 0 !important;
         width: 100% !important;
-        height: 100dvh !important;
-        min-height: 100dvh !important;
+        height: 100% !important;
         z-index: 1 !important;
         background-color: var(--bg-main) !important;
     }
     #map {
         width: 100% !important;
         height: 100% !important;
-        min-height: 100% !important;
         background-color: var(--bg-main) !important;
     }
 
@@ -871,12 +831,12 @@ body.dark-mode #map [class*="ground-pane"] {
 
     .metro-floating-btn {
         left: 12px;
-        top: max(calc(env(safe-area-inset-top) + 60px), 64px);
+        top: max(calc(env(safe-area-inset-top) + 68px), 72px);
     }
 
     .theme-toggle-floating-btn {
         right: 12px;
-        top: max(calc(env(safe-area-inset-top) + 60px), 64px);
+        top: max(calc(env(safe-area-inset-top) + 68px), 72px);
     }
 
     .custom-geoloc-btn {
