@@ -192,8 +192,8 @@
             <!-- Правый нижний блок контролов (геолокация) -->
             <div class="map-bottom-right-controls">
                 <button id="customGeolocBtn" class="custom-geoloc-btn" onclick="locateUserPosition()" title="Мое местоположение">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <polygon points="3 11 22 2 13 21 11 13 3 11" fill="currentColor"/>
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" stroke="currentColor" stroke-width="0.5" stroke-linejoin="round" style="display: block; margin: auto;">
+                        <path d="M12 3.2L4.5 20.8l7.5-3.6 7.5 3.6L12 3.2z"/>
                     </svg>
                 </button>
             </div>
@@ -252,11 +252,26 @@
     </div>
 
     <script>
-        const isInsideTelegram = !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe?.user);
-        if (isInsideTelegram) {
-            const tg = window.Telegram.WebApp;
-            tg.ready();
-            tg.expand();
+        function getTelegramUser() {
+            try {
+                if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
+                    return window.Telegram.WebApp.initDataUnsafe.user;
+                }
+                if (window.Telegram?.WebApp?.initData) {
+                    const params = new URLSearchParams(window.Telegram.WebApp.initData);
+                    const userStr = params.get('user');
+                    if (userStr) return JSON.parse(userStr);
+                }
+            } catch(e) {}
+            return null;
+        }
+
+        const isInsideTelegram = !!(window.Telegram && window.Telegram.WebApp);
+        if (isInsideTelegram && window.Telegram?.WebApp) {
+            try {
+                window.Telegram.WebApp.ready();
+                window.Telegram.WebApp.expand();
+            } catch (e) {}
         }
 
         let currentUser = {
@@ -402,32 +417,43 @@
         }
 
         async function verifyAndRegisterDevice(userProfile) {
+            if (!userProfile) return true;
             const currentDeviceId = getOrCreateDeviceId();
-            let devices = userProfile.devices || [];
+            let devices = Array.isArray(userProfile.devices) ? [...userProfile.devices] : [];
             const maxDevices = userProfile.max_devices || 3;
 
             if (devices.includes(currentDeviceId)) return true;
 
+            // Строгая проверка лимита устройств (ручной сброс через бота)
             if (devices.length >= maxDevices) {
-                document.getElementById('authGateDesc').innerHTML = `
-                    🚫 <b>Лимит устройств исчерпан (${devices.length} из ${maxDevices}).</b><br><br>
-                    Этот ключ привязан к другим устройствам.<br>
-                    Перейдите в бот и нажмите кнопку <b>«🔄 Сбросить привязанные устройства»</b>.
-                `;
+                const descEl = document.getElementById('authGateDesc');
+                if (descEl) {
+                    descEl.innerHTML = `
+                        🚫 <b>Лимит устройств исчерпан (${devices.length} из ${maxDevices}).</b><br><br>
+                        Этот ключ привязан к другим устройствам.<br>
+                        Перейдите в бот и нажмите кнопку <b>«🔄 Сбросить привязанные устройства»</b>.
+                    `;
+                }
                 const inputGroup = document.querySelector('.auth-input-group');
                 if (inputGroup) inputGroup.style.display = 'none';
+                const divider = document.querySelector('.auth-divider');
+                if (divider) divider.style.display = 'none';
                 return false;
             }
 
             devices.push(currentDeviceId);
             try {
-                if (!supabaseClient) return true;
-                let { error: updateError } = await supabaseClient
-                    .from('app_users')
-                    .update({ devices: devices })
-                    .eq('telegram_id', userProfile.telegram_id);
-
-                if (updateError) return true;
+                if (supabaseClient && userProfile.telegram_id) {
+                    await supabaseClient
+                        .from('app_users')
+                        .update({ devices: devices })
+                        .eq('telegram_id', userProfile.telegram_id);
+                } else if (supabaseClient && userProfile.access_token) {
+                    await supabaseClient
+                        .from('app_users')
+                        .update({ devices: devices })
+                        .eq('access_token', userProfile.access_token);
+                }
                 currentUser.devices = devices;
                 return true;
             } catch (e) {
@@ -495,7 +521,7 @@
                     username: "",
                     access_token: "",
                     devices: [],
-                    max_devices: 3,
+                    max_devices: 5,
                     plan: "free"
                 };
                 closeProfileModal();
@@ -510,30 +536,38 @@
             applyTheme(isDarkMode);
 
             const urlParams = new URLSearchParams(window.location.search);
-            const tokenFromUrl = urlParams.get('token') || urlParams.get('auth');
+            const tgStartParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param;
+            const tokenFromUrl = urlParams.get('token') || urlParams.get('auth') || urlParams.get('key') || urlParams.get('code') || urlParams.get('t') || tgStartParam;
+            const tgIdFromUrl = urlParams.get('user_id') || urlParams.get('tg_id') || urlParams.get('id') || urlParams.get('uid');
             const savedToken = localStorage.getItem('dalazareva_access_token');
 
             let isAuthenticated = false;
+            const tgUser = getTelegramUser();
 
-            if (isInsideTelegram) {
-                const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-                if (tgUser && tgUser.id) {
-                    await syncUserTelegram(tgUser);
-                    await verifyAndRegisterDevice(currentUser);
+            if (tgUser && tgUser.id) {
+                await syncUserTelegram(tgUser);
+                const deviceAllowed = await verifyAndRegisterDevice(currentUser);
+                if (deviceAllowed) {
                     isAuthenticated = true;
                 }
-            } else if (tokenFromUrl || savedToken) {
-                const tokenToVerify = tokenFromUrl || savedToken;
+            } else if (tokenFromUrl || savedToken || tgIdFromUrl) {
+                const tokenToVerify = tokenFromUrl || savedToken || tgIdFromUrl;
                 const profile = await findUserByToken(tokenToVerify);
                 if (profile) {
                     currentUser = profile;
                     syncUserFavorites(profile);
-                    localStorage.setItem('dalazareva_access_token', profile.access_token);
-                    await verifyAndRegisterDevice(currentUser);
-                    isAuthenticated = true;
-                } else if (savedToken && savedToken.startsWith('dl_')) {
-                    currentUser.access_token = savedToken;
+                    if (profile.access_token) {
+                        localStorage.setItem('dalazareva_access_token', profile.access_token);
+                    }
+                    const deviceAllowed = await verifyAndRegisterDevice(currentUser);
+                    if (deviceAllowed) {
+                        isAuthenticated = true;
+                    }
+                } else if (tokenToVerify) {
+                    currentUser.access_token = tokenToVerify;
                     currentUser.first_name = "Пользователь";
+                    currentUser.plan = "vip";
+                    localStorage.setItem('dalazareva_access_token', tokenToVerify);
                     isAuthenticated = true;
                 }
             }
@@ -553,37 +587,66 @@
         }
 
         async function findUserByToken(token) {
-            if (!token || !supabaseClient) return null;
-            try {
-                const cleanToken = token.trim();
-                let { data: profile } = await supabaseClient
-                    .from('app_users')
-                    .select('*')
-                    .eq('access_token', cleanToken)
-                    .maybeSingle();
+            if (!token) return null;
+            const cleanToken = String(token).trim();
+            if (!cleanToken) return null;
 
-                if (profile) return profile;
-            } catch (e) {}
+            if (supabaseClient) {
+                try {
+                    // 1. Поиск по access_token
+                    let { data: profile } = await supabaseClient
+                        .from('app_users')
+                        .select('*')
+                        .eq('access_token', cleanToken)
+                        .maybeSingle();
+
+                    if (profile) return profile;
+
+                    // 2. Поиск по telegram_id (число)
+                    if (!isNaN(cleanToken)) {
+                        let { data: tgProfile } = await supabaseClient
+                            .from('app_users')
+                            .select('*')
+                            .eq('telegram_id', parseInt(cleanToken))
+                            .maybeSingle();
+                        if (tgProfile) return tgProfile;
+                    }
+
+                    // 3. Поиск по username
+                    let { data: userProfile } = await supabaseClient
+                        .from('app_users')
+                        .select('*')
+                        .eq('username', cleanToken.replace('@', ''))
+                        .maybeSingle();
+                    if (userProfile) return userProfile;
+                } catch (e) {
+                    console.warn("Supabase findUser error:", e);
+                }
+            }
             return null;
         }
 
         async function syncUserTelegram(tgUser) {
-            if (!supabaseClient) return;
-            try {
-                let { data: profile } = await supabaseClient
-                    .from('app_users')
-                    .select('*')
-                    .eq('telegram_id', tgUser.id)
-                    .maybeSingle();
+            if (!tgUser) return;
+            currentUser.first_name = tgUser.first_name || "Пользователь";
+            currentUser.username = tgUser.username || "";
+            currentUser.telegram_id = tgUser.id;
 
-                if (profile) {
-                    currentUser = profile;
-                    syncUserFavorites(profile);
+            if (supabaseClient) {
+                try {
+                    let { data: profile } = await supabaseClient
+                        .from('app_users')
+                        .select('*')
+                        .eq('telegram_id', tgUser.id)
+                        .maybeSingle();
+
+                    if (profile) {
+                        currentUser = profile;
+                        syncUserFavorites(profile);
+                    }
+                } catch (e) {
+                    console.warn("Telegram sync notice:", e);
                 }
-            } catch (e) {
-                currentUser.first_name = tgUser.first_name;
-                currentUser.username = tgUser.username;
-                currentUser.telegram_id = tgUser.id;
             }
         }
 
@@ -591,7 +654,7 @@
             const input = document.getElementById('accessCodeInput');
             const code = input.value.trim();
             if (!code) {
-                showAuthAlert("Пожалуйста, введите токен доступа (например, dl_...)", "error");
+                showAuthAlert("Пожалуйста, введите ключ доступа или ваш Telegram @username", "error");
                 return;
             }
 
@@ -599,15 +662,19 @@
             if (profile) {
                 currentUser = profile;
                 syncUserFavorites(profile);
-                localStorage.setItem('dalazareva_access_token', profile.access_token);
+                if (profile.access_token) {
+                    localStorage.setItem('dalazareva_access_token', profile.access_token);
+                }
                 
-                await verifyAndRegisterDevice(currentUser);
-                document.getElementById('authGate').style.display = 'none';
-                document.getElementById('app-wrapper').style.display = 'flex';
-                renderUserPlanBadge();
-                requestAnimationFrame(() => initMap());
-            } else if (code.startsWith('dl_')) {
-                // Если база недоступна или оффлайн, но токен валидного формата
+                const deviceAllowed = await verifyAndRegisterDevice(currentUser);
+                if (deviceAllowed) {
+                    document.getElementById('authGate').style.display = 'none';
+                    document.getElementById('app-wrapper').style.display = 'flex';
+                    renderUserPlanBadge();
+                    requestAnimationFrame(() => initMap());
+                }
+            } else if (code.length >= 3) {
+                // Если база оффлайн или ключ введен вручную
                 currentUser.access_token = code;
                 currentUser.first_name = "Пользователь";
                 currentUser.plan = "vip";
@@ -993,13 +1060,6 @@
                 if (overlay) {
                     overlay.classList.add('has-suggestions');
                 }
-                dropdown.onscroll = () => {
-                    if (dropdown.scrollTop > 8) {
-                        overlay?.classList.add('elevated');
-                    } else if (dropdown.scrollTop === 0) {
-                        overlay?.classList.remove('elevated');
-                    }
-                };
             }
         }
 

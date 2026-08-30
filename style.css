@@ -1181,15 +1181,54 @@ body.dark-mode .fav-btn.is-active {
         background-color: var(--bg-main) !important;
     }
 
-    .show-list #map-container { display: none !important; }
-    .show-list #sidebar { display: flex !important; }
-    .show-list .top-cat-filter-bar { display: none !important; }
+    .show-list #map-container { 
+        opacity: 0;
+        pointer-events: none;
+        visibility: hidden;
+    }
+    .show-list #sidebar { 
+        display: flex !important;
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+        animation: listFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .show-list .top-cat-filter-bar { 
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(-50%, -10px);
+    }
     .show-list .metro-active-chip { display: none !important; }
-    .show-list .theme-toggle-floating-btn { display: none !important; }
-    .show-list .map-bottom-right-controls { display: none !important; }
+    .show-list .theme-toggle-floating-btn { 
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(0.8);
+    }
+    .show-list .map-bottom-right-controls { 
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(15px);
+    }
     
-    body:not(.show-list) #sidebar { display: none !important; }
-    body:not(.show-list) #map-container { display: block !important; }
+    body:not(.show-list) #sidebar { 
+        display: none !important; 
+    }
+    body:not(.show-list) #map-container { 
+        opacity: 1;
+        pointer-events: auto;
+        visibility: visible;
+        animation: mapFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes listFadeIn {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes mapFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
 
     .theme-toggle-floating-btn {
         right: 12px;
@@ -1210,12 +1249,12 @@ body.dark-mode .fav-btn.is-active {
         background: var(--glass-bg);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        padding: 4px;
+        padding: 5px;
         border-radius: 9999px;
         border: 1px solid var(--glass-border);
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12);
         z-index: 1000;
-        gap: 4px;
+        gap: 5px;
         align-items: center;
         max-width: 95vw;
     }
@@ -1232,10 +1271,23 @@ body.dark-mode .fav-btn.is-active {
         align-items: center;
         gap: 4px;
         white-space: nowrap;
-        transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .toggle-btn.icon-btn { padding: 8px 10px; font-size: 0.9rem; }
-    .toggle-btn.search-toggle-btn { padding: 8px 10px; font-size: 0.9rem; }
+    .toggle-btn.search-toggle-btn { 
+        padding: 8px 11px; 
+        font-size: 0.92rem;
+        margin-right: 2px;
+        background: var(--card-sub-bg);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .toggle-btn.metro-toggle-btn {
+        margin-left: 2px;
+        background: var(--card-sub-bg);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
     .toggle-btn.active {
         background: var(--accent-btn);
         color: var(--accent-btn-text);
@@ -1244,10 +1296,12 @@ body.dark-mode .fav-btn.is-active {
     .toggle-btn.metro-toggle-btn.active {
         background: var(--accent-btn);
         color: var(--accent-btn-text);
+        border-color: var(--accent-btn);
     }
     .toggle-btn.search-toggle-btn.has-search {
         background: var(--accent-btn);
         color: var(--accent-btn-text);
+        border-color: var(--accent-btn);
     }
     .bottom-filter-reset, .bottom-metro-reset, .bottom-search-reset {
         margin-left: 2px;
