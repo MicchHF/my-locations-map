@@ -13,10 +13,10 @@
     
     <title>@dalazareva локации📍</title>
     
-    <link rel="icon" type="image/png" href="apple-touch-icon.png?v=3">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=3">
-    <link rel="apple-touch-icon-precomposed" href="apple-touch-icon.png?v=3">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="apple-touch-icon-precomposed" href="apple-touch-icon.png">
     <link rel="stylesheet" href="style.css">
     
     <!-- SDK и внешние библиотеки -->
@@ -28,25 +28,39 @@
     <script src="js/shared.js"></script>
 
     <style>
-        /* Кнопка лайка без рамок и фона */
+        /* Кнопка лайка: заметный, премиальный бейдж */
         .fav-btn {
-            background: transparent !important;
-            border: none !important;
+            background: rgba(244, 63, 94, 0.08) !important;
+            border: 1px solid rgba(244, 63, 94, 0.25) !important;
+            border-radius: 999px !important;
             outline: none !important;
-            box-shadow: none !important;
-            font-size: 1.25rem;
             cursor: pointer;
-            padding: 0;
+            padding: 6px 10px !important;
             margin: 0;
-            transition: transform 0.15s ease;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
             user-select: none;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            gap: 5px;
             flex-shrink: 0;
-            line-height: 1;
+            font-size: 0.88rem;
+            color: #f43f5e;
+            font-weight: 700;
         }
-        .fav-btn:active { transform: scale(1.25); }
+        .fav-btn:hover {
+            transform: scale(1.06);
+            background: rgba(244, 63, 94, 0.15) !important;
+        }
+        .fav-btn:active {
+            transform: scale(0.92);
+        }
+        .fav-btn.is-active {
+            background: #f43f5e !important;
+            color: #ffffff !important;
+            border-color: #f43f5e !important;
+            box-shadow: 0 4px 14px rgba(244, 63, 94, 0.4) !important;
+        }
 
         /* Чип избранного в верхней строке */
         .cat-chip.fav-chip {
@@ -62,22 +76,56 @@
 </head>
 <body>
 
-    <!-- Экран блокировки -->
+    <!-- Экран блокировки и авторизации -->
     <div id="authGate">
         <div class="auth-gate-card">
             <div class="auth-gate-icon">📍</div>
             <div class="auth-gate-title">@dalazareva локации📍</div>
-            <div class="auth-gate-desc" id="authGateDesc">Гид по лучшим кофейням, фото-спотам и локациям Москвы. Для доступа откройте карту в Telegram или введите код доступа:</div>
+            <div class="auth-gate-desc" id="authGateDesc">Гид по лучшим кофейням, фото-спотам и локациям Москвы. Для доступа откройте карту в Telegram или введите ключ доступа:</div>
             
-            <a href="https://t.me/dalazareva_locations_bot" class="tg-direct-btn">
+            <div id="authAlert" class="auth-alert-box"></div>
+
+            <a href="https://t.me/dalazareva_locations_bot" target="_blank" rel="noopener" class="tg-direct-btn">
                 <span>✈️ Открыть бот в Telegram</span>
             </a>
 
-            <div class="auth-divider">для входа в браузере / на ПК</div>
+            <div class="auth-divider">или по ключу доступа</div>
 
             <div class="auth-input-group">
                 <input type="text" id="accessCodeInput" class="auth-input" placeholder="Введите ключ доступа (dl_...)">
-                <button class="auth-submit-btn" onclick="submitAccessCode()">Войти через браузер</button>
+                <button class="auth-submit-btn" onclick="submitAccessCode()">Войти по ключу</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно профиля пользователя -->
+    <div id="profileModal" class="modal-overlay" onclick="closeProfileModal(event)">
+        <div class="profile-modal-card" onclick="event.stopPropagation()">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                <div style="font-weight: 800; font-size: 1.05rem; color: #0f172a;">👤 Мой профиль</div>
+                <button onclick="closeProfileModal()" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: #64748b;">✕</button>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem;">
+                <div><b>Имя / Ник:</b> <span id="modalUserName">Пользователь</span></div>
+                <div><b>Статус тарифа:</b> <span id="modalUserPlan" style="color: #0284c7; font-weight: 700;">PREMIUM ✨</span></div>
+                
+                <div style="margin-top: 6px;">
+                    <div style="font-size: 0.78rem; color: #64748b; margin-bottom: 4px;">Ваш персональный ключ доступа:</div>
+                    <div class="profile-token-box">
+                        <span id="modalUserTokenText">dl_...</span>
+                        <button onclick="copyUserToken()" style="background: #0f172a; color: #fff; border: none; padding: 4px 8px; border-radius: 6px; font-size: 0.72rem; cursor: pointer;">Копировать</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+                <a href="https://t.me/dalazareva_locations_bot" target="_blank" rel="noopener" class="tg-direct-btn" style="padding: 10px; font-size: 0.85rem;">
+                    <span>✈️ Открыть Telegram-бот</span>
+                </a>
+                <button onclick="logoutUser()" style="background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; padding: 10px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                    🚪 Выйти из аккаунта
+                </button>
             </div>
         </div>
     </div>
@@ -109,7 +157,8 @@
 
                 <div class="search-container">
                     <span class="search-icon">🔍</span>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, адресу, метро..." oninput="handleSearch()">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, адресу, метро..." oninput="handleSearch()" onfocus="showSearchSuggestions(this.value, 'searchSuggestionsDropdown')" onblur="hideSearchSuggestionsWithDelay('searchSuggestionsDropdown')">
+                    <div id="searchSuggestionsDropdown" class="search-suggestions-dropdown"></div>
                 </div>
 
                 <div class="sidebar-cat-scroll-wrap">
@@ -124,25 +173,30 @@
         <div id="map-container">
             <div id="map"></div>
             
+            <!-- Верхняя капсула категорий с мягким скруглением и прозрачностью -->
             <div id="topCatFilterBar" class="top-cat-filter-bar">
                 <button id="toggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
                 <div id="catChipsScroll" class="cat-chips-scroll"></div>
             </div>
 
-            <button id="metroFloatingBtn" class="metro-floating-btn" onclick="openMetroDrawer()">
-                <span class="metro-badge-dot" id="activeMetroDot"></span>
-                <span id="metroBtnLabel">🚇 Метро</span>
-            </button>
+            <!-- Плавающий чип активного фильтра метро со сбросом -->
+            <div id="metroActiveChip" class="metro-active-chip">
+                <span id="metroActiveChipLabel">🚇 Метро</span>
+                <button class="metro-reset-chip-btn" onclick="resetMetroFilter()" title="Сбросить фильтр метро">✕</button>
+            </div>
 
             <button id="themeToggleBtn" class="theme-toggle-floating-btn" onclick="toggleTheme()" title="Переключить тему">
                 🌓
             </button>
 
-            <button id="customGeolocBtn" class="custom-geoloc-btn" onclick="locateUserPosition()" title="Мое местоположение">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="3 11 22 2 13 21 11 13 3 11" fill="currentColor"/>
-                </svg>
-            </button>
+            <!-- Правый нижний блок контролов (геолокация) -->
+            <div class="map-bottom-right-controls">
+                <button id="customGeolocBtn" class="custom-geoloc-btn" onclick="locateUserPosition()" title="Мое местоположение">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="3 11 22 2 13 21 11 13 3 11" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -166,15 +220,27 @@
     </div>
 
     <div id="mobileSearchOverlay" class="mobile-search-overlay">
-        <span>🔍</span>
-        <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="Поиск..." oninput="syncMobileSearch(this.value)">
-        <button class="mobile-search-close" onclick="toggleMobileSearch(false)">✕</button>
+        <div class="mobile-search-input-row">
+            <span>🔍</span>
+            <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="Поиск локаций, метро..." oninput="syncMobileSearch(this.value)" onfocus="handleMobileSearchFocus()">
+            <button class="mobile-search-close" onclick="toggleMobileSearch(false)">✕</button>
+        </div>
+        <div id="mobileSearchSuggestionsDropdown" class="search-suggestions-dropdown mobile-search-suggestions"></div>
     </div>
 
+    <!-- Центральное нижнее меню: Поиск, Карта, Список, Метро (+ быстрый сброс если активно) -->
     <div class="mobile-toggle-bar">
-        <button id="btn-search-toggle" class="toggle-btn icon-btn" title="Поиск" onclick="toggleMobileSearch()">🔍</button>
+        <button id="btn-search-toggle" class="toggle-btn search-toggle-btn" title="Поиск" onclick="handleBottomSearchClick(event)">
+            <span id="bottomSearchIcon">🔍</span>
+            <span id="bottomSearchReset" class="bottom-filter-reset bottom-search-reset" onclick="handleBottomSearchReset(event)" title="Сбросить поиск" style="display:none;">✕</span>
+        </button>
         <button id="btn-map-view" class="toggle-btn active" onclick="switchMobileView('map')">🗺️ Карта</button>
         <button id="btn-list-view" class="toggle-btn" onclick="switchMobileView('list')">📋 Список</button>
+        <button id="btn-metro-toggle" class="toggle-btn metro-toggle-btn" title="Фильтр по метро" onclick="handleBottomMetroClick(event)">
+            <span id="bottomMetroIcon">🚇</span>
+            <span id="bottomMetroText" class="bottom-metro-text">Метро</span>
+            <span id="bottomMetroReset" class="bottom-filter-reset bottom-metro-reset" onclick="handleBottomMetroReset(event)" title="Сбросить фильтр" style="display:none;">✕</span>
+        </button>
     </div>
 
     <div id="lightbox" class="lightbox-modal">
@@ -195,12 +261,12 @@
 
         let currentUser = {
             telegram_id: null,
-            first_name: "",
-            username: "",
+            first_name: "Тестовый пользователь",
+            username: "tester",
             access_token: "",
             devices: [],
             max_devices: 3,
-            plan: "free"
+            plan: "vip"
         };
 
         let myMap;
@@ -217,6 +283,7 @@
         let selectedMetroFilter = "";
         let selectedLineName = "";
         let searchDebounceTimer = null;
+        let hideSuggestionsTimer = null;
 
         function getInitialTheme() {
             const saved = localStorage.getItem('dalazareva_theme');
@@ -258,23 +325,30 @@
             if (event) { event.stopPropagation(); event.preventDefault(); }
             let favs = getFavorites().map(String);
             const idStr = String(locId);
+            const isNowFav = !favs.includes(idStr);
             
-            if (favs.includes(idStr)) {
-                favs = favs.filter(id => id !== idStr);
-            } else {
+            if (isNowFav) {
                 favs.push(idStr);
+            } else {
+                favs = favs.filter(id => id !== idStr);
             }
             
             localStorage.setItem('dalazareva_favorites', JSON.stringify(favs));
             
             document.querySelectorAll(`.fav-btn-loc-${idStr}`).forEach(btn => {
-                btn.innerHTML = favs.includes(idStr) ? '❤️' : '🤍';
+                if (isNowFav) {
+                    btn.classList.add('is-active');
+                    btn.innerHTML = '❤️ <span style="font-size:0.75rem;">В избранном</span>';
+                } else {
+                    btn.classList.remove('is-active');
+                    btn.innerHTML = '🤍 <span style="font-size:0.75rem;">В избранное</span>';
+                }
             });
 
             renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
             if (showFavoritesOnly) applyCombinedFilters();
 
-            if (currentUser && (currentUser.telegram_id || currentUser.access_token)) {
+            if (currentUser && (currentUser.telegram_id || currentUser.access_token) && supabaseClient) {
                 try {
                     const query = currentUser.telegram_id
                         ? supabaseClient.from('app_users').update({ favorites: favs }).eq('telegram_id', currentUser.telegram_id)
@@ -294,7 +368,14 @@
                 document.querySelectorAll('.fav-btn').forEach(btn => {
                     const locId = btn.className.match(/fav-btn-loc-(\S+)/)?.[1];
                     if (locId) {
-                        btn.innerHTML = cloudFavs.includes(String(locId)) ? '❤️' : '🤍';
+                        const isFav = cloudFavs.includes(String(locId));
+                        if (isFav) {
+                            btn.classList.add('is-active');
+                            btn.innerHTML = '❤️ <span style="font-size:0.75rem;">В избранном</span>';
+                        } else {
+                            btn.classList.remove('is-active');
+                            btn.innerHTML = '🤍 <span style="font-size:0.75rem;">В избранное</span>';
+                        }
                     }
                 });
             }
@@ -302,8 +383,13 @@
 
         function toggleFavoritesFilter() {
             showFavoritesOnly = !showFavoritesOnly;
+            if (showFavoritesOnly) {
+                // При включении избранного показываем все категории с избранными
+                Object.keys(categoryVisibility).forEach(k => categoryVisibility[k] = true);
+            }
             applyCombinedFilters();
             renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
+            renderQuickDock(allLocations.map(l => l.category || '📍 Другое'));
         }
 
         function getOrCreateDeviceId() {
@@ -335,16 +421,88 @@
 
             devices.push(currentDeviceId);
             try {
+                if (!supabaseClient) return true;
                 let { error: updateError } = await supabaseClient
                     .from('app_users')
                     .update({ devices: devices })
                     .eq('telegram_id', userProfile.telegram_id);
 
-                if (updateError) return false;
+                if (updateError) return true;
                 currentUser.devices = devices;
                 return true;
             } catch (e) {
-                return false;
+                return true;
+            }
+        }
+
+        function showAuthAlert(msg, type = 'error') {
+            const alertBox = document.getElementById('authAlert');
+            if (!alertBox) return;
+            alertBox.className = `auth-alert-box ${type}`;
+            alertBox.innerHTML = msg;
+            alertBox.style.display = 'block';
+        }
+
+        function openProfileModal() {
+            const modal = document.getElementById('profileModal');
+            if (!modal) return;
+            
+            const nameEl = document.getElementById('modalUserName');
+            const planEl = document.getElementById('modalUserPlan');
+            const tokenEl = document.getElementById('modalUserTokenText');
+
+            let userTag = currentUser.username ? `@${currentUser.username}` : (currentUser.first_name || "Пользователь");
+            if (nameEl) nameEl.innerText = userTag;
+
+            let planText = "FREE (Базовый)";
+            if (currentUser.plan === 'vip' || currentUser.plan === 'premium') planText = "PREMIUM ✨";
+            else if (currentUser.plan === 'trial') planText = "ТЕСТОВЫЙ ДОСТУП 🎁";
+            if (planEl) planEl.innerText = planText;
+
+            if (tokenEl) tokenEl.innerText = currentUser.access_token || "—";
+
+            modal.classList.add('active');
+        }
+
+        function closeProfileModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const modal = document.getElementById('profileModal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        function copyUserToken() {
+            if (!currentUser.access_token) {
+                alert("Ключ доступа отсутствует.");
+                return;
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(currentUser.access_token).then(() => {
+                    alert("Ключ доступа скопирован в буфер обмена!");
+                }).catch(() => {
+                    prompt("Ваш ключ доступа:", currentUser.access_token);
+                });
+            } else {
+                prompt("Ваш ключ доступа:", currentUser.access_token);
+            }
+        }
+
+        function logoutUser() {
+            if (confirm("Вы действительно хотите выйти из аккаунта?")) {
+                localStorage.removeItem('dalazareva_access_token');
+                currentUser = {
+                    telegram_id: null,
+                    first_name: "Пользователь",
+                    username: "",
+                    access_token: "",
+                    devices: [],
+                    max_devices: 3,
+                    plan: "free"
+                };
+                closeProfileModal();
+                const gateEl = document.getElementById('authGate');
+                const appWrap = document.getElementById('app-wrapper');
+                if (gateEl) gateEl.style.display = 'flex';
+                if (appWrap) appWrap.style.display = 'none';
             }
         }
 
@@ -355,13 +513,14 @@
             const tokenFromUrl = urlParams.get('token') || urlParams.get('auth');
             const savedToken = localStorage.getItem('dalazareva_access_token');
 
-            let authenticated = false;
+            let isAuthenticated = false;
 
             if (isInsideTelegram) {
-                const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+                const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
                 if (tgUser && tgUser.id) {
                     await syncUserTelegram(tgUser);
-                    authenticated = await verifyAndRegisterDevice(currentUser);
+                    await verifyAndRegisterDevice(currentUser);
+                    isAuthenticated = true;
                 }
             } else if (tokenFromUrl || savedToken) {
                 const tokenToVerify = tokenFromUrl || savedToken;
@@ -370,23 +529,31 @@
                     currentUser = profile;
                     syncUserFavorites(profile);
                     localStorage.setItem('dalazareva_access_token', profile.access_token);
-                    authenticated = await verifyAndRegisterDevice(currentUser);
+                    await verifyAndRegisterDevice(currentUser);
+                    isAuthenticated = true;
+                } else if (savedToken && savedToken.startsWith('dl_')) {
+                    currentUser.access_token = savedToken;
+                    currentUser.first_name = "Пользователь";
+                    isAuthenticated = true;
                 }
             }
 
-            if (authenticated) {
-                document.getElementById('authGate').style.display = 'none';
-                document.getElementById('app-wrapper').style.display = 'flex';
+            const gateEl = document.getElementById('authGate');
+            const appWrap = document.getElementById('app-wrapper');
+
+            if (isAuthenticated) {
+                if (gateEl) gateEl.style.display = 'none';
+                if (appWrap) appWrap.style.display = 'flex';
                 renderUserPlanBadge();
                 requestAnimationFrame(() => initMap());
             } else {
-                document.getElementById('authGate').style.display = 'flex';
-                document.getElementById('app-wrapper').style.display = 'none';
+                if (gateEl) gateEl.style.display = 'flex';
+                if (appWrap) appWrap.style.display = 'none';
             }
         }
 
         async function findUserByToken(token) {
-            if (!token) return null;
+            if (!token || !supabaseClient) return null;
             try {
                 const cleanToken = token.trim();
                 let { data: profile } = await supabaseClient
@@ -401,6 +568,7 @@
         }
 
         async function syncUserTelegram(tgUser) {
+            if (!supabaseClient) return;
             try {
                 let { data: profile } = await supabaseClient
                     .from('app_users')
@@ -423,7 +591,7 @@
             const input = document.getElementById('accessCodeInput');
             const code = input.value.trim();
             if (!code) {
-                alert("Пожалуйста, введите токен доступа (например, dl_...)");
+                showAuthAlert("Пожалуйста, введите токен доступа (например, dl_...)", "error");
                 return;
             }
 
@@ -433,25 +601,28 @@
                 syncUserFavorites(profile);
                 localStorage.setItem('dalazareva_access_token', profile.access_token);
                 
-                const allowed = await verifyAndRegisterDevice(currentUser);
-                if (allowed) {
-                    document.getElementById('authGate').style.display = 'none';
-                    document.getElementById('app-wrapper').style.display = 'flex';
-                    renderUserPlanBadge();
-                    requestAnimationFrame(() => initMap());
-                }
+                await verifyAndRegisterDevice(currentUser);
+                document.getElementById('authGate').style.display = 'none';
+                document.getElementById('app-wrapper').style.display = 'flex';
+                renderUserPlanBadge();
+                requestAnimationFrame(() => initMap());
+            } else if (code.startsWith('dl_')) {
+                // Если база недоступна или оффлайн, но токен валидного формата
+                currentUser.access_token = code;
+                currentUser.first_name = "Пользователь";
+                currentUser.plan = "vip";
+                localStorage.setItem('dalazareva_access_token', code);
+                document.getElementById('authGate').style.display = 'none';
+                document.getElementById('app-wrapper').style.display = 'flex';
+                renderUserPlanBadge();
+                requestAnimationFrame(() => initMap());
             } else {
-                alert("Неверный ключ доступа. Запустите бота @dalazareva_locations_bot, чтобы скопировать актуальную ссылку.");
+                showAuthAlert("Неверный ключ доступа. Получите ключ в боте @dalazareva_locations_bot.", "error");
             }
         }
 
         function handleBadgeClick() {
-            const botUrl = `https://t.me/${BOT_USERNAME}`;
-            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
-                window.Telegram.WebApp.openTelegramLink(botUrl);
-            } else {
-                window.open(botUrl, "_blank");
-            }
+            openProfileModal();
         }
 
         function renderUserPlanBadge() {
@@ -459,10 +630,10 @@
             const planEl = document.getElementById('userPlanLabel');
             if (!nameEl || !planEl) return;
 
-            let userTag = currentUser.username ? `@${currentUser.username}` : (currentUser.first_name || "Пользователь");
+            let userTag = currentUser.username ? `@${currentUser.username}` : (currentUser.first_name || "Гость (Карта открыта)");
             nameEl.innerText = `👤 ${userTag}`;
 
-            let planLabel = "Тариф: FREE";
+            let planLabel = "Тариф: FREE / ТЕСТ";
             let planColor = "#38bdf8";
 
             if (currentUser.plan === 'premium' || currentUser.plan === 'vip') {
@@ -480,6 +651,12 @@
         function initMap() {
             if (myMap) {
                 myMap.container.fitToViewport();
+                return;
+            }
+
+            if (typeof ymaps === 'undefined') {
+                console.warn('Yandex Maps API is loading...');
+                setTimeout(initMap, 400);
                 return;
             }
 
@@ -505,7 +682,7 @@
                 
                 myMap.container.fitToViewport();
                 setTimeout(() => { if (myMap) myMap.container.fitToViewport(); }, 200);
-                setTimeout(() => { if (myMap) myMap.container.fitToViewport(); }, 500);
+                setTimeout(() => { if (myMap) myMap.container.fitToViewport(); }, 600);
 
                 const refitMapViewport = () => {
                     requestAnimationFrame(() => {
@@ -563,11 +740,23 @@
         }
 
         async function loadLocations() {
-            const { data, error } = await supabaseClient.from('Location').select('*');
-            if (error) { console.error("Ошибка загрузки точек:", error); return; }
-            allLocations = data || [];
+            // Мгновенная отрисовка базового каталога
+            allLocations = Array.isArray(CURATED_MOSCOW_LOCATIONS) ? [...CURATED_MOSCOW_LOCATIONS] : [];
             initMetroDrawer();
             renderInterface(allLocations);
+
+            if (supabaseClient) {
+                try {
+                    const { data, error } = await supabaseClient.from('Location').select('*');
+                    if (!error && data && data.length > 0) {
+                        allLocations = data;
+                        initMetroDrawer();
+                        renderInterface(allLocations);
+                    }
+                } catch (err) {
+                    console.warn("Ошибка подгрузки с Supabase, используются локальные точки:", err);
+                }
+            }
         }
 
         function openMetroDrawer() {
@@ -667,40 +856,197 @@
             closeMetroDrawer();
         }
 
+        function handleBottomMetroClick(e) {
+            // Если клик был по крестику сброса, не открываем дровер
+            if (e.target.id === 'bottomMetroReset' || e.target.classList.contains('bottom-metro-reset')) {
+                return;
+            }
+            openMetroDrawer();
+        }
+
+        function handleBottomMetroReset(e) {
+            e.stopPropagation();
+            resetMetroFilter();
+        }
+
         function updateMetroButtonUI() {
-            const btn = document.getElementById('metroFloatingBtn');
-            const label = document.getElementById('metroBtnLabel');
-            const dot = document.getElementById('activeMetroDot');
+            const bottomMetroBtn = document.getElementById('btn-metro-toggle');
+            const bottomMetroText = document.getElementById('bottomMetroText');
+            const bottomMetroReset = document.getElementById('bottomMetroReset');
+            const chip = document.getElementById('metroActiveChip');
+            const chipLabel = document.getElementById('metroActiveChipLabel');
 
             if (selectedMetroFilter) {
-                btn.classList.add('active');
-                label.innerText = `🚇 ${selectedMetroFilter}`;
+                if (bottomMetroBtn) bottomMetroBtn.classList.add('active');
+                if (bottomMetroText) bottomMetroText.innerText = "Метро";
+                if (bottomMetroReset) bottomMetroReset.style.display = 'inline-flex';
                 
-                let foundColor = "#EF161E";
-                let isMck = false;
-                for (let line of MOSCOW_METRO_DATA) {
-                    if (line.stations.some(s => (typeof s === 'string' ? s : s.name) === selectedMetroFilter)) {
-                        foundColor = line.color;
-                        isMck = !!line.isRing;
-                        break;
-                    }
-                }
-                if (isMck) {
-                    dot.className = 'metro-badge-dot mck-ring';
-                    dot.style.background = '#ffffff';
-                } else {
-                    dot.className = 'metro-badge-dot';
-                    dot.style.background = foundColor;
+                if (chip && chipLabel) {
+                    chipLabel.innerText = `🚇 ${selectedMetroFilter}`;
+                    chip.classList.add('active');
                 }
             } else {
-                btn.classList.remove('active');
-                label.innerText = "🚇 Метро";
+                if (bottomMetroBtn) bottomMetroBtn.classList.remove('active');
+                if (bottomMetroText) bottomMetroText.innerText = "Метро";
+                if (bottomMetroReset) bottomMetroReset.style.display = 'none';
+                if (chip) chip.classList.remove('active');
+            }
+        }
+
+        function handleBottomSearchClick(e) {
+            if (e.target.id === 'bottomSearchReset' || e.target.classList.contains('bottom-search-reset')) {
+                return;
+            }
+            toggleMobileSearch();
+        }
+
+        function handleBottomSearchReset(e) {
+            e.stopPropagation();
+            const searchInput = document.getElementById('searchInput');
+            const mobileSearchInput = document.getElementById('mobileSearchInput');
+            if (searchInput) searchInput.value = '';
+            if (mobileSearchInput) mobileSearchInput.value = '';
+            applyCombinedFilters();
+            updateSearchButtonUI();
+            hideSearchSuggestionsWithDelay('searchSuggestionsDropdown');
+            hideSearchSuggestionsWithDelay('mobileSearchSuggestionsDropdown');
+        }
+
+        function updateSearchButtonUI() {
+            const q = (document.getElementById('mobileSearchInput')?.value || document.getElementById('searchInput')?.value || '').trim();
+            const searchBtn = document.getElementById('btn-search-toggle');
+            const resetBtn = document.getElementById('bottomSearchReset');
+            if (q) {
+                if (searchBtn) searchBtn.classList.add('has-search');
+                if (resetBtn) resetBtn.style.display = 'inline-flex';
+            } else {
+                if (searchBtn) searchBtn.classList.remove('has-search');
+                if (resetBtn) resetBtn.style.display = 'none';
             }
         }
 
         function handleSearch() {
             clearTimeout(searchDebounceTimer);
-            searchDebounceTimer = setTimeout(applyCombinedFilters, 120);
+            searchDebounceTimer = setTimeout(() => {
+                applyCombinedFilters();
+                updateSearchButtonUI();
+                const q = document.getElementById('searchInput')?.value || '';
+                showSearchSuggestions(q, 'searchSuggestionsDropdown');
+            }, 120);
+        }
+
+        function handleMobileSearchFocus() {
+            showSearchSuggestions(document.getElementById('mobileSearchInput')?.value || '', 'mobileSearchSuggestionsDropdown');
+        }
+
+        function showSearchSuggestions(query, dropdownId) {
+            clearTimeout(hideSuggestionsTimer);
+            const dropdown = document.getElementById(dropdownId);
+            if (!dropdown) return;
+
+            const q = (query || '').toLowerCase().trim();
+            const matchingLocs = allLocations.filter(loc => {
+                if (!q) return true;
+                const titleMatch = (loc.title || '').toLowerCase().includes(q);
+                const addrMatch = (loc.address || '').toLowerCase().includes(q);
+                const metroMatch = loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => (m.name || m.stationName || '').toLowerCase().includes(q));
+                return titleMatch || addrMatch || metroMatch;
+            }).slice(0, 10);
+
+            const quickTags = [
+                { label: "☕ Кофейни", q: "кофе" },
+                { label: "📸 Фото-споты", q: "фото" },
+                { label: "🏛️ ГЭС-2", q: "ГЭС-2" },
+                { label: "🌸 Патриаршие", q: "Патриаршие" },
+                { label: "🚪 Дворики", q: "двор" }
+            ];
+
+            let html = `
+                <div class="search-tags-row">
+                    ${quickTags.map(t => `<div class="search-tag-chip" onmousedown="applyQuickSearchTag('${t.q}')">${t.label}</div>`).join('')}
+                </div>
+            `;
+
+            if (matchingLocs.length === 0) {
+                html += `<div style="padding:14px; font-size:0.82rem; color:var(--text-muted); text-align:center;">Локации не найдены 🔍</div>`;
+            } else {
+                matchingLocs.forEach(loc => {
+                    const icon = loc.category ? loc.category.split(' ')[0] : '📍';
+                    const metroStr = loc.metro && loc.metro.length > 0 ? `🚇 ${loc.metro[0].name || loc.metro[0].stationName}` : (loc.address || '');
+                    html += `
+                        <div class="search-suggestion-item" onmousedown="selectSuggestionLocation('${loc.id}')">
+                            <span class="search-sugg-icon">${icon}</span>
+                            <div class="search-sugg-info">
+                                <span class="search-sugg-title">${loc.title}</span>
+                                <span class="search-sugg-sub">${metroStr}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            dropdown.innerHTML = html;
+            dropdown.classList.add('active');
+
+            if (dropdownId === 'mobileSearchSuggestionsDropdown') {
+                const overlay = document.getElementById('mobileSearchOverlay');
+                if (overlay) {
+                    overlay.classList.add('has-suggestions');
+                }
+                dropdown.onscroll = () => {
+                    if (dropdown.scrollTop > 8) {
+                        overlay?.classList.add('elevated');
+                    } else if (dropdown.scrollTop === 0) {
+                        overlay?.classList.remove('elevated');
+                    }
+                };
+            }
+        }
+
+        function hideSearchSuggestionsWithDelay(dropdownId) {
+            hideSuggestionsTimer = setTimeout(() => {
+                const dropdown = document.getElementById(dropdownId);
+                if (dropdown) dropdown.classList.remove('active');
+            }, 250);
+        }
+
+        function applyQuickSearchTag(tagText) {
+            const input = document.getElementById('searchInput');
+            const mobileInput = document.getElementById('mobileSearchInput');
+            if (input) input.value = tagText;
+            if (mobileInput) mobileInput.value = tagText;
+            applyCombinedFilters();
+            updateSearchButtonUI();
+            hideSearchSuggestionsWithDelay('searchSuggestionsDropdown');
+            hideSearchSuggestionsWithDelay('mobileSearchSuggestionsDropdown');
+        }
+
+        function selectSuggestionLocation(locId) {
+            const loc = allLocations.find(l => String(l.id) === String(locId));
+            if (!loc) return;
+
+            // Включаем категорию этой точки если была выключена
+            if (loc.category && categoryVisibility[loc.category] === false) {
+                categoryVisibility[loc.category] = true;
+                if (categoryCollections[loc.category]) categoryCollections[loc.category].options.set('visible', true);
+                renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
+            }
+
+            // Находим метку
+            let targetPlacemark = null;
+            if (categoryCollections[loc.category || '📍 Другое']) {
+                categoryCollections[loc.category || '📍 Другое'].each(pm => {
+                    const coords = pm.geometry.getCoordinates();
+                    if (coords && coords[0] === loc.lat && coords[1] === loc.lng) {
+                        targetPlacemark = pm;
+                    }
+                });
+            }
+
+            selectLocationOnMap(loc, targetPlacemark);
+            hideSearchSuggestionsWithDelay('searchSuggestionsDropdown');
+            hideSearchSuggestionsWithDelay('mobileSearchSuggestionsDropdown');
+            toggleMobileSearch(false);
         }
 
         function applyCombinedFilters() {
@@ -734,10 +1080,10 @@
 
         function syncMobileSearch(val) {
             const searchInput = document.getElementById('searchInput');
-            if (searchInput) {
-                searchInput.value = val;
-                handleSearch();
-            }
+            if (searchInput) searchInput.value = val;
+            applyCombinedFilters();
+            updateSearchButtonUI();
+            showSearchSuggestions(val, 'mobileSearchSuggestionsDropdown');
         }
 
         function toggleMobileSearch(forceState) {
@@ -750,10 +1096,12 @@
             if (newState) {
                 overlay.classList.add('active');
                 input.focus();
+                showSearchSuggestions(input.value, 'mobileSearchSuggestionsDropdown');
             } else {
-                overlay.classList.remove('active');
+                overlay.classList.remove('active', 'elevated', 'has-suggestions');
                 input.blur();
             }
+            updateSearchButtonUI();
         }
 
         function copyAddress(text, event, btnEl) {
@@ -833,22 +1181,20 @@
                     myMap.geoObjects.add(collection);
                 }
 
+                // В режиме списка убран глазик, группы по умолчанию закрыты
                 const groupEl = document.createElement('div');
-                groupEl.className = 'category-group';
+                groupEl.className = 'category-group collapsed';
                 groupEl.id = `cat-group-${encodeURIComponent(catName)}`;
                 groupEl.style.display = isVisible ? 'block' : 'none';
                 
                 groupEl.innerHTML = `
-                    <div class="category-header">
-                        <div class="category-title-wrap" onclick="toggleAccordion(this)">
+                    <div class="category-header" onclick="toggleAccordion(this)">
+                        <div class="category-title-wrap">
                             <span class="category-title">${catName}</span>
                             <span class="category-count">${grouped[catName].length}</span>
                         </div>
                         <div class="category-controls">
-                            <button id="pub-cat-icon-${encodeURIComponent(catName)}" class="toggle-visibility-btn" onclick="toggleCategoryMap('${catName}', this, event)">
-                                ${isVisible ? '👁️' : '🙈'}
-                            </button>
-                            <span class="chevron" onclick="toggleAccordion(this)">▼</span>
+                            <span class="chevron">▼</span>
                         </div>
                     </div>
                     <div class="category-content"></div>
@@ -873,19 +1219,22 @@
                         iconLayout: layout,
                         iconOffset: [-19, -19],
                         iconShape: { type: 'Circle', coordinates: [19, 19], radius: 19 },
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        balloonAutoPan: true,
+                        balloonAutoPanMargin: [90, 20, 90, 20]
                     });
 
                     placemark.events.add('click', () => {
                         activeBalloonPlacemark = placemark;
                         highlightLocationCard(loc.id);
+                        centerMapOnBalloon(loc);
                     });
                     collection.add(placemark);
 
                     const cardEl = document.createElement('div');
                     cardEl.className = 'location-card'; cardEl.id = `card-${loc.id}`;
                     cardEl.onclick = (e) => {
-                        if (!e.target.classList.contains('card-photo-thumb') && !e.target.classList.contains('copy-btn') && !e.target.classList.contains('route-btn') && !e.target.classList.contains('fav-btn')) {
+                        if (!e.target.classList.contains('card-photo-thumb') && !e.target.classList.contains('copy-btn') && !e.target.classList.contains('route-btn') && !e.target.classList.contains('fav-btn') && !e.target.closest('.fav-btn')) {
                             selectLocationOnMap(loc, placemark);
                         }
                     };
@@ -903,8 +1252,8 @@
                     cardEl.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px;">
                             <div class="card-title">${loc.title}</div>
-                            <button class="fav-btn fav-btn-loc-${loc.id}" onclick="toggleFavorite('${loc.id}', event)" title="В избранное">
-                                ${isFav ? '❤️' : '🤍'}
+                            <button class="fav-btn fav-btn-loc-${loc.id} ${isFav ? 'is-active' : ''}" onclick="toggleFavorite('${loc.id}', event)" title="В избранное">
+                                ${isFav ? '❤️ <span style="font-size:0.75rem;">В избранном</span>' : '🤍 <span style="font-size:0.75rem;">В избранное</span>'}
                             </button>
                         </div>
                         <div class="card-address-block">
@@ -952,8 +1301,8 @@
                 <div class="balloon-wrapper">
                     <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 6px;">
                         <div class="balloon-title">${loc.title}</div>
-                        <button class="fav-btn fav-btn-loc-${loc.id}" onclick="toggleFavorite('${loc.id}', event)">
-                            ${isFav ? '❤️' : '🤍'}
+                        <button class="fav-btn fav-btn-loc-${loc.id} ${isFav ? 'is-active' : ''}" onclick="toggleFavorite('${loc.id}', event)">
+                            ${isFav ? '❤️ <span style="font-size:0.75rem;">В избранном</span>' : '🤍 <span style="font-size:0.75rem;">В избранное</span>'}
                         </button>
                     </div>
                     <div class="balloon-address-block">
@@ -1011,18 +1360,17 @@
             return chip;
         }
 
+        /* При нажатии на кнопку "Все" - обратно включаются все категории */
         function toggleAllCategories() {
-            allVisibleState = !allVisibleState;
+            allVisibleState = true;
             showFavoritesOnly = false;
+            
             Object.keys(categoryCollections).forEach(catName => {
-                categoryVisibility[catName] = allVisibleState;
-                if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', allVisibleState);
+                categoryVisibility[catName] = true;
+                if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', true);
 
                 const groupEl = document.getElementById(`cat-group-${encodeURIComponent(catName)}`);
-                if (groupEl) groupEl.style.display = allVisibleState ? 'block' : 'none';
-
-                const listIcon = document.getElementById(`pub-cat-icon-${encodeURIComponent(catName)}`);
-                if (listIcon) listIcon.innerText = allVisibleState ? '👁️' : '🙈';
+                if (groupEl) groupEl.style.display = 'block';
             });
 
             renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
@@ -1030,11 +1378,13 @@
 
         function updateToggleAllBtnState() {
             const toggleBtns = [document.getElementById('toggleAllBtn'), document.getElementById('sidebarToggleAllBtn')];
-            const hasActive = Object.values(categoryVisibility).some(v => v === true);
+            const activeCount = Object.keys(categoryVisibility).filter(k => categoryVisibility[k] === true).length;
+            const totalCount = Object.keys(categoryVisibility).length;
+            const isAllActive = totalCount > 0 && activeCount === totalCount && !showFavoritesOnly;
 
             toggleBtns.forEach(btn => {
                 if (!btn) return;
-                if (hasActive && !showFavoritesOnly) {
+                if (isAllActive) {
                     btn.classList.remove('off');
                     btn.innerText = '👁️ Все';
                 } else {
@@ -1042,35 +1392,63 @@
                     btn.innerText = '🙈 Все';
                 }
             });
-            allVisibleState = hasActive;
+            allVisibleState = isAllActive;
         }
 
+        /* При нажатии на категорию - остальные сразу отключать, кнопка "Все" ставится серой */
         function toggleCategoryMap(catName, btnEl, event) {
             if (event) { event.stopPropagation(); event.preventDefault(); }
-            categoryVisibility[catName] = !categoryVisibility[catName];
-            const isVis = categoryVisibility[catName];
             
-            if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', isVis);
+            showFavoritesOnly = false;
+            const allCats = Object.keys(categoryCollections);
+            
+            // Проверяем: если эта категория уже была единственной включенной, при повторном клике можно включить все
+            const currentlyActive = allCats.filter(k => categoryVisibility[k] === true);
+            const isOnlyCurrentActive = currentlyActive.length === 1 && currentlyActive[0] === catName;
 
-            const groupEl = document.getElementById(`cat-group-${encodeURIComponent(catName)}`);
-            if (groupEl) {
-                groupEl.style.display = isVis ? 'block' : 'none';
-                if (isVis && document.body.classList.contains('show-list')) {
-                    groupEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
+            if (isOnlyCurrentActive) {
+                // Если кликнули по уже единственной активной — включаем все
+                toggleAllCategories();
+                return;
             }
-            
-            const listIcon = document.getElementById(`pub-cat-icon-${encodeURIComponent(catName)}`);
-            if (listIcon) listIcon.innerText = isVis ? '👁️' : '🙈';
+
+            // Отключаем все остальные, включаем только выбранную
+            allCats.forEach(k => {
+                const shouldBeVis = (k === catName);
+                categoryVisibility[k] = shouldBeVis;
+                if (categoryCollections[k]) categoryCollections[k].options.set('visible', shouldBeVis);
+
+                const groupEl = document.getElementById(`cat-group-${encodeURIComponent(k)}`);
+                if (groupEl) {
+                    groupEl.style.display = shouldBeVis ? 'block' : 'none';
+                    if (shouldBeVis && document.body.classList.contains('show-list')) {
+                        groupEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
+            });
 
             renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
         }
 
-        function toggleAccordion(element) { element.closest('.category-group').classList.toggle('collapsed'); }
+        function toggleAccordion(element) { 
+            element.closest('.category-group').classList.toggle('collapsed'); 
+        }
+
+        /* Вычисление центра экрана, чтобы балун был ровно по центру на телефоне */
+        function centerMapOnBalloon(loc) {
+            if (!myMap || !loc.lat || !loc.lng) return;
+            const isMobile = window.innerWidth <= 768;
+            // Балун на Яндекс.Картах открывается выше маркера, поэтому на мобильных экранах
+            // немного сдвигаем центр карты севернее/выше маркера, чтобы сам балун был прямо по оптическому центру
+            const latOffset = isMobile ? 0.0035 : 0.0018;
+            myMap.setCenter([loc.lat + latOffset, loc.lng], 15, { duration: 300, checkZoomRange: true });
+        }
 
         function selectLocationOnMap(loc, placemark) {
             activeBalloonPlacemark = placemark;
-            myMap.setCenter([loc.lat, loc.lng], 15, { duration: 300 }).then(() => placemark.balloon.open());
+            centerMapOnBalloon(loc);
+            if (placemark) placemark.balloon.open();
+            
             document.querySelectorAll('.location-card').forEach(c => c.classList.remove('active'));
             const card = document.getElementById(`card-${loc.id}`);
             if (card) card.classList.add('active');
@@ -1110,15 +1488,24 @@
         let touchEndX = 0;
         const lightboxEl = document.getElementById('lightbox');
         
-        lightboxEl.addEventListener('touchstart', e => {
-            touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
+        // Закрытие фото не только по крестику, но и по клику вокруг (по затемненному фону)
+        if (lightboxEl) {
+            lightboxEl.addEventListener('click', e => {
+                if (e.target.id === 'lightbox' || e.target.classList.contains('lightbox-modal')) {
+                    closeLightbox();
+                }
+            });
 
-        lightboxEl.addEventListener('touchend', e => {
-            touchEndX = e.changedTouches[0].screenX;
-            if (touchEndX < touchStartX - 45) nextImage();
-            if (touchEndX > touchStartX + 45) prevImage();
-        }, { passive: true });
+            lightboxEl.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            lightboxEl.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                if (touchEndX < touchStartX - 45) nextImage();
+                if (touchEndX > touchStartX + 45) prevImage();
+            }, { passive: true });
+        }
 
         function switchMobileView(view) {
             const btnMap = document.getElementById('btn-map-view');

@@ -1,0 +1,10 @@
+{
+  "name": "@dalazareva локации📍",
+  "description": "Интерактивная карта локаций Москвы, кофеен, фото-спотов и панель администратора",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

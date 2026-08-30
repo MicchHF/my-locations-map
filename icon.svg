@@ -1,37 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
-  <defs>
-    <!-- Фон: фирменный тёмный сланец -->
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0F172A"/>
-      <stop offset="100%" stop-color="#1E293B"/>
-    </linearGradient>
-
-    <!-- Пин: градиент фирменного лазурного цвета -->
-    <linearGradient id="pinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38BDF8"/>
-      <stop offset="100%" stop-color="#0284C7"/>
-    </linearGradient>
-
-    <!-- Мягкое неоновое свечение -->
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#38BDF8" flood-opacity="0.35"/>
-    </filter>
-  </defs>
-
-  <!-- Скруглённая подложка иконки iOS -->
-  <rect width="512" height="512" rx="128" fill="url(#bgGrad)"/>
-
-  <!-- Тонкая элегантная рамка -->
-  <rect x="18" y="18" width="476" height="476" rx="110" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="3"/>
-
-  <!-- Основной пин локации -->
-  <g filter="url(#glow)">
-    <path d="M256 95 C182 95 122 155 122 228 C122 322 256 418 256 418 C256 418 390 322 390 228 C390 155 330 95 256 95 Z" fill="url(#pinGrad)"/>
-    
-    <!-- Центральный вырез -->
-    <circle cx="256" cy="225" r="50" fill="#0F172A"/>
-    
-    <!-- Внутренний акцент / звезда -->
-    <path d="M256 202 Q256 225 279 225 Q256 225 256 248 Q256 225 233 225 Q256 225 256 202 Z" fill="#38BDF8"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="28" fill="#0f172a"/>
+  <path d="M50 16C33.43 16 20 29.43 20 46c0 21.6 26.2 36.8 28.5 38.1.9.5 2.1.5 3 0C53.8 82.8 80 67.6 80 46c0-16.57-13.43-30-30-30zm0 40c-6.63 0-12-5.37-12-12s5.37-12 12-12 12 5.37 12 12-5.37 12-12 12z" fill="#38bdf8"/>
+  <circle cx="50" cy="44" r="6" fill="#ffffff"/>
 </svg>
