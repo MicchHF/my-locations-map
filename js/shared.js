@@ -3,7 +3,7 @@
 // 1. Инициализация Supabase
 const SUPABASE_URL = "https://cwkgylbtcjfmweoldhyb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_KnWO20wlfuWd0NYKMNKRvw_l1rttjaT";
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 const BOT_USERNAME = "dalazareva_locations_bot";
 
@@ -453,3 +453,8 @@ function findNearestMetroStations(lat, lng) {
     allStationsWithDistance.sort((a, b) => a.distance - b.distance);
     return allStationsWithDistance.slice(0, 3);
 }
+
+// 5. Каталог локаций по умолчанию (пустой, загрузка из базы данных)
+const CURATED_MOSCOW_LOCATIONS = [];
+
+
