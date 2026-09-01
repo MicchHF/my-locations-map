@@ -11,6 +11,12 @@ const BOT_USERNAME = "dalazareva_locations_bot";
 const CATEGORY_COLORS = {
     "☕ Кофейни": "#8B4513",
     "🍽️ Заведения (рестораны)": "#059669",
+    "📱 Локации для фото": "#8B5CF6",
+    "📱 Локация для фото": "#8B5CF6",
+    "📸 Локации для фото": "#8B5CF6",
+    "📸 Локация для фото": "#8B5CF6",
+    "Локации для фото": "#8B5CF6",
+    "Локация для фото": "#8B5CF6",
     "📷 Фотостудии": "#EC4899",
     "📸 Фотобудки": "#06B6D4",
     "🚪 Двери": "#EA580C",
@@ -22,7 +28,46 @@ const CATEGORY_COLORS = {
     "📍 Другое": "#0F172A"
 };
 
-const DEFAULT_CATEGORIES = Object.keys(CATEGORY_COLORS);
+const DEFAULT_CATEGORIES = [
+    "☕ Кофейни",
+    "🍽️ Заведения (рестораны)",
+    "📱 Локации для фото",
+    "📷 Фотостудии",
+    "📸 Фотобудки",
+    "🚪 Двери",
+    "🏛️ Архитектура",
+    "🎨 Музеи и культура",
+    "🏞️ Парки и природа",
+    "🛍️ Шопинг",
+    "🏨 Отели",
+    "📍 Другое"
+];
+
+function normalizeCategoryName(category) {
+    if (!category) return "📍 Другое";
+    const trimmed = category.trim();
+    if (
+        trimmed === "📱 Локация для фото" ||
+        trimmed === "📱 Локации для фото" ||
+        trimmed === "📸 Локация для фото" ||
+        trimmed === "📸 Локации для фото" ||
+        trimmed === "Локация для фото" ||
+        trimmed === "Локации для фото"
+    ) {
+        return "📱 Локации для фото";
+    }
+    if (trimmed === "Фотостудии" || trimmed === "📷 Фотостудии") return "📷 Фотостудии";
+    if (trimmed === "Фотобудки" || trimmed === "📸 Фотобудки") return "📸 Фотобудки";
+    if (trimmed === "Двери" || trimmed === "🚪 Двери") return "🚪 Двери";
+    if (trimmed === "Архитектура" || trimmed === "🏛️ Архитектура") return "🏛️ Архитектура";
+    if (trimmed === "Музеи и культура" || trimmed === "🎨 Музеи и культура") return "🎨 Музеи и культура";
+    if (trimmed === "Парки и природа" || trimmed === "🏞️ Парки и природа") return "🏞️ Парки и природа";
+    if (trimmed === "Шопинг" || trimmed === "🛍️ Шопинг") return "🛍️ Шопинг";
+    if (trimmed === "Отели" || trimmed === "🏨 Отели") return "🏨 Отели";
+    if (trimmed === "Кофейни" || trimmed === "☕ Кофейни") return "☕ Кофейни";
+    if (trimmed === "Заведения (рестораны)" || trimmed === "🍽️ Заведения (рестораны)") return "🍽️ Заведения (рестораны)";
+    return trimmed;
+}
 
 // 3. База станций метро
 const MOSCOW_METRO_DATA = [
@@ -407,7 +452,8 @@ const MOSCOW_METRO_DATA = [
 
 // 4. Вспомогательные функции
 function getCategoryPinColor(category) {
-    return CATEGORY_COLORS[category] || "#0F172A";
+    const norm = normalizeCategoryName(category);
+    return CATEGORY_COLORS[norm] || CATEGORY_COLORS[category] || "#0F172A";
 }
 
 function getMetroSvg(color = "#EF161E", isMck = false) {
