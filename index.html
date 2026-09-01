@@ -6,7 +6,7 @@
     
     <meta id="themeColorMeta" name="theme-color" content="#f4f3f0">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="@dalazareva локации📍">
     <meta name="mobile-web-app-capable" content="yes">
     <link rel="manifest" href="manifest.json">
@@ -155,15 +155,16 @@
                     </a>
                 </div>
 
-                <div class="search-container">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, адресу, метро..." oninput="handleSearch()" onfocus="showSearchSuggestions(this.value, 'searchSuggestionsDropdown')" onblur="hideSearchSuggestionsWithDelay('searchSuggestionsDropdown')">
-                    <div id="searchSuggestionsDropdown" class="search-suggestions-dropdown"></div>
-                </div>
-
-                <div class="sidebar-cat-scroll-wrap">
-                    <button id="sidebarToggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
-                    <div id="sidebarCatChipsScroll" class="cat-chips-scroll"></div>
+                <div class="sidebar-search-row">
+                    <div class="search-container">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="searchInput" class="search-input" placeholder="Поиск локаций, метро..." oninput="handleSearch()" onfocus="showSearchSuggestions(this.value, 'searchSuggestionsDropdown')" onblur="hideSearchSuggestionsWithDelay('searchSuggestionsDropdown')">
+                        <div id="searchSuggestionsDropdown" class="search-suggestions-dropdown"></div>
+                    </div>
+                    <button id="desktopMetroBtn" class="desktop-metro-btn" onclick="openMetroDrawer()" title="Фильтр по веткам и станциям метро">
+                        <span>🚇</span>
+                        <span id="desktopMetroText">Метро</span>
+                    </button>
                 </div>
             </div>
             
@@ -173,10 +174,24 @@
         <div id="map-container">
             <div id="map"></div>
             
-            <!-- Верхняя капсула категорий с мягким скруглением и прозрачностью -->
+            <!-- Верхняя капсула категорий для мобильных -->
             <div id="topCatFilterBar" class="top-cat-filter-bar">
                 <button id="toggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
                 <div id="catChipsScroll" class="cat-chips-scroll"></div>
+            </div>
+
+            <!-- Вертикальное боковое меню категорий для десктопа (справа на карте: иконки с раскрытием) -->
+            <div id="desktopVerticalCatBar" class="desktop-vertical-cat-bar" title="Фильтр категорий">
+                <div class="vertical-cat-header">
+                    <button id="verticalCatExpandBtn" class="vertical-cat-expand-btn" onclick="toggleDesktopCatBarExpand()" title="Развернуть категории">
+                        <span class="expand-icon">◀</span>
+                        <span class="vertical-cat-header-title">Категории</span>
+                    </button>
+                    <button id="verticalToggleAllBtn" class="vertical-toggle-all-btn" onclick="toggleAllCategories()" title="Показать все / Скрыть все точки">
+                        👁️
+                    </button>
+                </div>
+                <div id="verticalCatChipsScroll" class="vertical-cat-chips-scroll"></div>
             </div>
 
             <!-- Плавающий чип активного фильтра метро со сбросом -->
@@ -219,11 +234,13 @@
         </div>
     </div>
 
+    <div id="mobileSearchBackdrop" class="mobile-search-backdrop" onclick="toggleMobileSearch(false)"></div>
     <div id="mobileSearchOverlay" class="mobile-search-overlay">
         <div class="mobile-search-input-row">
             <span>🔍</span>
             <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="Поиск локаций, метро..." oninput="syncMobileSearch(this.value)" onfocus="handleMobileSearchFocus()">
-            <button class="mobile-search-close" onclick="toggleMobileSearch(false)">✕</button>
+            <button id="mobileSearchClearBtn" class="mobile-search-clear-btn" onclick="clearMobileSearchInput()" style="display:none;" title="Очистить">✕</button>
+            <button class="mobile-search-cancel-btn" onclick="toggleMobileSearch(false)">Отмена</button>
         </div>
         <div id="mobileSearchSuggestionsDropdown" class="search-suggestions-dropdown mobile-search-suggestions"></div>
     </div>
@@ -286,6 +303,8 @@
 
         let myMap;
         window.myMap = null;
+        let clusterer = null;
+        let locationPlacemarksMap = {};
         let activeBalloonPlacemark = null;
         let userLocationPlacemark = null;
         let allLocations = [];
@@ -310,6 +329,7 @@
 
         function applyTheme(dark) {
             isDarkMode = dark;
+            const themeColor = dark ? '#090d16' : '#f4f3f0';
             if (dark) {
                 document.body.classList.add('dark-mode');
                 document.getElementById('themeColorMeta')?.setAttribute('content', '#090d16');
@@ -320,6 +340,12 @@
                 document.getElementById('themeColorMeta')?.setAttribute('content', '#f4f3f0');
                 const btn = document.getElementById('themeToggleBtn');
                 if (btn) btn.innerText = '🌙';
+            }
+            if (window.Telegram?.WebApp) {
+                try {
+                    window.Telegram.WebApp.setHeaderColor?.(themeColor);
+                    window.Telegram.WebApp.setBackgroundColor?.(themeColor);
+                } catch(e) {}
             }
         }
 
@@ -404,7 +430,6 @@
             }
             applyCombinedFilters();
             renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
-            renderQuickDock(allLocations.map(l => l.category || '📍 Другое'));
         }
 
         function getOrCreateDeviceId() {
@@ -808,7 +833,11 @@
 
         async function loadLocations() {
             // Мгновенная отрисовка базового каталога
-            allLocations = Array.isArray(CURATED_MOSCOW_LOCATIONS) ? [...CURATED_MOSCOW_LOCATIONS] : [];
+            allLocations = (Array.isArray(CURATED_MOSCOW_LOCATIONS) ? CURATED_MOSCOW_LOCATIONS : []).map(loc => ({
+                ...loc,
+                category: normalizeCategoryName(loc.category),
+                extra_categories: Array.isArray(loc.extra_categories) ? loc.extra_categories.map(normalizeCategoryName) : []
+            }));
             initMetroDrawer();
             renderInterface(allLocations);
 
@@ -816,9 +845,13 @@
                 try {
                     const { data, error } = await supabaseClient.from('Location').select('*');
                     if (!error && data && data.length > 0) {
-                        allLocations = data;
+                        allLocations = data.map(loc => ({
+                            ...loc,
+                            category: normalizeCategoryName(loc.category),
+                            extra_categories: Array.isArray(loc.extra_categories) ? loc.extra_categories.map(normalizeCategoryName) : []
+                        }));
                         initMetroDrawer();
-                        renderInterface(allLocations);
+                        applyCombinedFilters();
                     }
                 } catch (err) {
                     console.warn("Ошибка подгрузки с Supabase, используются локальные точки:", err);
@@ -940,6 +973,8 @@
             const bottomMetroBtn = document.getElementById('btn-metro-toggle');
             const bottomMetroText = document.getElementById('bottomMetroText');
             const bottomMetroReset = document.getElementById('bottomMetroReset');
+            const desktopMetroBtn = document.getElementById('desktopMetroBtn');
+            const desktopMetroText = document.getElementById('desktopMetroText');
             const chip = document.getElementById('metroActiveChip');
             const chipLabel = document.getElementById('metroActiveChipLabel');
 
@@ -947,6 +982,8 @@
                 if (bottomMetroBtn) bottomMetroBtn.classList.add('active');
                 if (bottomMetroText) bottomMetroText.innerText = "Метро";
                 if (bottomMetroReset) bottomMetroReset.style.display = 'inline-flex';
+                if (desktopMetroBtn) desktopMetroBtn.classList.add('active');
+                if (desktopMetroText) desktopMetroText.innerText = selectedMetroFilter.length > 12 ? selectedMetroFilter.slice(0, 11) + '…' : selectedMetroFilter;
                 
                 if (chip && chipLabel) {
                     chipLabel.innerText = `🚇 ${selectedMetroFilter}`;
@@ -956,6 +993,8 @@
                 if (bottomMetroBtn) bottomMetroBtn.classList.remove('active');
                 if (bottomMetroText) bottomMetroText.innerText = "Метро";
                 if (bottomMetroReset) bottomMetroReset.style.display = 'none';
+                if (desktopMetroBtn) desktopMetroBtn.classList.remove('active');
+                if (desktopMetroText) desktopMetroText.innerText = 'Метро';
                 if (chip) chip.classList.remove('active');
             }
         }
@@ -1022,7 +1061,7 @@
 
             const quickTags = [
                 { label: "☕ Кофейни", q: "кофе" },
-                { label: "📸 Фото-споты", q: "фото" },
+                { label: "📱 Фото-споты", q: "фото" },
                 { label: "🏛️ ГЭС-2", q: "ГЭС-2" },
                 { label: "🌸 Патриаршие", q: "Патриаршие" },
                 { label: "🚪 Дворики", q: "двор" }
@@ -1088,21 +1127,10 @@
             // Включаем категорию этой точки если была выключена
             if (loc.category && categoryVisibility[loc.category] === false) {
                 categoryVisibility[loc.category] = true;
-                if (categoryCollections[loc.category]) categoryCollections[loc.category].options.set('visible', true);
-                renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
+                applyCombinedFilters();
             }
 
-            // Находим метку
-            let targetPlacemark = null;
-            if (categoryCollections[loc.category || '📍 Другое']) {
-                categoryCollections[loc.category || '📍 Другое'].each(pm => {
-                    const coords = pm.geometry.getCoordinates();
-                    if (coords && coords[0] === loc.lat && coords[1] === loc.lng) {
-                        targetPlacemark = pm;
-                    }
-                });
-            }
-
+            const targetPlacemark = locationPlacemarksMap[loc.id] || null;
             selectLocationOnMap(loc, targetPlacemark);
             hideSearchSuggestionsWithDelay('searchSuggestionsDropdown');
             hideSearchSuggestionsWithDelay('mobileSearchSuggestionsDropdown');
@@ -1111,19 +1139,29 @@
 
         function applyCombinedFilters() {
             const query = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
-            const favs = getFavorites();
+            const favs = getFavorites().map(String);
+            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
             
+            const activeCats = allCats.filter(k => categoryVisibility[k] === true);
+            const hasSpecificCategory = activeCats.length > 0 && activeCats.length < allCats.length;
+
             const filtered = allLocations.filter(loc => {
+                const primaryCat = loc.category || '📍 Другое';
+                const extraCats = Array.isArray(loc.extra_categories) ? loc.extra_categories : [];
+                const allLocCats = [primaryCat, ...extraCats];
+
                 const titleMatch = (loc.title || '').toLowerCase().includes(query);
                 const addressMatch = (loc.address || '').toLowerCase().includes(query);
                 const descMatch = (loc.description || '').toLowerCase().includes(query);
                 const metroMatch = loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => (m.name || m.stationName || '').toLowerCase().includes(query));
-                const textPass = !query || (titleMatch || addressMatch || descMatch || metroMatch);
+                const catMatch = allLocCats.some(c => c.toLowerCase().includes(query));
+                const textPass = !query || (titleMatch || addressMatch || descMatch || metroMatch || catMatch);
 
                 const metroPass = !selectedMetroFilter || (loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => (m.name || m.stationName) === selectedMetroFilter));
                 const favPass = !showFavoritesOnly || favs.includes(String(loc.id));
+                const catPass = !hasSpecificCategory || allLocCats.some(c => categoryVisibility[c] === true);
 
-                return textPass && metroPass && favPass;
+                return textPass && metroPass && favPass && catPass;
             });
 
             renderInterface(filtered);
@@ -1138,9 +1176,24 @@
             }
         }
 
+        function clearMobileSearchInput() {
+            const input = document.getElementById('mobileSearchInput');
+            const searchInput = document.getElementById('searchInput');
+            if (input) input.value = '';
+            if (searchInput) searchInput.value = '';
+            const clearBtn = document.getElementById('mobileSearchClearBtn');
+            if (clearBtn) clearBtn.style.display = 'none';
+            applyCombinedFilters();
+            updateSearchButtonUI();
+            showSearchSuggestions('', 'mobileSearchSuggestionsDropdown');
+            input?.focus();
+        }
+
         function syncMobileSearch(val) {
             const searchInput = document.getElementById('searchInput');
             if (searchInput) searchInput.value = val;
+            const clearBtn = document.getElementById('mobileSearchClearBtn');
+            if (clearBtn) clearBtn.style.display = val ? 'inline-flex' : 'none';
             applyCombinedFilters();
             updateSearchButtonUI();
             showSearchSuggestions(val, 'mobileSearchSuggestionsDropdown');
@@ -1148,18 +1201,27 @@
 
         function toggleMobileSearch(forceState) {
             const overlay = document.getElementById('mobileSearchOverlay');
+            const backdrop = document.getElementById('mobileSearchBackdrop');
             const input = document.getElementById('mobileSearchInput');
+            const clearBtn = document.getElementById('mobileSearchClearBtn');
             if (!overlay || !input) return;
             const isCurrentlyActive = overlay.classList.contains('active');
             const newState = forceState !== undefined ? forceState : !isCurrentlyActive;
 
             if (newState) {
+                document.body.classList.add('mobile-search-open');
                 overlay.classList.add('active');
+                if (backdrop) backdrop.classList.add('active');
+                if (clearBtn) clearBtn.style.display = input.value ? 'inline-flex' : 'none';
                 input.focus();
                 showSearchSuggestions(input.value, 'mobileSearchSuggestionsDropdown');
             } else {
-                overlay.classList.remove('active', 'elevated', 'has-suggestions');
+                document.body.classList.remove('mobile-search-open');
+                overlay.classList.remove('active');
+                if (backdrop) backdrop.classList.remove('active');
                 input.blur();
+                hideSearchSuggestionsWithDelay('mobileSearchSuggestionsDropdown');
+                window.scrollTo(0, 0);
             }
             updateSearchButtonUI();
         }
@@ -1208,7 +1270,7 @@
             if (!listEl) return;
             listEl.innerHTML = '';
             const grouped = {};
-            const favs = getFavorites();
+            const favs = getFavorites().map(String);
             
             locationsToRender.forEach(loc => {
                 const cat = loc.category || '📍 Другое';
@@ -1216,10 +1278,40 @@
                 grouped[cat].push(loc);
             });
 
-            if (myMap && myMap.geoObjects) {
-                Object.values(categoryCollections).forEach(coll => myMap.geoObjects.remove(coll));
+            // Инициализация или очистка кластеризатора меток
+            if (myMap) {
+                if (!clusterer) {
+                    const customClusterLayout = ymaps.templateLayoutFactory.createClass(`
+                        <div class="custom-cluster-pin">
+                            <div class="custom-cluster-core">
+                                <span class="custom-cluster-dot"></span>
+                            </div>
+                            <span class="custom-cluster-mini-badge">{{ properties.geoObjects.length }}</span>
+                        </div>
+                    `);
+
+                    clusterer = new ymaps.Clusterer({
+                        clusterIconLayout: customClusterLayout,
+                        clusterIconShape: {
+                            type: 'Circle',
+                            coordinates: [17, 17],
+                            radius: 17
+                        },
+                        groupByCoordinates: false,
+                        clusterDisableClickZoom: false,
+                        clusterHideIconOnBalloonOpen: false,
+                        geoObjectHideIconOnBalloonOpen: false,
+                        clusterOpenBalloonOnClick: false,
+                        maxZoom: 16,
+                        gridSize: 56,
+                        margin: 10
+                    });
+                    myMap.geoObjects.add(clusterer);
+                } else {
+                    clusterer.removeAll();
+                }
             }
-            categoryCollections = {};
+            locationPlacemarksMap = {};
 
             const allCatsToDisplay = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
             renderBothCatFilterBars(allCatsToDisplay);
@@ -1229,19 +1321,13 @@
                 return;
             }
 
+            const placemarksToAdd = [];
             const activeCategoriesList = Object.keys(grouped);
 
             activeCategoriesList.forEach(catName => {
                 if (categoryVisibility[catName] === undefined) categoryVisibility[catName] = true;
                 const isVisible = categoryVisibility[catName];
 
-                const collection = new ymaps.GeoObjectCollection({}, { visible: isVisible });
-                categoryCollections[catName] = collection;
-                if (myMap && myMap.geoObjects) {
-                    myMap.geoObjects.add(collection);
-                }
-
-                // В режиме списка убран глазик, группы по умолчанию закрыты
                 const groupEl = document.createElement('div');
                 groupEl.className = 'category-group collapsed';
                 groupEl.id = `cat-group-${encodeURIComponent(catName)}`;
@@ -1280,8 +1366,11 @@
                         iconOffset: [-19, -19],
                         iconShape: { type: 'Circle', coordinates: [19, 19], radius: 19 },
                         cursor: 'pointer',
+                        balloonOffset: [0, -30],
                         balloonAutoPan: true,
-                        balloonAutoPanMargin: [90, 20, 90, 20]
+                        balloonAutoPanMargin: [80, 16, 90, 16],
+                        balloonCloseButton: true,
+                        hideIconOnBalloonOpen: false
                     });
 
                     placemark.events.add('click', () => {
@@ -1289,7 +1378,9 @@
                         highlightLocationCard(loc.id);
                         centerMapOnBalloon(loc);
                     });
-                    collection.add(placemark);
+
+                    locationPlacemarksMap[loc.id] = placemark;
+                    placemarksToAdd.push(placemark);
 
                     const cardEl = document.createElement('div');
                     cardEl.className = 'location-card'; cardEl.id = `card-${loc.id}`;
@@ -1309,12 +1400,19 @@
                     const routeUrl = `https://yandex.ru/maps/?rtext=~${loc.lat},${loc.lng}`;
                     const safeAddr = escapeQuotes(loc.address);
 
+                    const extraCats = Array.isArray(loc.extra_categories) ? loc.extra_categories : [];
+                    const extraCatsHtml = extraCats.length > 0 ? extraCats.map(ec => `<span class="cat-pill-secondary" title="${ec}">${ec}</span>`).join('') : '';
+
                     cardEl.innerHTML = `
-                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px;">
                             <div class="card-title">${loc.title}</div>
                             <button class="fav-btn fav-btn-loc-${loc.id} ${isFav ? 'is-active' : ''}" onclick="toggleFavorite('${loc.id}', event)" title="В избранное">
                                 ${isFav ? '❤️ <span style="font-size:0.75rem;">В избранном</span>' : '🤍 <span style="font-size:0.75rem;">В избранное</span>'}
                             </button>
+                        </div>
+                        <div class="card-cat-badges">
+                            <span class="cat-pill-primary">${loc.category || '📍 Другое'}</span>
+                            ${extraCatsHtml}
                         </div>
                         <div class="card-address-block">
                             ${loc.address ? `<div class="card-address">📍 ${loc.address}</div>` : ''}
@@ -1331,6 +1429,10 @@
                 });
                 listEl.appendChild(groupEl);
             });
+
+            if (clusterer && placemarksToAdd.length > 0) {
+                clusterer.add(placemarksToAdd);
+            }
         }
 
         function createBalloonHTML(loc) {
@@ -1357,13 +1459,20 @@
                 `}).join('')}</div>`;
             }
 
+            const extraCats = Array.isArray(loc.extra_categories) ? loc.extra_categories : [];
+            const extraCatsHtml = extraCats.length > 0 ? extraCats.map(ec => `<span class="cat-pill-secondary" title="${ec}">${ec}</span>`).join('') : '';
+
             return `
                 <div class="balloon-wrapper">
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 6px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 4px;">
                         <div class="balloon-title">${loc.title}</div>
                         <button class="fav-btn fav-btn-loc-${loc.id} ${isFav ? 'is-active' : ''}" onclick="toggleFavorite('${loc.id}', event)">
                             ${isFav ? '❤️ <span style="font-size:0.75rem;">В избранном</span>' : '🤍 <span style="font-size:0.75rem;">В избранное</span>'}
                         </button>
+                    </div>
+                    <div class="card-cat-badges" style="margin-bottom: 6px;">
+                        <span class="cat-pill-primary">${loc.category || '📍 Другое'}</span>
+                        ${extraCatsHtml}
                     </div>
                     <div class="balloon-address-block">
                         ${loc.address ? `<div class="balloon-address">📍 ${loc.address}</div>` : ''}
@@ -1381,25 +1490,31 @@
 
         function renderBothCatFilterBars(categories) {
             const mapContainer = document.getElementById('catChipsScroll');
-            const sidebarContainer = document.getElementById('sidebarCatChipsScroll');
+            const verticalContainer = document.getElementById('verticalCatChipsScroll');
 
             if (mapContainer) mapContainer.innerHTML = '';
-            if (sidebarContainer) sidebarContainer.innerHTML = '';
+            if (verticalContainer) verticalContainer.innerHTML = '';
 
             const uniqueCats = Array.from(new Set(categories)).filter(Boolean);
             const favCount = getFavorites().length;
 
-            const favChipMap = createFavChip(favCount);
-            const favChipSidebar = createFavChip(favCount);
+            // Мобильные чипы над картой
+            if (mapContainer) {
+                mapContainer.appendChild(createFavChip(favCount));
+                uniqueCats.forEach(catName => {
+                    const isVis = categoryVisibility[catName] !== false;
+                    mapContainer.appendChild(createChipElement(catName, isVis));
+                });
+            }
 
-            if (mapContainer) mapContainer.appendChild(favChipMap);
-            if (sidebarContainer) sidebarContainer.appendChild(favChipSidebar);
-
-            uniqueCats.forEach(catName => {
-                const isVis = categoryVisibility[catName] !== false;
-                if (mapContainer) mapContainer.appendChild(createChipElement(catName, isVis));
-                if (sidebarContainer) sidebarContainer.appendChild(createChipElement(catName, isVis));
-            });
+            // Десктопное вертикальное меню иконок
+            if (verticalContainer) {
+                verticalContainer.appendChild(createVerticalFavItem(favCount));
+                uniqueCats.forEach(catName => {
+                    const isVis = categoryVisibility[catName] !== false;
+                    verticalContainer.appendChild(createVerticalCatItem(catName, isVis));
+                });
+            }
 
             updateToggleAllBtnState();
         }
@@ -1420,98 +1535,174 @@
             return chip;
         }
 
-        /* При нажатии на кнопку "Все" - обратно включаются все категории */
+        function toggleDesktopCatBarExpand() {
+            const bar = document.getElementById('desktopVerticalCatBar');
+            const expandBtn = document.getElementById('verticalCatExpandBtn');
+            if (bar) {
+                bar.classList.toggle('is-expanded');
+                const isExpanded = bar.classList.contains('is-expanded');
+                if (expandBtn) {
+                    expandBtn.title = isExpanded ? 'Свернуть категории' : 'Развернуть категории';
+                    const icon = expandBtn.querySelector('.expand-icon');
+                    if (icon) icon.innerText = isExpanded ? '▶' : '◀';
+                }
+            }
+        }
+
+        function createVerticalFavItem(count) {
+            const item = document.createElement('button');
+            item.className = `vertical-cat-item fav-item ${showFavoritesOnly ? 'active' : ''}`;
+            item.title = `Избранное (${count})`;
+            item.onclick = () => toggleFavoritesFilter();
+            item.innerHTML = `
+                <span class="v-cat-icon">❤️</span>
+                <span class="v-cat-name">Избранное ${count > 0 ? `(${count})` : ''}</span>
+                <div class="v-cat-tooltip">Избранное (${count})</div>
+            `;
+            return item;
+        }
+
+        function createVerticalCatItem(catName, isVis) {
+            const item = document.createElement('button');
+            item.className = `vertical-cat-item ${isVis ? 'active' : 'disabled'}`;
+            item.title = catName;
+            item.onclick = () => toggleCategoryMap(catName);
+            
+            const parts = (catName || '').trim().split(' ');
+            const icon = parts[0] || '📍';
+            const cleanName = parts.slice(1).join(' ') || catName;
+
+            item.innerHTML = `
+                <span class="v-cat-icon">${icon}</span>
+                <span class="v-cat-name">${cleanName}</span>
+                <div class="v-cat-tooltip">${catName}</div>
+            `;
+            return item;
+        }
+
+        /* При нажатии на кнопку "Все" - если все включены, то скрываются все точки; если не все включены - включаются все */
         function toggleAllCategories() {
-            allVisibleState = true;
+            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
+            const activeCount = allCats.filter(k => categoryVisibility[k] === true).length;
+            const isAllCurrentlyActive = activeCount === allCats.length && !showFavoritesOnly;
+
             showFavoritesOnly = false;
             
-            Object.keys(categoryCollections).forEach(catName => {
-                categoryVisibility[catName] = true;
-                if (categoryCollections[catName]) categoryCollections[catName].options.set('visible', true);
+            if (isAllCurrentlyActive) {
+                // Если все активны — выключаем все
+                allCats.forEach(catName => {
+                    categoryVisibility[catName] = false;
+                });
+                allVisibleState = false;
+            } else {
+                // Если часть выключена или было только избранное — включаем абсолютно все
+                allCats.forEach(catName => {
+                    categoryVisibility[catName] = true;
+                });
+                allVisibleState = true;
+            }
 
-                const groupEl = document.getElementById(`cat-group-${encodeURIComponent(catName)}`);
-                if (groupEl) groupEl.style.display = 'block';
-            });
-
-            renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
+            applyCombinedFilters();
         }
 
         function updateToggleAllBtnState() {
-            const toggleBtns = [document.getElementById('toggleAllBtn'), document.getElementById('sidebarToggleAllBtn')];
-            const activeCount = Object.keys(categoryVisibility).filter(k => categoryVisibility[k] === true).length;
-            const totalCount = Object.keys(categoryVisibility).length;
+            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
+            const activeCount = allCats.filter(k => categoryVisibility[k] === true).length;
+            const totalCount = allCats.length;
             const isAllActive = totalCount > 0 && activeCount === totalCount && !showFavoritesOnly;
 
-            toggleBtns.forEach(btn => {
-                if (!btn) return;
+            const mapToggleBtn = document.getElementById('toggleAllBtn');
+            const vertToggleBtn = document.getElementById('verticalToggleAllBtn');
+
+            if (mapToggleBtn) {
                 if (isAllActive) {
-                    btn.classList.remove('off');
-                    btn.innerText = '👁️ Все';
+                    mapToggleBtn.classList.remove('off');
+                    mapToggleBtn.innerText = '👁️ Все';
+                    mapToggleBtn.title = 'Скрыть все точки';
                 } else {
-                    btn.classList.add('off');
-                    btn.innerText = '🙈 Все';
+                    mapToggleBtn.classList.add('off');
+                    mapToggleBtn.innerText = '🙈 Все';
+                    mapToggleBtn.title = 'Показать все точки';
                 }
-            });
+            }
+
+            if (vertToggleBtn) {
+                if (isAllActive) {
+                    vertToggleBtn.classList.remove('off');
+                    vertToggleBtn.innerText = '👁️';
+                    vertToggleBtn.title = 'Скрыть все точки';
+                } else {
+                    vertToggleBtn.classList.add('off');
+                    vertToggleBtn.innerText = '🙈';
+                    vertToggleBtn.title = 'Показать все точки';
+                }
+            }
             allVisibleState = isAllActive;
         }
 
-        /* При нажатии на категорию - остальные сразу отключать, кнопка "Все" ставится серой */
+        /* При нажатии на категорию - если было выбрано избранное, оно отключается; включается выбранная категория */
         function toggleCategoryMap(catName, btnEl, event) {
             if (event) { event.stopPropagation(); event.preventDefault(); }
             
+            const wasFavoritesOnly = showFavoritesOnly;
             showFavoritesOnly = false;
-            const allCats = Object.keys(categoryCollections);
             
-            // Проверяем: если эта категория уже была единственной включенной, при повторном клике можно включить все
+            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
             const currentlyActive = allCats.filter(k => categoryVisibility[k] === true);
-            const isOnlyCurrentActive = currentlyActive.length === 1 && currentlyActive[0] === catName;
+            const isOnlyCurrentActive = !wasFavoritesOnly && currentlyActive.length === 1 && currentlyActive[0] === catName;
 
             if (isOnlyCurrentActive) {
                 // Если кликнули по уже единственной активной — включаем все
-                toggleAllCategories();
-                return;
+                allCats.forEach(k => { categoryVisibility[k] = true; });
+            } else {
+                // Отключаем все остальные, включаем только выбранную
+                allCats.forEach(k => {
+                    categoryVisibility[k] = (k === catName);
+                });
             }
 
-            // Отключаем все остальные, включаем только выбранную
-            allCats.forEach(k => {
-                const shouldBeVis = (k === catName);
-                categoryVisibility[k] = shouldBeVis;
-                if (categoryCollections[k]) categoryCollections[k].options.set('visible', shouldBeVis);
-
-                const groupEl = document.getElementById(`cat-group-${encodeURIComponent(k)}`);
-                if (groupEl) {
-                    groupEl.style.display = shouldBeVis ? 'block' : 'none';
-                    if (shouldBeVis && document.body.classList.contains('show-list')) {
-                        groupEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                }
-            });
-
-            renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
+            applyCombinedFilters();
         }
 
         function toggleAccordion(element) { 
             element.closest('.category-group').classList.toggle('collapsed'); 
         }
 
-        /* Вычисление центра экрана, чтобы балун был ровно по центру на телефоне */
+        /* Вычисление центра экрана, чтобы балун и маркер были комфортно видны по центру */
         function centerMapOnBalloon(loc) {
             if (!myMap || !loc.lat || !loc.lng) return;
             const isMobile = window.innerWidth <= 768;
-            // Балун на Яндекс.Картах открывается выше маркера, поэтому на мобильных экранах
-            // немного сдвигаем центр карты севернее/выше маркера, чтобы сам балун был прямо по оптическому центру
-            const latOffset = isMobile ? 0.0035 : 0.0018;
-            myMap.setCenter([loc.lat + latOffset, loc.lng], 15, { duration: 300, checkZoomRange: true });
+            const latOffset = isMobile ? 0.0016 : 0.0009;
+            const currentZoom = myMap.getZoom() || 15;
+            const targetZoom = Math.max(currentZoom, 16);
+            myMap.setCenter([loc.lat + latOffset, loc.lng], targetZoom, { duration: 300, checkZoomRange: true });
         }
 
         function selectLocationOnMap(loc, placemark) {
+            if (!placemark && loc.id) {
+                placemark = locationPlacemarksMap[loc.id];
+            }
             activeBalloonPlacemark = placemark;
-            centerMapOnBalloon(loc);
-            if (placemark) placemark.balloon.open();
+            
+            if (myMap && loc.lat && loc.lng) {
+                const isMobile = window.innerWidth <= 768;
+                const latOffset = isMobile ? 0.0016 : 0.0009;
+                const targetZoom = Math.max(myMap.getZoom() || 15, 16);
+                
+                myMap.setCenter([loc.lat + latOffset, loc.lng], targetZoom, { duration: 300, checkZoomRange: true }).then(() => {
+                    if (placemark && placemark.balloon) {
+                        placemark.balloon.open();
+                    }
+                });
+            }
             
             document.querySelectorAll('.location-card').forEach(c => c.classList.remove('active'));
             const card = document.getElementById(`card-${loc.id}`);
-            if (card) card.classList.add('active');
+            if (card) {
+                card.classList.add('active');
+                const group = card.closest('.category-group');
+                if (group) group.classList.remove('collapsed');
+            }
             if (window.innerWidth <= 768) switchMobileView('map');
         }
 
@@ -1532,7 +1723,15 @@
             if (!loc || !loc.images) return;
             currentGallery = loc.images; currentImageIdx = index;
             updateLightboxImage();
-            document.getElementById('lightbox').classList.add('active');
+            const lb = document.getElementById('lightbox');
+            if (lb) lb.classList.add('active');
+            document.getElementById('themeColorMeta')?.setAttribute('content', '#000000');
+            if (window.Telegram?.WebApp) {
+                try {
+                    window.Telegram.WebApp.setHeaderColor?.('#000000');
+                    window.Telegram.WebApp.setBackgroundColor?.('#000000');
+                } catch(e) {}
+            }
         }
 
         function updateLightboxImage() {
@@ -1540,7 +1739,18 @@
             document.getElementById('lightbox-counter').innerText = `${currentImageIdx + 1} из ${currentGallery.length}`;
         }
 
-        function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
+        function closeLightbox() { 
+            const lb = document.getElementById('lightbox');
+            if (lb) lb.classList.remove('active');
+            const themeColor = isDarkMode ? '#090d16' : '#f4f3f0';
+            document.getElementById('themeColorMeta')?.setAttribute('content', themeColor);
+            if (window.Telegram?.WebApp) {
+                try {
+                    window.Telegram.WebApp.setHeaderColor?.(themeColor);
+                    window.Telegram.WebApp.setBackgroundColor?.(themeColor);
+                } catch(e) {}
+            }
+        }
         function nextImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx + 1) % currentGallery.length; updateLightboxImage(); }
         function prevImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx - 1 + currentGallery.length) % currentGallery.length; updateLightboxImage(); }
 

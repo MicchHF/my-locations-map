@@ -104,7 +104,21 @@
                     </div>
                 </div>
 
-                <div id="adminFormContainer" class="admin-form-container">
+                <!-- Панель статистики / счетчика локаций для администратора -->
+                <div id="adminStatsPanel" class="admin-stats-panel">
+                    <div class="admin-stats-header" onclick="toggleStatsPanel()">
+                        <div class="admin-stats-title">
+                            <span>📊 Сводка локаций</span>
+                            <span id="statsTotalBadge" class="stats-total-pill">0 локаций</span>
+                        </div>
+                        <span id="statsChevron" class="form-chevron">▼</span>
+                    </div>
+                    <div id="adminStatsBody" class="admin-stats-body">
+                        <div id="adminStatsGrid" class="admin-stats-grid"></div>
+                    </div>
+                </div>
+
+                <div id="adminFormContainer" class="admin-form-container collapsed">
                     <div class="admin-form-header" onclick="toggleAddForm()">
                         <div class="admin-form-title">
                             <span>➕ Добавить новую точку</span>
@@ -116,8 +130,16 @@
                         <input type="text" id="addTitle" class="form-input" placeholder="Название точки *">
                         
                         <!-- Список категорий наполняется динамически из shared.js -->
-                        <select id="addCategorySelect" class="form-select" onchange="handleCategorySelectChange(this)"></select>
-                        <input type="text" id="addCustomCategory" class="form-input" placeholder="Введите название категории" style="display: none;">
+                        <div>
+                            <label class="upload-status">Основная категория:</label>
+                            <select id="addCategorySelect" class="form-select" onchange="handleCategorySelectChange(this)"></select>
+                            <input type="text" id="addCustomCategory" class="form-input" placeholder="Введите название категории" style="display: none; margin-top: 4px;">
+                        </div>
+
+                        <div>
+                            <label class="upload-status">✨ Дополнительные категории (выберите при необходимости):</label>
+                            <div id="addExtraCategoriesChips" class="extra-cats-selector"></div>
+                        </div>
 
                         <div style="display: flex; gap: 6px;">
                             <input type="text" id="addCoords" class="form-input" placeholder="Координаты (клик или ввод)" oninput="onCoordsInput('add')">
@@ -167,7 +189,7 @@
 
                 <div class="search-container">
                     <span class="search-icon">🔍</span>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, адресу, метро..." oninput="handleSearch()">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, адресу, метро, категории..." oninput="handleSearch()">
                 </div>
             </div>
             
@@ -196,8 +218,12 @@
                 <input type="text" id="editTitle" class="form-input">
             </div>
             <div>
-                <label class="upload-status">Категория</label>
-                <select id="editCategorySelect" class="form-select"></select>
+                <label class="upload-status">Основная категория</label>
+                <select id="editCategorySelect" class="form-select" onchange="renderEditExtraCategoryChips()"></select>
+            </div>
+            <div>
+                <label class="upload-status">✨ Дополнительные категории</label>
+                <div id="editExtraCategoriesChips" class="extra-cats-selector"></div>
             </div>
             <div>
                 <label class="upload-status">Координаты</label>
@@ -269,9 +295,10 @@
 
     <script>
         let myMap;
+        let clusterer = null;
+        let locationPlacemarksMap = {};
         let tempPlacemark = null;
         let allLocations = [];
-        let categoryCollections = {};
         let categoryVisibility = {};
         let allVisibleState = true;
         let selectedFiles = [];
@@ -279,9 +306,15 @@
         let editNewFiles = [];
         let currentGallery = [];
         let currentImageIdx = 0;
+        let selectedAddExtraCategories = [];
+        let selectedEditExtraCategories = [];
 
         function toggleAddForm() {
             document.getElementById('adminFormContainer').classList.toggle('collapsed');
+        }
+
+        function toggleStatsPanel() {
+            document.getElementById('adminStatsPanel').classList.toggle('collapsed');
         }
 
         function populateMetroLineSelects() {
@@ -599,9 +632,62 @@
         async function loadLocations() {
             const { data, error } = await supabaseClient.from('Location').select('*');
             if (error) { console.error("Ошибка загрузки:", error); return; }
-            allLocations = data || [];
+            
+            allLocations = (data || []).map(loc => ({
+                ...loc,
+                category: normalizeCategoryName(loc.category),
+                extra_categories: Array.isArray(loc.extra_categories) ? loc.extra_categories.map(normalizeCategoryName) : []
+            }));
+
             updateCategorySelectOptions();
+            renderAddExtraCategoryChips();
+            renderAdminStats();
             renderInterface(allLocations);
+        }
+
+        /* Отрисовка сводки / счетчика локаций для администратора */
+        function renderAdminStats() {
+            const totalBadge = document.getElementById('statsTotalBadge');
+            const grid = document.getElementById('adminStatsGrid');
+            if (!grid) return;
+
+            const total = allLocations.length;
+            if (totalBadge) totalBadge.innerText = `${total} ${total === 1 ? 'локация' : (total >= 2 && total <= 4 ? 'локации' : 'локаций')}`;
+
+            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
+            
+            const counts = {};
+            allCats.forEach(c => { counts[c] = { primary: 0, extra: 0, total: 0 }; });
+
+            allLocations.forEach(loc => {
+                const cat = loc.category || '📍 Другое';
+                if (!counts[cat]) counts[cat] = { primary: 0, extra: 0, total: 0 };
+                counts[cat].primary += 1;
+                counts[cat].total += 1;
+
+                if (Array.isArray(loc.extra_categories)) {
+                    loc.extra_categories.forEach(ec => {
+                        if (!counts[ec]) counts[ec] = { primary: 0, extra: 0, total: 0 };
+                        counts[ec].extra += 1;
+                        counts[ec].total += 1;
+                    });
+                }
+            });
+
+            grid.innerHTML = '';
+            allCats.forEach(catName => {
+                const c = counts[catName] || { primary: 0, extra: 0, total: 0 };
+                const card = document.createElement('div');
+                card.className = 'admin-stat-card';
+                card.onclick = () => {
+                    toggleCategoryMap(catName);
+                };
+                card.innerHTML = `
+                    <div class="admin-stat-name" title="${catName}">${catName}</div>
+                    <div class="admin-stat-count">${c.primary} ${c.extra > 0 ? `<span style="font-size:0.75rem; color:var(--text-muted); font-weight:400;">(+${c.extra})</span>` : ''}</div>
+                `;
+                grid.appendChild(card);
+            });
         }
 
         function updateCategorySelectOptions() {
@@ -614,7 +700,7 @@
             mergedCategories.forEach(cat => {
                 const opt = document.createElement('option');
                 opt.value = cat; opt.innerText = cat;
-                if (cat === "📍 Другое") opt.selected = true;
+                if (cat === "📸 Локации для фото" || cat === "📍 Другое") opt.selected = true;
                 select.appendChild(opt);
             });
 
@@ -623,9 +709,62 @@
             select.appendChild(optNew);
         }
 
+        function renderAddExtraCategoryChips() {
+            const container = document.getElementById('addExtraCategoriesChips');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const currentPrimary = document.getElementById('addCategorySelect')?.value;
+            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category).filter(Boolean)]));
+
+            allCats.forEach(cat => {
+                if (cat === currentPrimary) return;
+                const isSelected = selectedAddExtraCategories.includes(cat);
+                const chip = document.createElement('div');
+                chip.className = `extra-cat-chip ${isSelected ? 'selected' : ''}`;
+                chip.innerHTML = `<span>${cat}</span>`;
+                chip.onclick = () => {
+                    if (selectedAddExtraCategories.includes(cat)) {
+                        selectedAddExtraCategories = selectedAddExtraCategories.filter(c => c !== cat);
+                    } else {
+                        selectedAddExtraCategories.push(cat);
+                    }
+                    renderAddExtraCategoryChips();
+                };
+                container.appendChild(chip);
+            });
+        }
+
+        function renderEditExtraCategoryChips() {
+            const container = document.getElementById('editExtraCategoriesChips');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const currentPrimary = document.getElementById('editCategorySelect')?.value;
+            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category).filter(Boolean)]));
+
+            allCats.forEach(cat => {
+                if (cat === currentPrimary) return;
+                const isSelected = selectedEditExtraCategories.includes(cat);
+                const chip = document.createElement('div');
+                chip.className = `extra-cat-chip ${isSelected ? 'selected' : ''}`;
+                chip.innerHTML = `<span>${cat}</span>`;
+                chip.onclick = () => {
+                    if (selectedEditExtraCategories.includes(cat)) {
+                        selectedEditExtraCategories = selectedEditExtraCategories.filter(c => c !== cat);
+                    } else {
+                        selectedEditExtraCategories.push(cat);
+                    }
+                    renderEditExtraCategoryChips();
+                };
+                container.appendChild(chip);
+            });
+        }
+
         function handleCategorySelectChange(selectEl) {
             const customInput = document.getElementById('addCustomCategory');
             customInput.style.display = selectEl.value === '__NEW__' ? 'block' : 'none';
+            renderAddExtraCategoryChips();
         }
 
         function handleFileSelection(inputEl) {
@@ -638,11 +777,13 @@
             const title = document.getElementById('addTitle').value.trim();
             const selectCat = document.getElementById('addCategorySelect').value;
             const customCat = document.getElementById('addCustomCategory').value.trim();
-            const category = selectCat === '__NEW__' ? customCat : selectCat;
+            const rawCategory = selectCat === '__NEW__' ? customCat : selectCat;
+            const category = normalizeCategoryName(rawCategory) || "📍 Другое";
             const address = document.getElementById('addAddress').value.trim();
             const coordsStr = document.getElementById('addCoords').value.trim();
             const description = document.getElementById('addDesc').value.trim();
             const metro = getMetroFromInputs('add');
+            const extra_categories = selectedAddExtraCategories.filter(c => c !== category);
 
             if (!title || !coordsStr) { alert("Укажите Название и Координаты!"); return; }
 
@@ -657,9 +798,16 @@
             const locationFolderId = `loc_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
             let images = selectedFiles.length > 0 ? await uploadImagesToSupabase(selectedFiles, locationFolderId) : [];
 
-            const { error } = await supabaseClient.from('Location').insert([{
-                title, category: category || "📍 Другое", address, lat: coordsParts[0], lng: coordsParts[1], description, images, metro
+            let { error } = await supabaseClient.from('Location').insert([{
+                title, category, extra_categories, address, lat: coordsParts[0], lng: coordsParts[1], description, images, metro
             }]);
+
+            if (error && error.message && error.message.includes('extra_categories')) {
+                const res = await supabaseClient.from('Location').insert([{
+                    title, category, address, lat: coordsParts[0], lng: coordsParts[1], description, images, metro
+                }]);
+                error = res.error;
+            }
 
             saveBtn.disabled = false;
 
@@ -671,6 +819,8 @@
                 document.getElementById('addDesc').value = '';
                 document.getElementById('addPhotosInput').value = '';
                 document.getElementById('uploadStatus').innerText = '';
+                selectedAddExtraCategories = [];
+                renderAddExtraCategoryChips();
                 setMetroToInputs('add', []);
                 if (tempPlacemark) { myMap.geoObjects.remove(tempPlacemark); tempPlacemark = null; }
                 selectedFiles = [];
@@ -680,12 +830,25 @@
 
         function handleSearch() {
             const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
+            const activeCats = allCats.filter(k => categoryVisibility[k] === true);
+            const hasSpecificCategory = activeCats.length > 0 && activeCats.length < allCats.length;
+
             const filtered = allLocations.filter(loc => {
+                const primaryCat = loc.category || '📍 Другое';
+                const extraCats = Array.isArray(loc.extra_categories) ? loc.extra_categories : [];
+                const allLocCats = [primaryCat, ...extraCats];
+
                 const titleMatch = (loc.title || '').toLowerCase().includes(query);
                 const addressMatch = (loc.address || '').toLowerCase().includes(query);
                 const descMatch = (loc.description || '').toLowerCase().includes(query);
                 const metroMatch = loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => (m.name || m.stationName || '').toLowerCase().includes(query));
-                return titleMatch || addressMatch || descMatch || metroMatch;
+                const catMatch = allLocCats.some(c => c.toLowerCase().includes(query));
+                const textPass = !query || (titleMatch || addressMatch || descMatch || metroMatch || catMatch);
+
+                const catPass = !hasSpecificCategory || allLocCats.some(c => categoryVisibility[c] === true);
+
+                return textPass && catPass;
             });
             renderInterface(filtered);
         }
@@ -714,22 +877,57 @@
                 grouped[cat].push(loc);
             });
 
-            Object.values(categoryCollections).forEach(coll => myMap.geoObjects.remove(coll));
-            categoryCollections = {};
+            if (myMap) {
+                if (!clusterer) {
+                    const customClusterLayout = ymaps.templateLayoutFactory.createClass(`
+                        <div class="custom-cluster-pin">
+                            <div class="custom-cluster-core">
+                                <span class="custom-cluster-dot"></span>
+                            </div>
+                            <span class="custom-cluster-mini-badge">{{ properties.geoObjects.length }}</span>
+                        </div>
+                    `);
 
+                    clusterer = new ymaps.Clusterer({
+                        clusterIconLayout: customClusterLayout,
+                        clusterIconShape: {
+                            type: 'Circle',
+                            coordinates: [17, 17],
+                            radius: 17
+                        },
+                        groupByCoordinates: false,
+                        clusterDisableClickZoom: false,
+                        clusterHideIconOnBalloonOpen: false,
+                        geoObjectHideIconOnBalloonOpen: false,
+                        clusterOpenBalloonOnClick: false,
+                        maxZoom: 16,
+                        gridSize: 56,
+                        margin: 10
+                    });
+                    myMap.geoObjects.add(clusterer);
+                } else {
+                    clusterer.removeAll();
+                }
+            }
+            locationPlacemarksMap = {};
+
+            const allCatsToDisplay = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
+            renderTopCatFilter(allCatsToDisplay);
+
+            if (locationsToRender.length === 0) {
+                listEl.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:0.9rem;">Ничего не найдено 🔍</div>';
+                return;
+            }
+
+            const placemarksToAdd = [];
             const activeCategoriesList = Object.keys(grouped);
-            renderTopCatFilter(activeCategoriesList);
 
             activeCategoriesList.forEach(catName => {
                 if (categoryVisibility[catName] === undefined) categoryVisibility[catName] = true;
-
-                const collection = new ymaps.GeoObjectCollection({}, { visible: categoryVisibility[catName] });
-                categoryCollections[catName] = collection;
-                myMap.geoObjects.add(collection);
+                const isVisible = categoryVisibility[catName];
 
                 const groupEl = document.createElement('div');
                 groupEl.className = 'category-group';
-                const isVisible = categoryVisibility[catName];
                 
                 groupEl.innerHTML = `
                     <div class="category-header">
@@ -761,12 +959,19 @@
                         hintContent: loc.title,
                         balloonContent: createBalloonHTML(loc)
                     }, {
-                        iconLayout: layout, iconOffset: [-19, -19],
+                        iconLayout: layout, 
+                        iconOffset: [-19, -19],
                         iconShape: { type: 'Circle', coordinates: [19, 19], radius: 19 },
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        balloonOffset: [0, -30],
+                        balloonAutoPan: true,
+                        balloonAutoPanMargin: [80, 16, 90, 16],
+                        balloonCloseButton: true,
+                        hideIconOnBalloonOpen: false
                     });
 
-                    collection.add(placemark);
+                    locationPlacemarksMap[loc.id] = placemark;
+                    placemarksToAdd.push(placemark);
 
                     const cardEl = document.createElement('div');
                     cardEl.className = 'location-card';
@@ -783,8 +988,15 @@
                         </div>`;
                     }
 
+                    const extraCats = Array.isArray(loc.extra_categories) ? loc.extra_categories : [];
+                    const extraCatsHtml = extraCats.length > 0 ? extraCats.map(ec => `<span class="cat-pill-secondary">${ec}</span>`).join('') : '';
+
                     cardEl.innerHTML = `
                         <div class="card-title">${loc.title}</div>
+                        <div class="card-cat-badges">
+                            <span class="cat-pill-primary">${loc.category || '📍 Другое'}</span>
+                            ${extraCatsHtml}
+                        </div>
                         ${loc.address ? `<div class="card-address">📍 ${loc.address}</div>` : ''}
                         ${renderMetroBadges(loc.metro)}
                         ${photosHtml}
@@ -797,6 +1009,10 @@
                 });
                 listEl.appendChild(groupEl);
             });
+
+            if (clusterer && placemarksToAdd.length > 0) {
+                clusterer.add(placemarksToAdd);
+            }
         }
 
         function createBalloonHTML(loc) {
@@ -820,9 +1036,16 @@
                 `}).join('')}</div>`;
             }
 
+            const extraCats = Array.isArray(loc.extra_categories) ? loc.extra_categories : [];
+            const extraCatsHtml = extraCats.length > 0 ? extraCats.map(ec => `<span class="cat-pill-secondary">${ec}</span>`).join('') : '';
+
             return `
                 <div class="balloon-wrapper">
                     <div class="balloon-title">${loc.title}</div>
+                    <div class="card-cat-badges" style="margin-bottom: 6px;">
+                        <span class="cat-pill-primary">${loc.category || '📍 Другое'}</span>
+                        ${extraCatsHtml}
+                    </div>
                     ${loc.address ? `<div class="balloon-address">📍 ${loc.address}</div>` : ''}
                     ${metroHtml}
                     <button class="balloon-btn" onclick="openEditModal('${loc.id}')">✏️ Редактировать</button>
@@ -851,34 +1074,36 @@
 
         function toggleCategoryMap(catName, event) {
             if (event) { event.stopPropagation(); event.preventDefault(); }
-            categoryVisibility[catName] = !categoryVisibility[catName];
             
-            if (categoryCollections[catName]) {
-                categoryCollections[catName].options.set('visible', categoryVisibility[catName]);
+            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
+            const currentlyActive = allCats.filter(k => categoryVisibility[k] === true);
+            const isOnlyCurrentActive = currentlyActive.length === 1 && currentlyActive[0] === catName;
+
+            if (isOnlyCurrentActive) {
+                allCats.forEach(k => { categoryVisibility[k] = true; });
+                allVisibleState = true;
+            } else {
+                allCats.forEach(k => {
+                    categoryVisibility[k] = (k === catName);
+                });
+                allVisibleState = false;
             }
 
-            const listIcon = document.getElementById(`icon-cat-${encodeURIComponent(catName)}`);
-            if (listIcon) listIcon.innerText = categoryVisibility[catName] ? '👁️' : '🙈';
-
-            renderTopCatFilter(Object.keys(categoryCollections));
+            handleSearch();
         }
 
         function toggleAllCategories() {
-            allVisibleState = !allVisibleState;
-            Object.keys(categoryCollections).forEach(catName => {
-                categoryVisibility[catName] = allVisibleState;
-                if (categoryCollections[catName]) {
-                    categoryCollections[catName].options.set('visible', allVisibleState);
-                }
-                const listIcon = document.getElementById(`icon-cat-${encodeURIComponent(catName)}`);
-                if (listIcon) listIcon.innerText = allVisibleState ? '👁️' : '🙈';
+            allVisibleState = true;
+            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
+            allCats.forEach(catName => {
+                categoryVisibility[catName] = true;
             });
-            renderTopCatFilter(Object.keys(categoryCollections));
+            handleSearch();
         }
 
         function openEditModal(id, event) {
             if (event) event.stopPropagation();
-            const loc = allLocations.find(l => l.id === id);
+            const loc = allLocations.find(l => String(l.id) === String(id));
             if (!loc) return;
 
             document.getElementById('editLocationId').value = loc.id;
@@ -899,6 +1124,9 @@
                 if (cat === loc.category) opt.selected = true;
                 select.appendChild(opt);
             });
+
+            selectedEditExtraCategories = Array.isArray(loc.extra_categories) ? [...loc.extra_categories] : [];
+            renderEditExtraCategoryChips();
 
             editingImagesList = loc.images ? [...loc.images] : [];
             editNewFiles = [];
@@ -955,7 +1183,8 @@
             const editBtn = document.getElementById('editSaveBtn');
             const id = document.getElementById('editLocationId').value;
             const title = document.getElementById('editTitle').value.trim();
-            const category = document.getElementById('editCategorySelect').value;
+            const category = normalizeCategoryName(document.getElementById('editCategorySelect').value);
+            const extra_categories = selectedEditExtraCategories.filter(c => c !== category);
             const address = document.getElementById('editAddress').value.trim();
             const coordsStr = document.getElementById('editCoords').value.trim();
             const description = document.getElementById('editDesc').value.trim();
@@ -976,9 +1205,16 @@
                 editingImagesList = [...editingImagesList, ...uploadedUrls];
             }
 
-            const { error } = await supabaseClient.from('Location').update({
-                title, category, address, lat: coordsParts[0], lng: coordsParts[1], description, images: editingImagesList, metro
+            let { error } = await supabaseClient.from('Location').update({
+                title, category, extra_categories, address, lat: coordsParts[0], lng: coordsParts[1], description, images: editingImagesList, metro
             }).eq('id', id);
+
+            if (error && error.message && error.message.includes('extra_categories')) {
+                const res = await supabaseClient.from('Location').update({
+                    title, category, address, lat: coordsParts[0], lng: coordsParts[1], description, images: editingImagesList, metro
+                }).eq('id', id);
+                error = res.error;
+            }
 
             editBtn.disabled = false;
 
@@ -993,7 +1229,19 @@
         function toggleAccordion(element) { element.closest('.category-group').classList.toggle('collapsed'); }
 
         function selectLocationOnMap(loc, placemark) {
-            myMap.setCenter([loc.lat, loc.lng], 15, { duration: 300 }).then(() => placemark.balloon.open());
+            if (!placemark && loc.id) {
+                placemark = locationPlacemarksMap[loc.id];
+            }
+            if (myMap && loc.lat && loc.lng) {
+                const isMobile = window.innerWidth <= 768;
+                const latOffset = isMobile ? 0.0016 : 0.0009;
+                const targetZoom = Math.max(myMap.getZoom() || 15, 16);
+                myMap.setCenter([loc.lat + latOffset, loc.lng], targetZoom, { duration: 300, checkZoomRange: true }).then(() => {
+                    if (placemark && placemark.balloon) {
+                        placemark.balloon.open();
+                    }
+                });
+            }
             if (window.innerWidth <= 768) switchMobileView('map');
         }
 
