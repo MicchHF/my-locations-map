@@ -33,6 +33,7 @@
         .logout-btn { background: rgba(255,255,255,0.15); border: none; color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; }
         .client-link-btn { background: #0284c7; border: none; color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 0.72rem; text-decoration: none; cursor: pointer; }
         
+        #sidebar { width: 440px; }
         .admin-form-container { 
             background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; 
             margin-bottom: 8px; overflow: hidden; 
@@ -45,7 +46,56 @@
         .form-chevron { font-size: 0.75rem; transition: transform 0.2s; color: #64748b; }
         .admin-form-container.collapsed .form-chevron { transform: rotate(-90deg); }
         .admin-form-container.collapsed .admin-form-body { display: none; }
-        .admin-form-body { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .admin-form-body { 
+            padding: 12px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+            max-height: calc(100vh - 240px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+        }
+
+        @media (max-width: 768px) {
+            #sidebar {
+                width: 100% !important;
+                height: 100% !important;
+                max-height: 100dvh !important;
+                display: none;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                overscroll-behavior-y: contain;
+            }
+            .show-list #sidebar {
+                display: flex !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+            .sidebar-header {
+                flex-shrink: 0 !important;
+                overflow: visible !important;
+            }
+            .admin-form-container {
+                overflow: visible !important;
+            }
+            .admin-form-body {
+                max-height: none !important;
+                overflow: visible !important;
+            }
+            #locations-list {
+                flex: none !important;
+                height: auto !important;
+                overflow: visible !important;
+                padding-bottom: calc(env(safe-area-inset-bottom) + 120px) !important;
+            }
+            .modal-content {
+                max-height: 85dvh !important;
+                width: 95% !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+        }
         
         .form-input, .form-select, .form-textarea { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.82rem; outline: none; background: #fff; }
         .form-textarea { resize: vertical; min-height: 50px; }
@@ -94,7 +144,7 @@
     </div>
 
     <div id="app-wrapper">
-        <div id="sidebar" style="width: 440px;">
+        <div id="sidebar">
             <div class="sidebar-header">
                 <div class="admin-badge">
                     <span>⚡ Панель Администратора</span>
@@ -129,6 +179,11 @@
                     <div class="admin-form-body">
                         <input type="text" id="addTitle" class="form-input" placeholder="Название точки *">
                         
+                        <div>
+                            <label class="upload-status">🔗 Ссылка на место (Яндекс Карты / сайт):</label>
+                            <input type="url" id="addUrl" class="form-input" placeholder="https://yandex.ru/maps/org/... (или любая ссылка)">
+                        </div>
+
                         <!-- Список категорий наполняется динамически из shared.js -->
                         <div>
                             <label class="upload-status">Основная категория:</label>
@@ -216,6 +271,10 @@
             <div>
                 <label class="upload-status">Название *</label>
                 <input type="text" id="editTitle" class="form-input">
+            </div>
+            <div>
+                <label class="upload-status">🔗 Ссылка на место (Яндекс Карты / сайт)</label>
+                <input type="url" id="editUrl" class="form-input" placeholder="https://yandex.ru/maps/org/... (или любая ссылка)">
             </div>
             <div>
                 <label class="upload-status">Основная категория</label>
@@ -310,7 +369,13 @@
         let selectedEditExtraCategories = [];
 
         function toggleAddForm() {
-            document.getElementById('adminFormContainer').classList.toggle('collapsed');
+            const formContainer = document.getElementById('adminFormContainer');
+            const isNowExpanded = formContainer.classList.toggle('collapsed') === false;
+            if (isNowExpanded && window.innerWidth <= 768) {
+                setTimeout(() => {
+                    formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
         }
 
         function toggleStatsPanel() {
@@ -570,7 +635,14 @@
                 const nearestStations = findNearestMetroStations(coords[0], coords[1]);
                 setMetroToInputs('add', nearestStations);
 
-                document.getElementById('adminFormContainer').classList.remove('collapsed');
+                const formContainer = document.getElementById('adminFormContainer');
+                formContainer.classList.remove('collapsed');
+                if (window.innerWidth <= 768) {
+                    switchMobileView('list');
+                    setTimeout(() => {
+                        formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 200);
+                }
             });
 
             loadLocations();
@@ -633,11 +705,7 @@
             const { data, error } = await supabaseClient.from('Location').select('*');
             if (error) { console.error("Ошибка загрузки:", error); return; }
             
-            allLocations = (data || []).map(loc => ({
-                ...loc,
-                category: normalizeCategoryName(loc.category),
-                extra_categories: Array.isArray(loc.extra_categories) ? loc.extra_categories.map(normalizeCategoryName) : []
-            }));
+            allLocations = (data || []).map(loc => parseLocationData(loc));
 
             updateCategorySelectOptions();
             renderAddExtraCategoryChips();
@@ -775,6 +843,7 @@
         async function saveNewLocation() {
             const saveBtn = document.getElementById('saveBtn');
             const title = document.getElementById('addTitle').value.trim();
+            const rawUrl = document.getElementById('addUrl').value.trim();
             const selectCat = document.getElementById('addCategorySelect').value;
             const customCat = document.getElementById('addCustomCategory').value.trim();
             const rawCategory = selectCat === '__NEW__' ? customCat : selectCat;
@@ -798,13 +867,18 @@
             const locationFolderId = `loc_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
             let images = selectedFiles.length > 0 ? await uploadImagesToSupabase(selectedFiles, locationFolderId) : [];
 
+            let finalDescription = description;
+            if (rawUrl) {
+                finalDescription = `<!--url:${rawUrl}-->\n${description}`.trim();
+            }
+
             let { error } = await supabaseClient.from('Location').insert([{
-                title, category, extra_categories, address, lat: coordsParts[0], lng: coordsParts[1], description, images, metro
+                title, category, extra_categories, address, lat: coordsParts[0], lng: coordsParts[1], description: finalDescription, images, metro, url: rawUrl || null
             }]);
 
-            if (error && error.message && error.message.includes('extra_categories')) {
+            if (error && error.message && (error.message.includes('url') || error.message.includes('extra_categories'))) {
                 const res = await supabaseClient.from('Location').insert([{
-                    title, category, address, lat: coordsParts[0], lng: coordsParts[1], description, images, metro
+                    title, category, address, lat: coordsParts[0], lng: coordsParts[1], description: finalDescription, images, metro
                 }]);
                 error = res.error;
             }
@@ -814,6 +888,7 @@
             if (error) alert("Ошибка: " + error.message);
             else {
                 document.getElementById('addTitle').value = '';
+                document.getElementById('addUrl').value = '';
                 document.getElementById('addAddress').value = '';
                 document.getElementById('addCoords').value = '';
                 document.getElementById('addDesc').value = '';
@@ -1108,6 +1183,7 @@
 
             document.getElementById('editLocationId').value = loc.id;
             document.getElementById('editTitle').value = loc.title || '';
+            document.getElementById('editUrl').value = loc.url || '';
             document.getElementById('editAddress').value = loc.address || '';
             document.getElementById('editCoords').value = `${loc.lat}, ${loc.lng}`;
             document.getElementById('editDesc').value = loc.description || '';
@@ -1183,6 +1259,7 @@
             const editBtn = document.getElementById('editSaveBtn');
             const id = document.getElementById('editLocationId').value;
             const title = document.getElementById('editTitle').value.trim();
+            const rawUrl = document.getElementById('editUrl').value.trim();
             const category = normalizeCategoryName(document.getElementById('editCategorySelect').value);
             const extra_categories = selectedEditExtraCategories.filter(c => c !== category);
             const address = document.getElementById('editAddress').value.trim();
@@ -1205,13 +1282,18 @@
                 editingImagesList = [...editingImagesList, ...uploadedUrls];
             }
 
+            let finalDescription = description;
+            if (rawUrl) {
+                finalDescription = `<!--url:${rawUrl}-->\n${description}`.trim();
+            }
+
             let { error } = await supabaseClient.from('Location').update({
-                title, category, extra_categories, address, lat: coordsParts[0], lng: coordsParts[1], description, images: editingImagesList, metro
+                title, category, extra_categories, address, lat: coordsParts[0], lng: coordsParts[1], description: finalDescription, images: editingImagesList, metro, url: rawUrl || null
             }).eq('id', id);
 
-            if (error && error.message && error.message.includes('extra_categories')) {
+            if (error && error.message && (error.message.includes('url') || error.message.includes('extra_categories'))) {
                 const res = await supabaseClient.from('Location').update({
-                    title, category, address, lat: coordsParts[0], lng: coordsParts[1], description, images: editingImagesList, metro
+                    title, category, address, lat: coordsParts[0], lng: coordsParts[1], description: finalDescription, images: editingImagesList, metro
                 }).eq('id', id);
                 error = res.error;
             }

@@ -478,8 +478,11 @@ body.dark-mode #map [class*="ground-pane"] {
 }
 .metro-icon-svg { width: 14px; height: 11px; flex-shrink: 0; }
 
+.card-address { cursor: pointer; transition: color 0.15s ease; }
+.card-address:hover { color: var(--accent-btn); text-decoration: underline; }
+
 .card-actions-row { display: flex; gap: 6px; width: 100%; margin-top: 4px; }
-.copy-btn, .route-btn {
+.details-btn, .copy-btn, .route-btn {
     flex: 1; 
     display: inline-flex; 
     align-items: center; 
@@ -494,8 +497,21 @@ body.dark-mode #map [class*="ground-pane"] {
     border: 1px solid var(--border-color);
     transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.copy-btn:hover, .route-btn:hover {
+.details-btn:hover, .copy-btn:hover, .route-btn:hover {
     transform: translateY(-1px);
+}
+.details-btn { 
+    background: var(--bg-card); 
+    color: var(--text-main); 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03); 
+}
+.details-btn:hover { 
+    border-color: #38bdf8; 
+    color: #0284c7; 
+}
+[data-theme="dark"] .details-btn:hover {
+    border-color: #38bdf8;
+    color: #38bdf8;
 }
 .copy-btn { background: var(--bg-card); color: var(--text-main); box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
 .route-btn { background: var(--accent-btn); border-color: var(--accent-btn); color: var(--accent-btn-text); box-shadow: 0 2px 8px rgba(15, 23, 42, 0.18); }
@@ -732,12 +748,17 @@ body.dark-mode .custom-cluster-mini-badge {
     color: #f8fafc;
 }
 .balloon-address-block { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; width: 100%; }
-.balloon-address { font-size: 0.78rem; color: #475569; background: #f8fafc; padding: 7px 9px; border-radius: 9px; line-height: 1.35; word-break: break-word; border: 1px solid #e2e8f0; width: 100%; }
+.balloon-address { font-size: 0.78rem; color: #475569; background: #f8fafc; padding: 7px 9px; border-radius: 9px; line-height: 1.35; word-break: break-word; border: 1px solid #e2e8f0; width: 100%; cursor: pointer; transition: color 0.15s ease; }
+.balloon-address:hover { color: #0284c7; }
 [data-theme="dark"] .balloon-address { background: #1e293b; color: #cbd5e1; border-color: #334155; }
 .balloon-metro-block { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
 .balloon-actions-row { display: flex; gap: 6px; width: 100%; margin-top: 4px; }
 .balloon-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 7px 10px; font-size: 0.76rem; font-weight: 600; border-radius: 9px; text-decoration: none; cursor: pointer; text-align: center; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
 .balloon-btn:hover { transform: translateY(-1px); }
+.balloon-details-btn { background: #ffffff; border: 1px solid #cbd5e1; color: #334155; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+[data-theme="dark"] .balloon-details-btn { background: #1e293b; border-color: #334155; color: #f1f5f9; }
+.balloon-details-btn:hover { border-color: #38bdf8; color: #0284c7; }
+[data-theme="dark"] .balloon-details-btn:hover { border-color: #38bdf8; color: #38bdf8; }
 .balloon-copy-btn { background: #ffffff; border: 1px solid #cbd5e1; color: #334155; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
 [data-theme="dark"] .balloon-copy-btn { background: #1e293b; border-color: #334155; color: #f1f5f9; }
 .balloon-route-btn { background: #0f172a; border: 1px solid #0f172a; color: #ffffff; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2); }
@@ -1432,9 +1453,12 @@ body.dark-mode .mobile-search-cancel-btn {
 /* Мобильная адаптация */
 @media (max-width: 768px) {
     #sidebar { 
-        width: 100%; 
-        height: 100%; 
+        width: 100% !important; 
+        height: 100% !important; 
+        max-height: 100dvh !important;
         display: none; 
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
     }
     
     #map-container {
@@ -1464,6 +1488,8 @@ body.dark-mode .mobile-search-cancel-btn {
         opacity: 1;
         visibility: visible;
         transform: translateY(0);
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
         animation: listFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
     .show-list .top-cat-filter-bar { 

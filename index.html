@@ -833,11 +833,7 @@
 
         async function loadLocations() {
             // Мгновенная отрисовка базового каталога
-            allLocations = (Array.isArray(CURATED_MOSCOW_LOCATIONS) ? CURATED_MOSCOW_LOCATIONS : []).map(loc => ({
-                ...loc,
-                category: normalizeCategoryName(loc.category),
-                extra_categories: Array.isArray(loc.extra_categories) ? loc.extra_categories.map(normalizeCategoryName) : []
-            }));
+            allLocations = (Array.isArray(CURATED_MOSCOW_LOCATIONS) ? CURATED_MOSCOW_LOCATIONS : []).map(loc => parseLocationData(loc));
             initMetroDrawer();
             renderInterface(allLocations);
 
@@ -845,11 +841,7 @@
                 try {
                     const { data, error } = await supabaseClient.from('Location').select('*');
                     if (!error && data && data.length > 0) {
-                        allLocations = data.map(loc => ({
-                            ...loc,
-                            category: normalizeCategoryName(loc.category),
-                            extra_categories: Array.isArray(loc.extra_categories) ? loc.extra_categories.map(normalizeCategoryName) : []
-                        }));
+                        allLocations = data.map(loc => parseLocationData(loc));
                         initMetroDrawer();
                         applyCombinedFilters();
                     }
@@ -1385,7 +1377,12 @@
                     const cardEl = document.createElement('div');
                     cardEl.className = 'location-card'; cardEl.id = `card-${loc.id}`;
                     cardEl.onclick = (e) => {
-                        if (!e.target.classList.contains('card-photo-thumb') && !e.target.classList.contains('copy-btn') && !e.target.classList.contains('route-btn') && !e.target.classList.contains('fav-btn') && !e.target.closest('.fav-btn')) {
+                        if (!e.target.classList.contains('card-photo-thumb') && 
+                            !e.target.classList.contains('copy-btn') && 
+                            !e.target.classList.contains('details-btn') && 
+                            !e.target.classList.contains('route-btn') && 
+                            !e.target.classList.contains('fav-btn') && 
+                            !e.target.closest('.fav-btn')) {
                             selectLocationOnMap(loc, placemark);
                         }
                     };
@@ -1398,6 +1395,7 @@
                     }
 
                     const routeUrl = `https://yandex.ru/maps/?rtext=~${loc.lat},${loc.lng}`;
+                    const detailsUrl = getLocationDetailsUrl(loc);
                     const safeAddr = escapeQuotes(loc.address);
 
                     const extraCats = Array.isArray(loc.extra_categories) ? loc.extra_categories : [];
@@ -1415,10 +1413,10 @@
                             ${extraCatsHtml}
                         </div>
                         <div class="card-address-block">
-                            ${loc.address ? `<div class="card-address">📍 ${loc.address}</div>` : ''}
+                            ${loc.address ? `<div class="card-address" onclick="copyAddress('${safeAddr}', event, this)" title="Нажмите, чтобы скопировать адрес">📍 ${loc.address}</div>` : ''}
                             <div class="card-actions-row">
-                                ${loc.address ? `<button class="copy-btn" onclick="copyAddress('${safeAddr}', event, this)">📋 Копировать</button>` : ''}
-                                <a href="${routeUrl}" target="_blank" rel="noopener" class="route-btn" onclick="event.stopPropagation();">🧭 Маршрут</a>
+                                <a href="${detailsUrl}" target="_blank" rel="noopener" class="details-btn" onclick="event.stopPropagation();" title="Открыть карточку места">Подробнее ↗</a>
+                                <a href="${routeUrl}" target="_blank" rel="noopener" class="route-btn" onclick="event.stopPropagation();" title="Построить маршрут">🧭 Маршрут</a>
                             </div>
                         </div>
                         ${renderMetroBadges(loc.metro)}
@@ -1443,6 +1441,7 @@
                 </div>`;
             }
             const routeUrl = `https://yandex.ru/maps/?rtext=~${loc.lat},${loc.lng}`;
+            const detailsUrl = getLocationDetailsUrl(loc);
             const safeAddr = escapeQuotes(loc.address);
             const isFav = getFavorites().includes(String(loc.id));
 
@@ -1475,10 +1474,10 @@
                         ${extraCatsHtml}
                     </div>
                     <div class="balloon-address-block">
-                        ${loc.address ? `<div class="balloon-address">📍 ${loc.address}</div>` : ''}
+                        ${loc.address ? `<div class="balloon-address" onclick="copyAddress('${safeAddr}', event, this)" title="Нажмите, чтобы скопировать адрес">📍 ${loc.address}</div>` : ''}
                         <div class="balloon-actions-row">
-                            ${loc.address ? `<button class="balloon-btn balloon-copy-btn" onclick="copyAddress('${safeAddr}', event, this)">📋 Копировать</button>` : ''}
-                            <a href="${routeUrl}" target="_blank" rel="noopener" class="balloon-btn balloon-route-btn">🧭 Маршрут</a>
+                            <a href="${detailsUrl}" target="_blank" rel="noopener" class="balloon-btn balloon-details-btn" title="Открыть карточку места">Подробнее ↗</a>
+                            <a href="${routeUrl}" target="_blank" rel="noopener" class="balloon-btn balloon-route-btn" title="Построить маршрут">🧭 Маршрут</a>
                         </div>
                     </div>
                     ${metroHtml}
