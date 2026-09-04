@@ -500,7 +500,54 @@ function findNearestMetroStations(lat, lng) {
     return allStationsWithDistance.slice(0, 3);
 }
 
-// 5. Каталог локаций по умолчанию (пустой, загрузка из базы данных)
+// 5. Обработка данных локаций и ссылок
+function parseLocationData(loc) {
+    if (!loc) return loc;
+    let url = loc.url || loc.yandex_url || loc.link || '';
+    let desc = loc.description || '';
+    if (!url && typeof desc === 'string') {
+        const tagMatch = desc.match(/<!--url:(.*?)-->/);
+        if (tagMatch) {
+            url = tagMatch[1].trim();
+            desc = desc.replace(/<!--url:.*?-->\r?\n?/, '').trim();
+        }
+    }
+    return {
+        ...loc,
+        url: url ? url.trim() : '',
+        description: desc,
+        category: normalizeCategoryName(loc.category),
+        extra_categories: Array.isArray(loc.extra_categories) ? loc.extra_categories.map(normalizeCategoryName) : []
+    };
+}
+
+function getLocationDetailsUrl(loc) {
+    if (!loc) return 'https://yandex.ru/maps/';
+    if (loc.url && typeof loc.url === 'string' && loc.url.trim().startsWith('http')) {
+        return loc.url.trim();
+    }
+    if (loc.yandex_url && typeof loc.yandex_url === 'string' && loc.yandex_url.trim().startsWith('http')) {
+        return loc.yandex_url.trim();
+    }
+    // Если прямая ссылка не найдена, ищем в описании
+    if (loc.description && typeof loc.description === 'string') {
+        const tagMatch = loc.description.match(/<!--url:(.*?)-->/);
+        if (tagMatch && tagMatch[1] && tagMatch[1].trim().startsWith('http')) {
+            return tagMatch[1].trim();
+        }
+    }
+    // Автоматический умный поиск карточки места на Яндекс.Картах
+    if (loc.title) {
+        const query = encodeURIComponent(`${loc.title} ${loc.address || 'Москва'}`.trim());
+        return `https://yandex.ru/maps/?text=${query}`;
+    }
+    if (loc.lat && loc.lng) {
+        return `https://yandex.ru/maps/?pt=${loc.lng},${loc.lat}&z=17`;
+    }
+    return 'https://yandex.ru/maps/';
+}
+
+// 6. Каталог локаций по умолчанию (пустой, загрузка из базы данных)
 const CURATED_MOSCOW_LOCATIONS = [];
 
 
