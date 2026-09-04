@@ -368,6 +368,19 @@
         let selectedAddExtraCategories = [];
         let selectedEditExtraCategories = [];
 
+        function getAllAdminCategoryNames() {
+            return Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')])).filter(Boolean);
+        }
+
+        function ensureAdminCategoryVisibilityInitialized() {
+            const allCats = getAllAdminCategoryNames();
+            allCats.forEach(cat => {
+                if (categoryVisibility[cat] === undefined) {
+                    categoryVisibility[cat] = true;
+                }
+            });
+        }
+
         function toggleAddForm() {
             const formContainer = document.getElementById('adminFormContainer');
             const isNowExpanded = formContainer.classList.toggle('collapsed') === false;
@@ -904,10 +917,12 @@
         }
 
         function handleSearch() {
+            ensureAdminCategoryVisibilityInitialized();
             const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
+            const allCats = getAllAdminCategoryNames();
             const activeCats = allCats.filter(k => categoryVisibility[k] === true);
-            const hasSpecificCategory = activeCats.length > 0 && activeCats.length < allCats.length;
+            const isAllCatsActive = activeCats.length === allCats.length;
+            const isNoneCatsActive = activeCats.length === 0;
 
             const filtered = allLocations.filter(loc => {
                 const primaryCat = loc.category || '📍 Другое';
@@ -921,7 +936,12 @@
                 const catMatch = allLocCats.some(c => c.toLowerCase().includes(query));
                 const textPass = !query || (titleMatch || addressMatch || descMatch || metroMatch || catMatch);
 
-                const catPass = !hasSpecificCategory || allLocCats.some(c => categoryVisibility[c] === true);
+                let catPass = true;
+                if (isNoneCatsActive) {
+                    catPass = false;
+                } else if (!isAllCatsActive) {
+                    catPass = allLocCats.some(c => categoryVisibility[c] === true);
+                }
 
                 return textPass && catPass;
             });
@@ -1131,10 +1151,15 @@
         }
 
         function renderTopCatFilter(categories) {
+            ensureAdminCategoryVisibilityInitialized();
             const container = document.getElementById('catChipsScroll');
             container.innerHTML = '';
-            categories.forEach(catName => {
-                const isVis = categoryVisibility[catName] !== false;
+            const allCats = getAllAdminCategoryNames();
+            const activeCount = allCats.filter(k => categoryVisibility[k] === true).length;
+            const isAllActive = allCats.length > 0 && activeCount === allCats.length;
+
+            (categories || allCats).forEach(catName => {
+                const isVis = categoryVisibility[catName] === true;
                 const chip = document.createElement('div');
                 chip.className = `cat-chip ${isVis ? 'active' : 'disabled'}`;
                 chip.innerHTML = `<span>${catName}</span>`;
@@ -1143,14 +1168,18 @@
             });
 
             const toggleAllBtn = document.getElementById('toggleAllBtn');
-            toggleAllBtn.className = `toggle-all-btn ${allVisibleState ? '' : 'off'}`;
-            toggleAllBtn.innerText = allVisibleState ? '👁️ Все' : '🙈 Все';
+            if (toggleAllBtn) {
+                toggleAllBtn.className = `toggle-all-btn ${isAllActive ? '' : 'off'}`;
+                toggleAllBtn.innerText = isAllActive ? '👁️ Все' : '🙈 Все';
+            }
+            allVisibleState = isAllActive;
         }
 
         function toggleCategoryMap(catName, event) {
             if (event) { event.stopPropagation(); event.preventDefault(); }
+            ensureAdminCategoryVisibilityInitialized();
             
-            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
+            const allCats = getAllAdminCategoryNames();
             const currentlyActive = allCats.filter(k => categoryVisibility[k] === true);
             const isOnlyCurrentActive = currentlyActive.length === 1 && currentlyActive[0] === catName;
 
@@ -1168,11 +1197,22 @@
         }
 
         function toggleAllCategories() {
-            allVisibleState = true;
-            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
-            allCats.forEach(catName => {
-                categoryVisibility[catName] = true;
-            });
+            ensureAdminCategoryVisibilityInitialized();
+            const allCats = getAllAdminCategoryNames();
+            const activeCount = allCats.filter(k => categoryVisibility[k] === true).length;
+            const isAllCurrentlyActive = activeCount === allCats.length;
+            
+            if (isAllCurrentlyActive) {
+                allCats.forEach(catName => {
+                    categoryVisibility[catName] = false;
+                });
+                allVisibleState = false;
+            } else {
+                allCats.forEach(catName => {
+                    categoryVisibility[catName] = true;
+                });
+                allVisibleState = true;
+            }
             handleSearch();
         }
 

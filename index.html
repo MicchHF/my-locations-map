@@ -319,6 +319,19 @@
         let searchDebounceTimer = null;
         let hideSuggestionsTimer = null;
 
+        function getAllCategoryNames() {
+            return Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')])).filter(Boolean);
+        }
+
+        function ensureCategoryVisibilityInitialized() {
+            const allCats = getAllCategoryNames();
+            allCats.forEach(cat => {
+                if (categoryVisibility[cat] === undefined) {
+                    categoryVisibility[cat] = true;
+                }
+            });
+        }
+
         function getInitialTheme() {
             const saved = localStorage.getItem('dalazareva_theme');
             if (saved) return saved === 'dark';
@@ -426,10 +439,11 @@
             showFavoritesOnly = !showFavoritesOnly;
             if (showFavoritesOnly) {
                 // При включении избранного показываем все категории с избранными
-                Object.keys(categoryVisibility).forEach(k => categoryVisibility[k] = true);
+                ensureCategoryVisibilityInitialized();
+                getAllCategoryNames().forEach(k => categoryVisibility[k] = true);
             }
             applyCombinedFilters();
-            renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
+            renderBothCatFilterBars(getAllCategoryNames());
         }
 
         function getOrCreateDeviceId() {
@@ -772,18 +786,44 @@
 
                 loadLocations();
                 
-                myMap.container.fitToViewport();
-                setTimeout(() => { if (myMap) myMap.container.fitToViewport(); }, 200);
-                setTimeout(() => { if (myMap) myMap.container.fitToViewport(); }, 600);
-
                 const refitMapViewport = () => {
                     requestAnimationFrame(() => {
-                        if (myMap) myMap.container.fitToViewport();
+                        if (myMap && myMap.container) {
+                            myMap.container.fitToViewport();
+                        }
                     });
                 };
+                window.refitMapViewport = refitMapViewport;
+
+                // Периодическая адаптация при старте PWA (пока завершаются системные анимации и скрываются панели на iOS)
+                refitMapViewport();
+                [60, 150, 350, 700, 1200, 2200].forEach(delay => {
+                    setTimeout(refitMapViewport, delay);
+                });
 
                 window.addEventListener('resize', refitMapViewport, { passive: true });
-                window.addEventListener('orientationchange', () => setTimeout(refitMapViewport, 150), { passive: true });
+                window.addEventListener('orientationchange', () => {
+                    refitMapViewport();
+                    setTimeout(refitMapViewport, 150);
+                    setTimeout(refitMapViewport, 450);
+                }, { passive: true });
+                window.addEventListener('pageshow', refitMapViewport, { passive: true });
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'visible') {
+                        refitMapViewport();
+                        setTimeout(refitMapViewport, 150);
+                    }
+                });
+                if (window.visualViewport) {
+                    window.visualViewport.addEventListener('resize', refitMapViewport, { passive: true });
+                }
+                if (window.ResizeObserver) {
+                    const mapEl = document.getElementById('map');
+                    if (mapEl) {
+                        const ro = new ResizeObserver(() => refitMapViewport());
+                        ro.observe(mapEl);
+                    }
+                }
             });
         }
 
@@ -834,6 +874,7 @@
         async function loadLocations() {
             // Мгновенная отрисовка базового каталога
             allLocations = (Array.isArray(CURATED_MOSCOW_LOCATIONS) ? CURATED_MOSCOW_LOCATIONS : []).map(loc => parseLocationData(loc));
+            ensureCategoryVisibilityInitialized();
             initMetroDrawer();
             renderInterface(allLocations);
 
@@ -842,6 +883,7 @@
                     const { data, error } = await supabaseClient.from('Location').select('*');
                     if (!error && data && data.length > 0) {
                         allLocations = data.map(loc => parseLocationData(loc));
+                        ensureCategoryVisibilityInitialized();
                         initMetroDrawer();
                         applyCombinedFilters();
                     }
@@ -1130,12 +1172,14 @@
         }
 
         function applyCombinedFilters() {
+            ensureCategoryVisibilityInitialized();
             const query = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
             const favs = getFavorites().map(String);
-            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
+            const allCats = getAllCategoryNames();
             
             const activeCats = allCats.filter(k => categoryVisibility[k] === true);
-            const hasSpecificCategory = activeCats.length > 0 && activeCats.length < allCats.length;
+            const isAllCatsActive = activeCats.length === allCats.length;
+            const isNoneCatsActive = activeCats.length === 0;
 
             const filtered = allLocations.filter(loc => {
                 const primaryCat = loc.category || '📍 Другое';
@@ -1151,7 +1195,13 @@
 
                 const metroPass = !selectedMetroFilter || (loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => (m.name || m.stationName) === selectedMetroFilter));
                 const favPass = !showFavoritesOnly || favs.includes(String(loc.id));
-                const catPass = !hasSpecificCategory || allLocCats.some(c => categoryVisibility[c] === true);
+
+                let catPass = true;
+                if (isNoneCatsActive) {
+                    catPass = false;
+                } else if (!isAllCatsActive) {
+                    catPass = allLocCats.some(c => categoryVisibility[c] === true);
+                }
 
                 return textPass && metroPass && favPass && catPass;
             });
@@ -1305,11 +1355,17 @@
             }
             locationPlacemarksMap = {};
 
-            const allCatsToDisplay = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
+            ensureCategoryVisibilityInitialized();
+            const allCatsToDisplay = getAllCategoryNames();
             renderBothCatFilterBars(allCatsToDisplay);
 
             if (locationsToRender.length === 0) {
-                listEl.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:0.9rem;">Ничего не найдено 🔍</div>';
+                const activeCount = allCatsToDisplay.filter(k => categoryVisibility[k] === true).length;
+                if (activeCount === 0) {
+                    listEl.innerHTML = '<div style="text-align:center; padding:32px 20px; color:var(--text-muted); font-size:0.9rem;">Все категории скрыты 🙈<br><span style="font-size:0.8rem; opacity:0.85; display:inline-block; margin-top:6px;">Нажмите «Все», чтобы показать точки</span></div>';
+                } else {
+                    listEl.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:0.9rem;">Ничего не найдено 🔍</div>';
+                }
                 return;
             }
 
@@ -1488,20 +1544,21 @@
         }
 
         function renderBothCatFilterBars(categories) {
+            ensureCategoryVisibilityInitialized();
             const mapContainer = document.getElementById('catChipsScroll');
             const verticalContainer = document.getElementById('verticalCatChipsScroll');
 
             if (mapContainer) mapContainer.innerHTML = '';
             if (verticalContainer) verticalContainer.innerHTML = '';
 
-            const uniqueCats = Array.from(new Set(categories)).filter(Boolean);
+            const uniqueCats = Array.from(new Set(categories || getAllCategoryNames())).filter(Boolean);
             const favCount = getFavorites().length;
 
             // Мобильные чипы над картой
             if (mapContainer) {
                 mapContainer.appendChild(createFavChip(favCount));
                 uniqueCats.forEach(catName => {
-                    const isVis = categoryVisibility[catName] !== false;
+                    const isVis = categoryVisibility[catName] === true;
                     mapContainer.appendChild(createChipElement(catName, isVis));
                 });
             }
@@ -1510,7 +1567,7 @@
             if (verticalContainer) {
                 verticalContainer.appendChild(createVerticalFavItem(favCount));
                 uniqueCats.forEach(catName => {
-                    const isVis = categoryVisibility[catName] !== false;
+                    const isVis = categoryVisibility[catName] === true;
                     verticalContainer.appendChild(createVerticalCatItem(catName, isVis));
                 });
             }
@@ -1581,7 +1638,8 @@
 
         /* При нажатии на кнопку "Все" - если все включены, то скрываются все точки; если не все включены - включаются все */
         function toggleAllCategories() {
-            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
+            ensureCategoryVisibilityInitialized();
+            const allCats = getAllCategoryNames();
             const activeCount = allCats.filter(k => categoryVisibility[k] === true).length;
             const isAllCurrentlyActive = activeCount === allCats.length && !showFavoritesOnly;
 
@@ -1605,7 +1663,8 @@
         }
 
         function updateToggleAllBtnState() {
-            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
+            ensureCategoryVisibilityInitialized();
+            const allCats = getAllCategoryNames();
             const activeCount = allCats.filter(k => categoryVisibility[k] === true).length;
             const totalCount = allCats.length;
             const isAllActive = totalCount > 0 && activeCount === totalCount && !showFavoritesOnly;
@@ -1642,11 +1701,12 @@
         /* При нажатии на категорию - если было выбрано избранное, оно отключается; включается выбранная категория */
         function toggleCategoryMap(catName, btnEl, event) {
             if (event) { event.stopPropagation(); event.preventDefault(); }
+            ensureCategoryVisibilityInitialized();
             
             const wasFavoritesOnly = showFavoritesOnly;
             showFavoritesOnly = false;
             
-            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
+            const allCats = getAllCategoryNames();
             const currentlyActive = allCats.filter(k => categoryVisibility[k] === true);
             const isOnlyCurrentActive = !wasFavoritesOnly && currentlyActive.length === 1 && currentlyActive[0] === catName;
 
@@ -1782,7 +1842,9 @@
             if (view === 'map') {
                 document.body.classList.remove('show-list');
                 btnMap.classList.add('active'); btnList.classList.remove('active');
-                setTimeout(() => { if (myMap) myMap.container.fitToViewport(); }, 50);
+                if (window.refitMapViewport) window.refitMapViewport();
+                setTimeout(() => { if (myMap && myMap.container) myMap.container.fitToViewport(); }, 50);
+                setTimeout(() => { if (myMap && myMap.container) myMap.container.fitToViewport(); }, 200);
             } else {
                 document.body.classList.add('show-list');
                 btnList.classList.add('active'); btnMap.classList.remove('active');
