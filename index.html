@@ -113,6 +113,7 @@
                 <div><b>Имя / Ник:</b> <span id="modalUserName">Пользователь</span></div>
                 <div><b>Статус тарифа:</b> <span id="modalUserPlan" style="color: #0284c7; font-weight: 700;">PREMIUM ✨</span></div>
                 <div><b>Подписка активна:</b> <span id="modalUserDaysLeft" style="font-weight: 700; color: #10b981;">—</span></div>
+                <div><b>Активных сессий:</b> <span id="modalUserSessions" style="font-weight: 700; color: #38bdf8;">1 из 3</span></div>
                 
                 <div style="margin-top: 6px;">
                     <div style="font-size: 0.78rem; color: #64748b; margin-bottom: 4px;">Ваш персональный ключ доступа:</div>
@@ -303,14 +304,18 @@
             } catch (e) {}
         }
 
+        window.BOT_USERNAME = window.BOT_USERNAME || "dalazareva_locations_bot";
+        var BOT_USERNAME = window.BOT_USERNAME;
+
         let currentUser = {
             telegram_id: null,
-            first_name: "Тестовый пользователь",
-            username: "tester",
+            first_name: "Пользователь",
+            username: "",
             access_token: "",
             devices: [],
             max_devices: 3,
-            plan: "vip"
+            plan: "free",
+            expires_at: null
         };
 
         let myMap;
@@ -475,14 +480,14 @@
 
             if (devices.includes(currentDeviceId)) return true;
 
-            // Строгая проверка лимита устройств (ручной сброс через бота)
+            // Строгая проверка лимита активных сессий (ручной сброс через бота)
             if (devices.length >= maxDevices) {
                 const descEl = document.getElementById('authGateDesc');
                 if (descEl) {
                     descEl.innerHTML = `
-                        🚫 <b>Лимит устройств исчерпан (${devices.length} из ${maxDevices}).</b><br><br>
-                        Этот ключ привязан к другим устройствам.<br>
-                        Перейдите в бот и нажмите кнопку <b>«🔄 Сбросить привязанные устройства»</b>.
+                        🚫 <b>Лимит активных сессий исчерпан (${devices.length} из ${maxDevices}).</b><br><br>
+                        Этот ключ уже используется на других устройствах или в других браузерах.<br>
+                        Перейдите в бот и нажмите кнопку <b>«Сбросить сессии»</b>.
                     `;
                 }
                 const inputGroup = document.querySelector('.auth-input-group');
@@ -520,14 +525,45 @@
             alertBox.style.display = 'block';
         }
 
-        function isUserSubscriptionExpired(profile) {
-            if (!profile) return false;
+        function checkUserSubscription(profile) {
+            if (!profile) {
+                return {
+                    allowed: false,
+                    reason: 'no_profile',
+                    alertHtml: `👋 <b>Добро пожаловать!</b><br>Запустите бота <a href="https://t.me/${BOT_USERNAME}" target="_blank" style="color:#38bdf8; text-decoration:underline;">@${BOT_USERNAME}</a>, чтобы активировать 7 дней бесплатного доступа.`
+                };
+            }
+
             const plan = (profile.plan || 'free').toLowerCase();
-            if (plan === 'lifetime' || profile.is_lifetime === true) return false;
+            if (plan === 'lifetime' || profile.is_lifetime === true) {
+                return { allowed: true, plan: 'lifetime', isLifetime: true };
+            }
+
             const expiresAt = profile.expires_at || profile.access_until || profile.expiration_date;
-            if (!expiresAt) return false;
+            if (!expiresAt) {
+                return {
+                    allowed: false,
+                    reason: 'not_activated',
+                    alertHtml: `🎁 <b>Доступ не активирован</b><br>Вам доступно 7 дней бесплатного доступа! Активируйте пробный период в боте <a href="https://t.me/${BOT_USERNAME}" target="_blank" style="color:#38bdf8; text-decoration:underline;">@${BOT_USERNAME}</a>.`
+                };
+            }
+
             const expDate = new Date(expiresAt);
-            return expDate.getTime() < Date.now();
+            if (expDate.getTime() < Date.now()) {
+                const dateStr = expDate.toLocaleDateString('ru-RU');
+                return {
+                    allowed: false,
+                    reason: 'expired',
+                    alertHtml: `⏳ <b>Срок действия пробного периода (или подписки) истёк ${dateStr}.</b><br>Продлите доступ в боте <a href="https://t.me/${BOT_USERNAME}" target="_blank" style="color:#38bdf8; text-decoration:underline;">@${BOT_USERNAME}</a>.`
+                };
+            }
+
+            const diffDays = Math.ceil((expDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+            return { allowed: true, plan: plan, expDate: expDate, diffDays: diffDays };
+        }
+
+        function isUserSubscriptionExpired(profile) {
+            return !checkUserSubscription(profile).allowed;
         }
 
         function getUserDaysLeftText(profile) {
@@ -535,7 +571,7 @@
             const plan = (profile.plan || 'free').toLowerCase();
             if (plan === 'lifetime' || profile.is_lifetime === true) return '♾️ Навсегда (Бессрочно)';
             const expiresAt = profile.expires_at || profile.access_until || profile.expiration_date;
-            if (!expiresAt) return plan === 'free' ? 'Базовый' : 'Активна';
+            if (!expiresAt) return plan === 'free' ? 'Не активирован' : 'Активна';
             const diffDays = Math.ceil((new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
             if (diffDays <= 0) return 'Истекла';
             return `${diffDays} дн. (до ${new Date(expiresAt).toLocaleDateString('ru-RU')})`;
@@ -549,18 +585,23 @@
             const planEl = document.getElementById('modalUserPlan');
             const tokenEl = document.getElementById('modalUserTokenText');
             const daysEl = document.getElementById('modalUserDaysLeft');
+            const sessionsEl = document.getElementById('modalUserSessions');
 
             let userTag = currentUser.username ? `@${currentUser.username}` : (currentUser.first_name || "Пользователь");
             if (nameEl) nameEl.innerText = userTag;
 
-            let planText = "FREE (Базовый)";
+            let planText = "FREE (Без доступа)";
             if (currentUser.plan === 'vip' || currentUser.plan === 'premium') planText = "PREMIUM ✨";
-            else if (currentUser.plan === 'trial') planText = "ТЕСТОВЫЙ ДОСТУП 🎁";
+            else if (currentUser.plan === 'trial') planText = "ПРОБНЫЙ ПЕРИОД 7 ДНЕЙ 🎁";
             else if (currentUser.plan === 'lifetime') planText = "LIFETIME (Навсегда) ♾️";
             if (planEl) planEl.innerText = planText;
 
             if (tokenEl) tokenEl.innerText = currentUser.access_token || "—";
             if (daysEl) daysEl.innerText = getUserDaysLeftText(currentUser);
+
+            const curSessions = Array.isArray(currentUser.devices) ? currentUser.devices.length : 0;
+            const maxSessions = currentUser.max_devices || 3;
+            if (sessionsEl) sessionsEl.innerText = `${curSessions} из ${maxSessions}`;
 
             modal.classList.add('active');
         }
@@ -621,8 +662,9 @@
 
             if (tgUser && tgUser.id) {
                 await syncUserTelegram(tgUser);
-                if (isUserSubscriptionExpired(currentUser)) {
-                    showAuthAlert(`⏳ Срок действия вашей подписки истёк.<br>Продлите доступ в боте <a href="https://t.me/${BOT_USERNAME}" target="_blank" style="color:#38bdf8; text-decoration:underline;">@${BOT_USERNAME}</a>.`, "error");
+                const subCheck = checkUserSubscription(currentUser);
+                if (!subCheck.allowed) {
+                    showAuthAlert(subCheck.alertHtml, "error");
                 } else {
                     const deviceAllowed = await verifyAndRegisterDevice(currentUser);
                     if (deviceAllowed) {
@@ -633,8 +675,9 @@
                 const tokenToVerify = tokenFromUrl || savedToken || tgIdFromUrl;
                 const profile = await findUserByToken(tokenToVerify);
                 if (profile) {
-                    if (isUserSubscriptionExpired(profile)) {
-                        showAuthAlert(`⏳ Срок действия вашей подписки истёк.<br>Продлите доступ в боте <a href="https://t.me/${BOT_USERNAME}" target="_blank" style="color:#38bdf8; text-decoration:underline;">@${BOT_USERNAME}</a>.`, "error");
+                    const subCheck = checkUserSubscription(profile);
+                    if (!subCheck.allowed) {
+                        showAuthAlert(subCheck.alertHtml, "error");
                     } else {
                         currentUser = profile;
                         syncUserFavorites(profile);
@@ -733,14 +776,15 @@
             const input = document.getElementById('accessCodeInput');
             const code = input.value.trim();
             if (!code) {
-                showAuthAlert("Пожалуйста, введите ключ доступа или ваш Telegram @username", "error");
+                showAuthAlert("Пожалуйста, введите ключ доступа (dl_...)", "error");
                 return;
             }
 
             const profile = await findUserByToken(code);
             if (profile) {
-                if (isUserSubscriptionExpired(profile)) {
-                    showAuthAlert(`⏳ Срок действия вашей подписки истёк.<br>Продлите доступ в боте <a href="https://t.me/${BOT_USERNAME}" target="_blank" style="color:#38bdf8; text-decoration:underline;">@${BOT_USERNAME}</a>.`, "error");
+                const subCheck = checkUserSubscription(profile);
+                if (!subCheck.allowed) {
+                    showAuthAlert(subCheck.alertHtml, "error");
                     return;
                 }
                 currentUser = profile;
@@ -757,7 +801,7 @@
                     requestAnimationFrame(() => initMap());
                 }
             } else {
-                showAuthAlert(`❌ Неверный ключ доступа.<br>Приобретите или активируйте доступ в боте <a href="https://t.me/${BOT_USERNAME}" target="_blank" style="color:#38bdf8; text-decoration:underline;">@${BOT_USERNAME}</a>.`, "error");
+                showAuthAlert(`❌ Неверный ключ доступа.<br>Получите ключ или активируйте бесплатный доступ в боте <a href="https://t.me/${BOT_USERNAME}" target="_blank" style="color:#38bdf8; text-decoration:underline;">@${BOT_USERNAME}</a>.`, "error");
             }
         }
 
@@ -770,18 +814,24 @@
             const planEl = document.getElementById('userPlanLabel');
             if (!nameEl || !planEl) return;
 
-            let userTag = currentUser.username ? `@${currentUser.username}` : (currentUser.first_name || "Гость (Карта открыта)");
+            let userTag = currentUser.username ? `@${currentUser.username}` : (currentUser.first_name || "Пользователь");
             nameEl.innerText = `👤 ${userTag}`;
 
             let planLabel = "Тариф: FREE / ТЕСТ";
             let planColor = "#38bdf8";
 
-            if (currentUser.plan === 'premium' || currentUser.plan === 'vip') {
-                planLabel = "Тариф: PREMIUM ✨";
-                planColor = "#fbbf24";
-            } else if (currentUser.plan === 'trial') {
-                planLabel = "Тариф: ТЕСТ 🎁";
+            const plan = (currentUser.plan || 'free').toLowerCase();
+            if (plan === 'lifetime' || currentUser.is_lifetime === true) {
+                planLabel = "Тариф: LIFETIME ♾️";
                 planColor = "#34d399";
+            } else if (plan === 'trial') {
+                const daysLeft = getUserDaysLeftText(currentUser);
+                planLabel = `Тариф: ТЕСТ 🎁 (${daysLeft})`;
+                planColor = "#fcd34d";
+            } else if (plan === 'premium' || plan === 'vip') {
+                const daysLeft = getUserDaysLeftText(currentUser);
+                planLabel = `Тариф: VIP ✨ (${daysLeft})`;
+                planColor = "#fbbf24";
             }
 
             planEl.innerText = planLabel;
@@ -1893,6 +1943,7 @@
                 toggleMobileSearch(false);
             }
         }
+        window.switchMobileView = switchMobileView;
 
         checkAuthAndInit();
     </script>
