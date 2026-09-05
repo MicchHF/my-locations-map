@@ -530,7 +530,7 @@
                 return {
                     allowed: false,
                     reason: 'no_profile',
-                    alertHtml: `👋 <b>Добро пожаловать!</b><br>Запустите бота <a href="https://t.me/${BOT_USERNAME}" target="_blank" style="color:#38bdf8; text-decoration:underline;">@${BOT_USERNAME}</a>, чтобы активировать 7 дней бесплатного доступа.`
+                    alertHtml: `👋 <b>Добро пожаловать!</b><br>Вам доступно 7 дней бесплатного доступа! Активируйте пробный период по кнопке ниже.`
                 };
             }
 
@@ -544,7 +544,7 @@
                 return {
                     allowed: false,
                     reason: 'not_activated',
-                    alertHtml: `🎁 <b>Доступ не активирован</b><br>Вам доступно 7 дней бесплатного доступа! Активируйте пробный период в боте <a href="https://t.me/${BOT_USERNAME}" target="_blank" style="color:#38bdf8; text-decoration:underline;">@${BOT_USERNAME}</a>.`
+                    alertHtml: `🎁 <b>Доступ не активирован</b><br>Вам доступно 7 дней бесплатного доступа! Активируйте пробный период по кнопке ниже.`
                 };
             }
 
@@ -554,7 +554,7 @@
                 return {
                     allowed: false,
                     reason: 'expired',
-                    alertHtml: `⏳ <b>Срок действия пробного периода (или подписки) истёк ${dateStr}.</b><br>Продлите доступ в боте <a href="https://t.me/${BOT_USERNAME}" target="_blank" style="color:#38bdf8; text-decoration:underline;">@${BOT_USERNAME}</a>.`
+                    alertHtml: `⏳ <b>Срок действия пробного периода (или подписки) истёк ${dateStr}.</b><br>Продлите доступ через бота по кнопке ниже.`
                 };
             }
 
@@ -801,7 +801,7 @@
                     requestAnimationFrame(() => initMap());
                 }
             } else {
-                showAuthAlert(`❌ Неверный ключ доступа.<br>Получите ключ или активируйте бесплатный доступ в боте <a href="https://t.me/${BOT_USERNAME}" target="_blank" style="color:#38bdf8; text-decoration:underline;">@${BOT_USERNAME}</a>.`, "error");
+                showAuthAlert("❌ Неверный ключ доступа.<br>Получите ключ или активируйте бесплатный доступ через бота.", "error");
             }
         }
 
