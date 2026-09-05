@@ -883,7 +883,10 @@
 
             let finalDescription = description;
             if (rawUrl) {
-                finalDescription = `<!--url:${rawUrl}-->\n${description}`.trim();
+                finalDescription = `<!--url:${rawUrl}-->\n${finalDescription}`.trim();
+            }
+            if (Array.isArray(extra_categories) && extra_categories.length > 0) {
+                finalDescription = `<!--extra_categories:${JSON.stringify(extra_categories)}-->\n${finalDescription}`.trim();
             }
 
             let { error } = await supabaseClient.from('Location').insert([{
@@ -1325,7 +1328,10 @@
 
             let finalDescription = description;
             if (rawUrl) {
-                finalDescription = `<!--url:${rawUrl}-->\n${description}`.trim();
+                finalDescription = `<!--url:${rawUrl}-->\n${finalDescription}`.trim();
+            }
+            if (Array.isArray(extra_categories) && extra_categories.length > 0) {
+                finalDescription = `<!--extra_categories:${JSON.stringify(extra_categories)}-->\n${finalDescription}`.trim();
             }
 
             let { error } = await supabaseClient.from('Location').update({
