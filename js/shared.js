@@ -513,12 +513,27 @@ function parseLocationData(loc) {
             desc = desc.replace(/<!--url:.*?-->\r?\n?/, '').trim();
         }
     }
+
+    let extraCats = Array.isArray(loc.extra_categories) ? loc.extra_categories : [];
+    if (extraCats.length === 0 && typeof desc === 'string') {
+        const catsMatch = desc.match(/<!--(?:extra_categories|cats):(.*?)(?:-->)/);
+        if (catsMatch) {
+            try {
+                const parsed = JSON.parse(catsMatch[1]);
+                if (Array.isArray(parsed)) extraCats = parsed;
+            } catch (e) {
+                extraCats = catsMatch[1].split(',').map(s => s.trim()).filter(Boolean);
+            }
+            desc = desc.replace(/<!--(?:extra_categories|cats):.*?(?:-->)\r?\n?/, '').trim();
+        }
+    }
+
     return {
         ...loc,
         url: url ? url.trim() : '',
         description: desc,
         category: normalizeCategoryName(loc.category),
-        extra_categories: Array.isArray(loc.extra_categories) ? loc.extra_categories.map(normalizeCategoryName) : []
+        extra_categories: Array.isArray(extraCats) ? extraCats.map(normalizeCategoryName) : []
     };
 }
 
