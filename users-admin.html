@@ -97,6 +97,8 @@
         .nav-btn.primary:hover { background: #0369a1; }
         .nav-btn.logout { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); color: #f87171; }
         .nav-btn.logout:hover { background: rgba(239, 68, 68, 0.25); color: #fca5a5; }
+        .nav-btn.warning { background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.4); color: #fbbf24; }
+        .nav-btn.warning:hover { background: rgba(245, 158, 11, 0.25); color: #fde68a; }
 
         /* Контейнер */
         .admin-main {
@@ -236,25 +238,58 @@
         .status-pill.expired .status-dot { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
 
         .token-cell {
-            display: inline-flex; align-items: center; gap: 6px; background: #1f2937;
-            padding: 4px 8px; border-radius: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-            font-size: 0.78rem; color: #93c5fd; border: 1px solid #374151; max-width: 170px;
-            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            display: inline-flex; align-items: center; justify-content: space-between; gap: 8px;
+            background: #111827; padding: 5px 8px; border-radius: 8px; border: 1px solid #283548;
+            min-width: 250px; max-width: 300px; width: 100%; box-sizing: border-box;
+        }
+        .token-text-wrap {
+            display: flex; align-items: center; gap: 6px; overflow: hidden; min-width: 0; flex: 1; cursor: pointer;
+        }
+        .token-text {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.78rem; color: #93c5fd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .token-text-wrap:hover .token-text { color: #bfdbfe; text-decoration: underline; }
+        .token-badge-legacy {
+            font-size: 0.65rem; font-weight: 700; padding: 1px 5px; border-radius: 4px;
+            background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4);
+            text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; flex-shrink: 0;
+        }
+        .token-actions {
+            display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;
         }
         .copy-icon-btn {
-            background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 0.85rem; padding: 2px;
-            transition: color 0.15s;
+            background: #1f293d; border: 1px solid #334155; color: #94a3b8; cursor: pointer;
+            font-size: 0.78rem; padding: 3px 6px; border-radius: 5px; transition: all 0.15s;
+            display: inline-flex; align-items: center; justify-content: center; line-height: 1;
         }
-        .copy-icon-btn:hover { color: #fff; }
+        .copy-icon-btn:hover { background: #334155; color: #fff; border-color: #60a5fa; }
+        .copy-icon-btn.regen:hover, .copy-icon-btn.regen.highlight {
+            background: rgba(245, 158, 11, 0.22); color: #fbbf24; border-color: rgba(245, 158, 11, 0.5);
+        }
+        .token-empty-cell {
+            display: inline-flex; align-items: center; gap: 8px;
+        }
 
         .device-counter {
-            font-size: 0.8rem; font-weight: 600; color: #e5e7eb; display: inline-flex; align-items: center; gap: 6px;
+            display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
         }
+        .device-pill {
+            display: inline-flex; align-items: center; gap: 3px; padding: 3px 8px;
+            background: #172033; border: 1px solid #283750; border-radius: 6px;
+            font-size: 0.78rem; color: #cbd5e1; white-space: nowrap;
+        }
+        .device-pill b { color: #fff; font-weight: 700; }
+        .device-pill.limit-reached {
+            background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); color: #fca5a5;
+        }
+        .device-pill.limit-reached b { color: #f87171; }
         .device-reset-btn {
-            background: #374151; border: none; color: #d1d5db; padding: 3px 6px;
-            border-radius: 5px; font-size: 0.7rem; cursor: pointer; transition: all 0.15s;
+            background: #1f2a3c; border: 1px solid #33435c; color: #cbd5e1; padding: 3px 7px;
+            border-radius: 6px; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s;
+            white-space: nowrap; display: inline-flex; align-items: center; gap: 3px;
         }
-        .device-reset-btn:hover { background: #4b5563; color: #fff; }
+        .device-reset-btn:hover { background: #2d3d57; color: #fff; border-color: #60a5fa; }
 
         /* Кнопки действий над пользователем */
         .actions-group { display: flex; align-items: center; gap: 6px; }
@@ -402,7 +437,10 @@
                 <button class="filter-chip" onclick="setFilter('lifetime', this)">♾️ Навсегда</button>
             </div>
 
-            <div style="display: flex; gap: 8px;">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                <button id="batchRegenBtn" class="nav-btn warning" style="display: none;" onclick="batchRegenerateShortTokens()" title="Обновить короткие токены до надежного формата dl_...">
+                    ⚡ Обновить короткие ключи (<span id="shortTokensCount">0</span>)
+                </button>
                 <button class="nav-btn" onclick="loadUsers()" title="Обновить список">🔄 Обновить</button>
                 <button class="add-user-btn" onclick="openCreateUserModal()">➕ Выдать доступ / Добавить</button>
             </div>
@@ -413,14 +451,14 @@
             <table class="users-table">
                 <thead>
                     <tr>
-                        <th>Пользователь</th>
-                        <th>Telegram ID</th>
-                        <th>Ключ доступа (Токен)</th>
-                        <th>Тариф</th>
-                        <th>Срок подписки</th>
-                        <th>Осталось дней</th>
-                        <th>Устройства</th>
-                        <th>Действия</th>
+                        <th style="min-width: 140px;">Пользователь</th>
+                        <th style="min-width: 110px;">Telegram ID</th>
+                        <th style="min-width: 270px;">Ключ доступа (Токен)</th>
+                        <th style="min-width: 90px;">Тариф</th>
+                        <th style="min-width: 125px;">Срок подписки</th>
+                        <th style="min-width: 95px;">Осталось дней</th>
+                        <th style="min-width: 140px;">Устройства</th>
+                        <th style="min-width: 110px;">Действия</th>
                     </tr>
                 </thead>
                 <tbody id="usersTableBody">
@@ -533,7 +571,10 @@
 
             <div class="form-row">
                 <label class="form-label">Ключ доступа (Токен)</label>
-                <input type="text" id="editToken" class="form-input-ctrl">
+                <div style="display: flex; gap: 6px;">
+                    <input type="text" id="editToken" class="form-input-ctrl" style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.82rem;">
+                    <button type="button" class="nav-btn" onclick="generateEditToken()" title="Сгенерировать новый ключ dl_...">⚡ Новый dl_</button>
+                </div>
             </div>
 
             <div class="form-row">
@@ -744,6 +785,18 @@
             document.getElementById('statExpired').innerText = expired;
             document.getElementById('statTrialUsers').innerText = trial;
             document.getElementById('countAll').innerText = total;
+
+            const shortUsers = allUsers.filter(u => !u.access_token || u.access_token.length < 15 || u.access_token.startsWith('DL-'));
+            const batchBtn = document.getElementById('batchRegenBtn');
+            const shortCountEl = document.getElementById('shortTokensCount');
+            if (batchBtn && shortCountEl) {
+                if (shortUsers.length > 0) {
+                    batchBtn.style.display = 'inline-flex';
+                    shortCountEl.innerText = shortUsers.length;
+                } else {
+                    batchBtn.style.display = 'none';
+                }
+            }
         }
 
         function renderUsersTable() {
@@ -783,6 +836,8 @@
                 const tgUser = u.username ? `@${u.username}` : (u.first_name || 'Без никнейма');
                 const tgLink = u.username ? `<a href="https://t.me/${u.username}" target="_blank" style="color:#38bdf8; text-decoration:none;">@${u.username} ↗</a>` : `<span style="color:var(--text-muted);">—</span>`;
                 const token = u.access_token || '';
+                const isShort = !token || token.length < 15 || token.startsWith('DL-');
+                const userIdentifier = u.id || u.telegram_id || u.access_token || '';
                 
                 const expiresDateStr = u.expires_at ? new Date(u.expires_at).toLocaleDateString('ru-RU') : (info.status === 'lifetime' ? 'Бессрочно' : '—');
                 
@@ -800,14 +855,27 @@
                                 ${u.telegram_id || '—'}
                             </code>
                         </td>
-                        <td>
+                        <td style="min-width: 270px;">
                             ${token ? `
-                                <div class="token-cell" title="${token}">
-                                    <span>${token}</span>
-                                    <button class="copy-icon-btn" onclick="copyTokenToClipboard('${token}')" title="Скопировать токен">📋</button>
-                                    <button class="copy-icon-btn" onclick="copyDirectMapLink('${token}')" title="Скопировать прямую ссылку на карту с авто-входом">🔗</button>
+                                <div class="token-cell" title="Ключ: ${token} (нажмите для копирования)">
+                                    <div class="token-text-wrap" onclick="copyTokenToClipboard('${token}')">
+                                        <span class="token-text">${token}</span>
+                                        ${isShort ? '<span class="token-badge-legacy" title="Устаревший короткий ключ">старый</span>' : ''}
+                                    </div>
+                                    <div class="token-actions">
+                                        <button class="copy-icon-btn" onclick="copyTokenToClipboard('${token}')" title="Скопировать ключ">📋</button>
+                                        <button class="copy-icon-btn" onclick="copyDirectMapLink('${token}')" title="Скопировать ссылку для входа">🔗</button>
+                                        <button class="copy-icon-btn regen ${isShort ? 'highlight' : ''}" onclick="regenerateUserToken('${userIdentifier}')" title="${isShort ? 'Обновить устаревший короткий ключ на dl_...' : 'Перегенерировать ключ (dl_...)'}">🔄</button>
+                                    </div>
                                 </div>
-                            ` : `<span style="color:var(--text-muted);">Нет токена</span>`}
+                            ` : `
+                                <div class="token-empty-cell">
+                                    <span style="color:var(--text-muted); font-size: 0.78rem;">Нет ключа</span>
+                                    <button class="device-reset-btn" onclick="regenerateUserToken('${userIdentifier}')" title="Сгенерировать ключ формата dl_...">
+                                        ⚡ Создать dl_...
+                                    </button>
+                                </div>
+                            `}
                         </td>
                         <td>
                             ${info.badgeHtml}
@@ -819,11 +887,13 @@
                         <td>
                             ${info.daysLeftText}
                         </td>
-                        <td>
+                        <td style="white-space: nowrap; min-width: 140px;">
                             <div class="device-counter">
-                                <span>📱 ${devices.length} / ${maxDev}</span>
+                                <span class="device-pill ${devices.length >= maxDev ? 'limit-reached' : ''}">
+                                    📱 <b>${devices.length}</b>/${maxDev}
+                                </span>
                                 ${devices.length > 0 ? `
-                                    <button class="device-reset-btn" onclick="resetUserDevices('${u.id || u.telegram_id || u.access_token}')" title="Сбросить привязанные устройства">
+                                    <button class="device-reset-btn" onclick="resetUserDevices('${userIdentifier}')" title="Сбросить привязанные устройства (${devices.length})">
                                         🔄 Сброс
                                     </button>
                                 ` : ''}
@@ -831,10 +901,10 @@
                         </td>
                         <td>
                             <div class="actions-group">
-                                <button class="action-btn extend" onclick="quickExtend30('${u.id || u.telegram_id || u.access_token}', 30)" title="Продлить на 30 дней">
+                                <button class="action-btn extend" onclick="quickExtend30('${userIdentifier}', 30)" title="Продлить на 30 дней">
                                     +30 дн
                                 </button>
-                                <button class="action-btn edit" onclick="openEditModal('${u.id || u.telegram_id || u.access_token}')" title="Редактировать подписку">
+                                <button class="action-btn edit" onclick="openEditModal('${userIdentifier}')" title="Редактировать подписку">
                                     ✏️
                                 </button>
                             </div>
@@ -856,11 +926,62 @@
             renderUsersTable();
         }
 
+        // Генерация надежного токена dl_... (24 символа hex)
+        function generateSecureToken() {
+            if (window.crypto && window.crypto.getRandomValues) {
+                const array = new Uint8Array(12);
+                window.crypto.getRandomValues(array);
+                return 'dl_' + Array.from(array, b => b.toString(16).padStart(2, '0')).join('');
+            }
+            return 'dl_' + Math.random().toString(16).substring(2, 10) + Math.random().toString(16).substring(2, 10) + Math.random().toString(16).substring(2, 10);
+        }
+
+        // Всплывающее уведомление (Toast)
+        function showToast(message, isSuccess = true) {
+            let toast = document.getElementById('adminToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'adminToast';
+                toast.style.cssText = `
+                    position: fixed;
+                    bottom: 24px;
+                    left: 50%;
+                    transform: translateX(-50%) translateY(0);
+                    background: #1e293b;
+                    color: #fff;
+                    padding: 10px 18px;
+                    border-radius: 10px;
+                    font-size: 0.88rem;
+                    font-weight: 600;
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+                    border: 1px solid #334155;
+                    z-index: 99999;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: opacity 0.2s, transform 0.2s;
+                    opacity: 0;
+                    pointer-events: none;
+                `;
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = (isSuccess ? '✅ ' : '⚠️ ') + message;
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(10px)';
+            }, 2500);
+        }
+
         // Копирование в буфер
         function copyTokenToClipboard(token) {
             if (!token) return;
             navigator.clipboard.writeText(token).then(() => {
-                alert(`Ключ доступа ${token} скопирован!`);
+                showToast(`Ключ скопирован: ${token}`);
+            }).catch(() => {
+                prompt("Скопируйте ключ доступа вручную:", token);
             });
         }
 
@@ -869,8 +990,90 @@
             const currentOrigin = window.location.origin;
             const link = `${currentOrigin}/index.html?token=${encodeURIComponent(token)}`;
             navigator.clipboard.writeText(link).then(() => {
-                alert(`Прямая ссылка для клиента скопирована в буфер:\n\n${link}`);
+                showToast("Прямая ссылка для клиента скопирована! 🔗");
+            }).catch(() => {
+                prompt("Скопируйте ссылку:", link);
             });
+        }
+
+        // Перегенерация ключа для конкретного пользователя
+        async function regenerateUserToken(identifier) {
+            const user = findUserByIdentifier(identifier);
+            if (!user) return;
+
+            const currentToken = user.access_token || 'нет ключа';
+            const userName = user.first_name || (user.username ? '@' + user.username : 'пользователя');
+            const isShort = !user.access_token || user.access_token.length < 15 || user.access_token.startsWith('DL-');
+
+            const msg = isShort
+                ? `Перегенерировать устаревший короткий токен для ${userName}?\n\nТекущий ключ: ${currentToken}\nБудет сгенерирован новый надежный ключ формата dl_... Клиенту потребуется передать новый ключ.`
+                : `Сгенерировать новый ключ доступа для ${userName}?\n\nТекущий ключ: ${currentToken}\nВнимание: старый ключ перестанет действовать!`;
+
+            if (!confirm(msg)) return;
+
+            const newToken = generateSecureToken();
+            try {
+                let query = supabaseClient.from('app_users').update({ access_token: newToken });
+                if (user.id) query = query.eq('id', user.id);
+                else if (user.telegram_id) query = query.eq('telegram_id', user.telegram_id);
+                else if (user.access_token) query = query.eq('access_token', user.access_token);
+
+                const { error } = await query;
+                if (error) throw error;
+
+                user.access_token = newToken;
+                updateStats();
+                renderUsersTable();
+                showToast(`Новый токен сохранен: ${newToken}`);
+
+                if (confirm(`Новый ключ успешно создан и сохранен в базе:\n${newToken}\n\nСкопировать новый ключ в буфер обмена?`)) {
+                    navigator.clipboard.writeText(newToken);
+                }
+            } catch (err) {
+                alert("Ошибка обновления токена: " + err.message);
+            }
+        }
+
+        // Пакетная перегенерация всех коротких/устаревших токенов
+        async function batchRegenerateShortTokens() {
+            const shortUsers = allUsers.filter(u => !u.access_token || u.access_token.length < 15 || u.access_token.startsWith('DL-'));
+            if (shortUsers.length === 0) {
+                alert("Все токены уже имеют современный надежный формат (dl_...).");
+                return;
+            }
+
+            if (!confirm(`Найдено ${shortUsers.length} пользователей с устаревшими короткими токенами (DL-**** или без токена).\n\nПерегенерировать для всех них новые надежные ключи формата dl_... в базе Supabase?`)) {
+                return;
+            }
+
+            let successCount = 0;
+            try {
+                for (const u of shortUsers) {
+                    const newToken = generateSecureToken();
+                    let query = supabaseClient.from('app_users').update({ access_token: newToken });
+                    if (u.id) query = query.eq('id', u.id);
+                    else if (u.telegram_id) query = query.eq('telegram_id', u.telegram_id);
+                    else if (u.access_token) query = query.eq('access_token', u.access_token);
+
+                    const { error } = await query;
+                    if (!error) {
+                        u.access_token = newToken;
+                        successCount++;
+                    }
+                }
+                updateStats();
+                renderUsersTable();
+                showToast(`Обновлено ${successCount} токенов!`);
+                alert(`Готово! Успешно обновлено ${successCount} из ${shortUsers.length} устаревших токенов на формат dl_...`);
+            } catch (err) {
+                alert("Ошибка пакетного обновления: " + err.message);
+            }
+        }
+
+        function generateEditToken() {
+            const newToken = generateSecureToken();
+            document.getElementById('editToken').value = newToken;
+            showToast("Сгенерирован новый ключ dl_... Не забудьте сохранить!");
         }
 
         // Сброс привязки устройств пользователя
@@ -966,8 +1169,7 @@
         }
 
         function generateNewRandomToken() {
-            const rand = Math.random().toString(36).substring(2, 8) + Math.random().toString(36).substring(2, 6);
-            document.getElementById('newToken').value = `loc_${rand}`;
+            document.getElementById('newToken').value = generateSecureToken();
         }
 
         async function saveNewUser() {
@@ -975,7 +1177,7 @@
             const firstName = document.getElementById('newFirstName').value.trim() || 'Пользователь';
             const plan = document.getElementById('newPlan').value;
             const expDateVal = document.getElementById('newExpiresAt').value;
-            const token = document.getElementById('newToken').value.trim() || `loc_${Math.random().toString(36).substring(2, 10)}`;
+            const token = document.getElementById('newToken').value.trim() || generateSecureToken();
             const maxDevices = parseInt(document.getElementById('newMaxDevices').value) || 3;
 
             let telegramId = null;
