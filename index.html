@@ -2,11 +2,11 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <meta id="themeColorMeta" name="theme-color" content="#f4f3f0">
+    <meta id="themeColorMeta" name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="@dalazareva локации📍">
     <meta name="mobile-web-app-capable" content="yes">
     <link rel="manifest" href="manifest.json">
@@ -76,6 +76,9 @@
 </head>
 <body>
 
+    <!-- Черная фиксированная полоса сверху для мобильных устройств/TWA -->
+    <div id="mobileTopBar" class="mobile-top-bar"></div>
+
     <!-- Экран блокировки и авторизации -->
     <div id="authGate">
         <div class="auth-gate-card">
@@ -109,6 +112,7 @@
             <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem;">
                 <div><b>Имя / Ник:</b> <span id="modalUserName">Пользователь</span></div>
                 <div><b>Статус тарифа:</b> <span id="modalUserPlan" style="color: #0284c7; font-weight: 700;">PREMIUM ✨</span></div>
+                <div><b>Подписка активна:</b> <span id="modalUserDaysLeft" style="font-weight: 700; color: #10b981;">—</span></div>
                 
                 <div style="margin-top: 6px;">
                     <div style="font-size: 0.78rem; color: #64748b; margin-bottom: 4px;">Ваш персональный ключ доступа:</div>
@@ -288,6 +292,8 @@
             try {
                 window.Telegram.WebApp.ready();
                 window.Telegram.WebApp.expand();
+                window.Telegram.WebApp.setHeaderColor?.('#000000');
+                window.Telegram.WebApp.setBackgroundColor?.('#000000');
             } catch (e) {}
         }
 
@@ -342,22 +348,22 @@
 
         function applyTheme(dark) {
             isDarkMode = dark;
-            const themeColor = dark ? '#090d16' : '#f4f3f0';
+            const bgThemeColor = dark ? '#090d16' : '#f4f3f0';
             if (dark) {
                 document.body.classList.add('dark-mode');
-                document.getElementById('themeColorMeta')?.setAttribute('content', '#090d16');
                 const btn = document.getElementById('themeToggleBtn');
                 if (btn) btn.innerText = '☀️';
             } else {
                 document.body.classList.remove('dark-mode');
-                document.getElementById('themeColorMeta')?.setAttribute('content', '#f4f3f0');
                 const btn = document.getElementById('themeToggleBtn');
                 if (btn) btn.innerText = '🌙';
             }
+            // Верхняя полоса в веб-версии и Telegram WebApp всегда черная (#000000)
+            document.getElementById('themeColorMeta')?.setAttribute('content', '#000000');
             if (window.Telegram?.WebApp) {
                 try {
-                    window.Telegram.WebApp.setHeaderColor?.(themeColor);
-                    window.Telegram.WebApp.setBackgroundColor?.(themeColor);
+                    window.Telegram.WebApp.setHeaderColor?.('#000000');
+                    window.Telegram.WebApp.setBackgroundColor?.(bgThemeColor);
                 } catch(e) {}
             }
         }
@@ -508,6 +514,27 @@
             alertBox.style.display = 'block';
         }
 
+        function isUserSubscriptionExpired(profile) {
+            if (!profile) return false;
+            const plan = (profile.plan || 'free').toLowerCase();
+            if (plan === 'lifetime' || profile.is_lifetime === true) return false;
+            const expiresAt = profile.expires_at || profile.access_until || profile.expiration_date;
+            if (!expiresAt) return false;
+            const expDate = new Date(expiresAt);
+            return expDate.getTime() < Date.now();
+        }
+
+        function getUserDaysLeftText(profile) {
+            if (!profile) return '—';
+            const plan = (profile.plan || 'free').toLowerCase();
+            if (plan === 'lifetime' || profile.is_lifetime === true) return '♾️ Навсегда (Бессрочно)';
+            const expiresAt = profile.expires_at || profile.access_until || profile.expiration_date;
+            if (!expiresAt) return plan === 'free' ? 'Базовый' : 'Активна';
+            const diffDays = Math.ceil((new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+            if (diffDays <= 0) return 'Истекла';
+            return `${diffDays} дн. (до ${new Date(expiresAt).toLocaleDateString('ru-RU')})`;
+        }
+
         function openProfileModal() {
             const modal = document.getElementById('profileModal');
             if (!modal) return;
@@ -515,6 +542,7 @@
             const nameEl = document.getElementById('modalUserName');
             const planEl = document.getElementById('modalUserPlan');
             const tokenEl = document.getElementById('modalUserTokenText');
+            const daysEl = document.getElementById('modalUserDaysLeft');
 
             let userTag = currentUser.username ? `@${currentUser.username}` : (currentUser.first_name || "Пользователь");
             if (nameEl) nameEl.innerText = userTag;
@@ -522,9 +550,11 @@
             let planText = "FREE (Базовый)";
             if (currentUser.plan === 'vip' || currentUser.plan === 'premium') planText = "PREMIUM ✨";
             else if (currentUser.plan === 'trial') planText = "ТЕСТОВЫЙ ДОСТУП 🎁";
+            else if (currentUser.plan === 'lifetime') planText = "LIFETIME (Навсегда) ♾️";
             if (planEl) planEl.innerText = planText;
 
             if (tokenEl) tokenEl.innerText = currentUser.access_token || "—";
+            if (daysEl) daysEl.innerText = getUserDaysLeftText(currentUser);
 
             modal.classList.add('active');
         }
@@ -585,29 +615,33 @@
 
             if (tgUser && tgUser.id) {
                 await syncUserTelegram(tgUser);
-                const deviceAllowed = await verifyAndRegisterDevice(currentUser);
-                if (deviceAllowed) {
-                    isAuthenticated = true;
+                if (isUserSubscriptionExpired(currentUser)) {
+                    showAuthAlert(`⏳ Срок действия вашей подписки истёк.<br>Продлите доступ в боте <a href="https://t.me/${BOT_USERNAME}" target="_blank" style="color:#38bdf8; text-decoration:underline;">@${BOT_USERNAME}</a>.`, "error");
+                } else {
+                    const deviceAllowed = await verifyAndRegisterDevice(currentUser);
+                    if (deviceAllowed) {
+                        isAuthenticated = true;
+                    }
                 }
             } else if (tokenFromUrl || savedToken || tgIdFromUrl) {
                 const tokenToVerify = tokenFromUrl || savedToken || tgIdFromUrl;
                 const profile = await findUserByToken(tokenToVerify);
                 if (profile) {
-                    currentUser = profile;
-                    syncUserFavorites(profile);
-                    if (profile.access_token) {
-                        localStorage.setItem('dalazareva_access_token', profile.access_token);
+                    if (isUserSubscriptionExpired(profile)) {
+                        showAuthAlert(`⏳ Срок действия вашей подписки истёк.<br>Продлите доступ в боте <a href="https://t.me/${BOT_USERNAME}" target="_blank" style="color:#38bdf8; text-decoration:underline;">@${BOT_USERNAME}</a>.`, "error");
+                    } else {
+                        currentUser = profile;
+                        syncUserFavorites(profile);
+                        if (profile.access_token) {
+                            localStorage.setItem('dalazareva_access_token', profile.access_token);
+                        }
+                        const deviceAllowed = await verifyAndRegisterDevice(currentUser);
+                        if (deviceAllowed) {
+                            isAuthenticated = true;
+                        }
                     }
-                    const deviceAllowed = await verifyAndRegisterDevice(currentUser);
-                    if (deviceAllowed) {
-                        isAuthenticated = true;
-                    }
-                } else if (tokenToVerify) {
-                    currentUser.access_token = tokenToVerify;
-                    currentUser.first_name = "Пользователь";
-                    currentUser.plan = "vip";
-                    localStorage.setItem('dalazareva_access_token', tokenToVerify);
-                    isAuthenticated = true;
+                } else if (savedToken) {
+                    localStorage.removeItem('dalazareva_access_token');
                 }
             }
 
@@ -699,6 +733,10 @@
 
             const profile = await findUserByToken(code);
             if (profile) {
+                if (isUserSubscriptionExpired(profile)) {
+                    showAuthAlert(`⏳ Срок действия вашей подписки истёк.<br>Продлите доступ в боте <a href="https://t.me/${BOT_USERNAME}" target="_blank" style="color:#38bdf8; text-decoration:underline;">@${BOT_USERNAME}</a>.`, "error");
+                    return;
+                }
                 currentUser = profile;
                 syncUserFavorites(profile);
                 if (profile.access_token) {
@@ -712,18 +750,8 @@
                     renderUserPlanBadge();
                     requestAnimationFrame(() => initMap());
                 }
-            } else if (code.length >= 3) {
-                // Если база оффлайн или ключ введен вручную
-                currentUser.access_token = code;
-                currentUser.first_name = "Пользователь";
-                currentUser.plan = "vip";
-                localStorage.setItem('dalazareva_access_token', code);
-                document.getElementById('authGate').style.display = 'none';
-                document.getElementById('app-wrapper').style.display = 'flex';
-                renderUserPlanBadge();
-                requestAnimationFrame(() => initMap());
             } else {
-                showAuthAlert("Неверный ключ доступа. Получите ключ в боте @dalazareva_locations_bot.", "error");
+                showAuthAlert(`❌ Неверный ключ доступа.<br>Приобретите или активируйте доступ в боте <a href="https://t.me/${BOT_USERNAME}" target="_blank" style="color:#38bdf8; text-decoration:underline;">@${BOT_USERNAME}</a>.`, "error");
             }
         }
 
@@ -814,9 +842,6 @@
                         setTimeout(refitMapViewport, 150);
                     }
                 });
-                if (window.visualViewport) {
-                    window.visualViewport.addEventListener('resize', refitMapViewport, { passive: true });
-                }
                 if (window.ResizeObserver) {
                     const mapEl = document.getElementById('map');
                     if (mapEl) {
@@ -1801,12 +1826,12 @@
         function closeLightbox() { 
             const lb = document.getElementById('lightbox');
             if (lb) lb.classList.remove('active');
-            const themeColor = isDarkMode ? '#090d16' : '#f4f3f0';
-            document.getElementById('themeColorMeta')?.setAttribute('content', themeColor);
+            const bgThemeColor = isDarkMode ? '#090d16' : '#f4f3f0';
+            document.getElementById('themeColorMeta')?.setAttribute('content', '#000000');
             if (window.Telegram?.WebApp) {
                 try {
-                    window.Telegram.WebApp.setHeaderColor?.(themeColor);
-                    window.Telegram.WebApp.setBackgroundColor?.(themeColor);
+                    window.Telegram.WebApp.setHeaderColor?.('#000000');
+                    window.Telegram.WebApp.setBackgroundColor?.(bgThemeColor);
                 } catch(e) {}
             }
         }
@@ -1842,9 +1867,6 @@
             if (view === 'map') {
                 document.body.classList.remove('show-list');
                 btnMap.classList.add('active'); btnList.classList.remove('active');
-                if (window.refitMapViewport) window.refitMapViewport();
-                setTimeout(() => { if (myMap && myMap.container) myMap.container.fitToViewport(); }, 50);
-                setTimeout(() => { if (myMap && myMap.container) myMap.container.fitToViewport(); }, 200);
             } else {
                 document.body.classList.add('show-list');
                 btnList.classList.add('active'); btnMap.classList.remove('active');

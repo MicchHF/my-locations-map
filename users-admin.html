@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <title>Управление подписками и аккаунтами | @dalazareva</title>
+    
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/shared.js"></script>
+
+    <style>
+        :root {
+            --bg-page: #0b0f19;
+            --bg-card: #111827;
+            --bg-card-hover: #1f2937;
+            --border-card: #1f2937;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --accent-blue: #0284c7;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #ef4444;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Авторизация */
+        .auth-overlay {
+            position: fixed; inset: 0; width: 100vw; height: 100vh;
+            background: #09090b; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .auth-box {
+            background: #111827; width: 100%; max-width: 380px; padding: 32px 28px; border-radius: 20px;
+            border: 1px solid #1f2937; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7); display: flex; flex-direction: column; gap: 14px;
+        }
+        .auth-title { font-size: 1.25rem; font-weight: 700; color: #f9fafb; text-align: center; }
+        .auth-desc { font-size: 0.82rem; color: #9ca3af; text-align: center; margin-top: -6px; margin-bottom: 4px; }
+        .auth-error { font-size: 0.8rem; color: #f87171; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px 12px; border-radius: 10px; display: none; }
+        .auth-input { width: 100%; padding: 11px 14px; background: #1f2937; border: 1px solid #374151; border-radius: 10px; font-size: 0.9rem; color: #fff; outline: none; transition: border-color 0.2s; }
+        .auth-input:focus { border-color: var(--accent-blue); }
+        .auth-btn { width: 100%; padding: 12px; background: var(--accent-blue); color: #fff; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+        .auth-btn:hover { opacity: 0.9; }
+
+        /* Шапка */
+        .admin-header {
+            background: #111827;
+            border-bottom: 1px solid #1f2937;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-brand { display: flex; align-items: center; gap: 12px; }
+        .header-logo { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, #0284c7, #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .header-title { font-size: 1.05rem; font-weight: 700; color: #f9fafb; margin: 0; }
+        .header-subtitle { font-size: 0.76rem; color: #9ca3af; margin: 0; }
+
+        .header-actions { display: flex; align-items: center; gap: 8px; }
+        .nav-btn {
+            display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px;
+            background: #1f2937; border: 1px solid #374151; color: #e5e7eb; border-radius: 8px;
+            font-size: 0.82rem; font-weight: 600; text-decoration: none; cursor: pointer; transition: all 0.2s;
+        }
+        .nav-btn:hover { background: #374151; color: #fff; }
+        .nav-btn.primary { background: var(--accent-blue); border-color: var(--accent-blue); color: #fff; }
+        .nav-btn.primary:hover { background: #0369a1; }
+        .nav-btn.logout { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); color: #f87171; }
+        .nav-btn.logout:hover { background: rgba(239, 68, 68, 0.25); color: #fca5a5; }
+
+        /* Контейнер */
+        .admin-main {
+            max-width: 1300px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex: 1;
+        }
+
+        /* Метрики */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 14px;
+            padding: 16px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+        }
+        .stat-card.total::after { background: var(--accent-blue); }
+        .stat-card.active::after { background: var(--accent-green); }
+        .stat-card.expiring::after { background: var(--accent-amber); }
+        .stat-card.expired::after { background: var(--accent-rose); }
+        .stat-card.trial::after { background: var(--accent-purple); }
+
+        .stat-label { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-value { font-size: 1.7rem; font-weight: 800; color: #fff; line-height: 1.1; }
+        .stat-desc { font-size: 0.74rem; color: var(--text-muted); }
+
+        /* Панель управления и фильтров */
+        .controls-bar {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 14px;
+            padding: 14px 16px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .search-box {
+            flex: 1;
+            min-width: 280px;
+            position: relative;
+        }
+        .search-icon {
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            color: #6b7280; font-size: 0.95rem; pointer-events: none;
+        }
+        .search-input-field {
+            width: 100%; padding: 10px 14px 10px 38px; background: #1f2937;
+            border: 1px solid #374151; border-radius: 10px; color: #fff; font-size: 0.88rem; outline: none;
+        }
+        .search-input-field:focus { border-color: var(--accent-blue); }
+
+        .filter-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .filter-chip {
+            padding: 6px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600;
+            background: #1f2937; border: 1px solid #374151; color: #9ca3af; cursor: pointer; transition: all 0.2s;
+        }
+        .filter-chip:hover { color: #fff; border-color: #4b5563; }
+        .filter-chip.active { background: #0284c7; border-color: #0284c7; color: #fff; }
+
+        .add-user-btn {
+            display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px;
+            background: #10b981; border: none; border-radius: 10px; color: #fff;
+            font-size: 0.86rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+        }
+        .add-user-btn:hover { background: #059669; transform: translateY(-1px); }
+
+        /* Таблица аккаунтов */
+        .table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+        .users-table th {
+            background: #151d2e;
+            color: #9ca3af;
+            font-size: 0.74rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            padding: 12px 16px;
+            border-bottom: 1px solid #1f2937;
+        }
+        .users-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #1f2937;
+            vertical-align: middle;
+        }
+        .users-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Бейджи */
+        .plan-badge {
+            display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px;
+            border-radius: 8px; font-size: 0.74rem; font-weight: 700; text-transform: uppercase;
+        }
+        .plan-badge.vip { background: rgba(139, 92, 246, 0.2); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.4); }
+        .plan-badge.premium { background: rgba(2, 132, 199, 0.2); color: #7dd3fc; border: 1px solid rgba(2, 132, 199, 0.4); }
+        .plan-badge.trial { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.4); }
+        .plan-badge.free { background: rgba(107, 114, 128, 0.2); color: #d1d5db; border: 1px solid rgba(107, 114, 128, 0.4); }
+        .plan-badge.lifetime { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); }
+
+        .status-pill {
+            display: inline-flex; align-items: center; gap: 5px; font-size: 0.78rem; font-weight: 600;
+        }
+        .status-dot { width: 7px; height: 7px; border-radius: 50%; }
+        .status-pill.active .status-dot { background: #10b981; box-shadow: 0 0 6px #10b981; }
+        .status-pill.expiring .status-dot { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
+        .status-pill.expired .status-dot { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+
+        .token-cell {
+            display: inline-flex; align-items: center; gap: 6px; background: #1f2937;
+            padding: 4px 8px; border-radius: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.78rem; color: #93c5fd; border: 1px solid #374151; max-width: 170px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .copy-icon-btn {
+            background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 0.85rem; padding: 2px;
+            transition: color 0.15s;
+        }
+        .copy-icon-btn:hover { color: #fff; }
+
+        .device-counter {
+            font-size: 0.8rem; font-weight: 600; color: #e5e7eb; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .device-reset-btn {
+            background: #374151; border: none; color: #d1d5db; padding: 3px 6px;
+            border-radius: 5px; font-size: 0.7rem; cursor: pointer; transition: all 0.15s;
+        }
+        .device-reset-btn:hover { background: #4b5563; color: #fff; }
+
+        /* Кнопки действий над пользователем */
+        .actions-group { display: flex; align-items: center; gap: 6px; }
+        .action-btn {
+            padding: 5px 10px; border-radius: 7px; font-size: 0.75rem; font-weight: 600;
+            border: 1px solid transparent; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+        }
+        .action-btn.extend { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); color: #34d399; }
+        .action-btn.extend:hover { background: rgba(16, 185, 129, 0.25); color: #6ee7b7; }
+        .action-btn.edit { background: rgba(2, 132, 199, 0.15); border-color: rgba(2, 132, 199, 0.3); color: #38bdf8; }
+        .action-btn.edit:hover { background: rgba(2, 132, 199, 0.25); color: #7dd3fc; }
+        .action-btn.del { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); color: #f87171; }
+        .action-btn.del:hover { background: rgba(239, 68, 68, 0.25); color: #fca5a5; }
+
+        /* Модальные окна */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+            z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-card {
+            background: #111827; border: 1px solid #1f2937; border-radius: 18px;
+            width: 100%; max-width: 480px; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7);
+            display: flex; flex-direction: column; gap: 14px;
+        }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1f2937; padding-bottom: 12px; }
+        .modal-title { font-size: 1.1rem; font-weight: 700; color: #fff; }
+        .modal-close { background: none; border: none; color: #9ca3af; font-size: 1.2rem; cursor: pointer; }
+        .form-row { display: flex; flex-direction: column; gap: 6px; }
+        .form-label { font-size: 0.78rem; font-weight: 600; color: #9ca3af; }
+        .form-input-ctrl { width: 100%; padding: 9px 12px; background: #1f2937; border: 1px solid #374151; border-radius: 8px; font-size: 0.86rem; color: #fff; outline: none; }
+        .form-input-ctrl:focus { border-color: var(--accent-blue); }
+
+        .quick-days-row { display: flex; gap: 6px; margin-top: 4px; }
+        .quick-day-btn { flex: 1; padding: 6px; font-size: 0.75rem; background: #1f2937; border: 1px solid #374151; color: #d1d5db; border-radius: 6px; cursor: pointer; }
+        .quick-day-btn:hover { background: #374151; color: #fff; }
+
+        @media (max-width: 768px) {
+            .admin-header { padding: 12px 16px; }
+            .admin-main { padding: 16px; }
+            .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .header-subtitle { display: none; }
+            .search-box { min-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Экран входа для администратора -->
+    <div id="authOverlay" class="auth-overlay">
+        <div class="auth-box">
+            <div style="font-size: 2rem; text-align: center;">👑</div>
+            <div class="auth-title">Вход в панель аккаунтов</div>
+            <div class="auth-desc">Управление пользователями, подписками и ключами @dalazareva</div>
+            <div id="authError" class="auth-error"></div>
+            <input type="email" id="authEmail" class="auth-input" placeholder="Email администратора" autocomplete="email">
+            <input type="password" id="authPassword" class="auth-input" placeholder="Пароль" autocomplete="current-password">
+            <button id="authBtn" class="auth-btn" onclick="handleLogin()">Войти в панель</button>
+            <div style="text-align: center; margin-top: 8px;">
+                <a href="admin.html" style="color: #9ca3af; font-size: 0.78rem; text-decoration: none;">← Перейти к панели локаций</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Основной интерфейс -->
+    <header class="admin-header">
+        <div class="header-brand">
+            <div class="header-logo">👥</div>
+            <div>
+                <h1 class="header-title">Подписки и Аккаунты</h1>
+                <p class="header-subtitle">База пользователей @dalazareva_locations_bot</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="admin.html" class="nav-btn">🗺️ Локации</a>
+            <a href="index.html" class="nav-btn" target="_blank">🌐 Карта</a>
+            <button class="nav-btn logout" onclick="handleLogout()">Выйти</button>
+        </div>
+    </header>
+
+    <main class="admin-main">
+        <!-- Виджеты статистики -->
+        <section class="stats-grid">
+            <div class="stat-card total">
+                <span class="stat-label">Всего аккаунтов</span>
+                <span class="stat-value" id="statTotalUsers">0</span>
+                <span class="stat-desc">Пользователей в базе</span>
+            </div>
+            <div class="stat-card active">
+                <span class="stat-label">Активных VIP / Премиум</span>
+                <span class="stat-value" id="statActiveVip">0</span>
+                <span class="stat-desc">С действующей подпиской</span>
+            </div>
+            <div class="stat-card expiring">
+                <span class="stat-label">Истекают скоро (≤3 дн.)</span>
+                <span class="stat-value" id="statExpiringSoon">0</span>
+                <span class="stat-desc">Требуют продления</span>
+            </div>
+            <div class="stat-card expired">
+                <span class="stat-label">Истёк доступ</span>
+                <span class="stat-value" id="statExpired">0</span>
+                <span class="stat-desc">Подписка завершилась</span>
+            </div>
+            <div class="stat-card trial">
+                <span class="stat-label">Тестовый доступ</span>
+                <span class="stat-value" id="statTrialUsers">0</span>
+                <span class="stat-desc">Пробные периоды</span>
+            </div>
+        </section>
+
+        <!-- Поиск, фильтры и кнопка добавления -->
+        <section class="controls-bar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="userSearchInput" class="search-input-field" placeholder="Поиск по Telegram ID, нику, имени или ключу доступа..." oninput="handleSearch()">
+            </div>
+
+            <div class="filter-chips">
+                <button class="filter-chip active" onclick="setFilter('all', this)">Все (<span id="countAll">0</span>)</button>
+                <button class="filter-chip" onclick="setFilter('active', this)">🟢 Активные</button>
+                <button class="filter-chip" onclick="setFilter('expiring', this)">🟡 Истекающие (≤3 дн.)</button>
+                <button class="filter-chip" onclick="setFilter('expired', this)">🔴 Истёкшие</button>
+                <button class="filter-chip" onclick="setFilter('trial', this)">🎁 Trial</button>
+                <button class="filter-chip" onclick="setFilter('lifetime', this)">♾️ Навсегда</button>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+                <button class="nav-btn" onclick="loadUsers()" title="Обновить список">🔄 Обновить</button>
+                <button class="add-user-btn" onclick="openCreateUserModal()">➕ Выдать доступ / Добавить</button>
+            </div>
+        </section>
+
+        <!-- Таблица пользователей -->
+        <section class="table-container">
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>Пользователь</th>
+                        <th>Telegram ID</th>
+                        <th>Ключ доступа (Токен)</th>
+                        <th>Тариф</th>
+                        <th>Срок подписки</th>
+                        <th>Осталось дней</th>
+                        <th>Устройства</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            Загрузка аккаунтов...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <!-- Модальное окно создания пользователя / выдачи доступа -->
+    <div id="createUserModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">➕ Выдать доступ новому пользователю</div>
+                <button class="modal-close" onclick="closeModal('createUserModal')">✕</button>
+            </div>
+            
+            <div class="form-row">
+                <label class="form-label">Telegram ID (цифры) или @username</label>
+                <input type="text" id="newTelegramId" class="form-input-ctrl" placeholder="Например: 123456789 или dalazareva">
+            </div>
+
+            <div class="form-row">
+                <label class="form-label">Имя пользователя (для заметок)</label>
+                <input type="text" id="newFirstName" class="form-input-ctrl" placeholder="Например: Дарья">
+            </div>
+
+            <div class="form-row">
+                <label class="form-label">Тарифный план</label>
+                <select id="newPlan" class="form-input-ctrl" onchange="handlePlanChangeNew()">
+                    <option value="vip">VIP / Премиум</option>
+                    <option value="premium">PREMIUM ✨</option>
+                    <option value="trial">Тестовый доступ (Trial 🎁)</option>
+                    <option value="lifetime">Бессрочный (Навсегда ♾️)</option>
+                    <option value="free">FREE (Базовый)</option>
+                </select>
+            </div>
+
+            <div class="form-row" id="newExpiresRow">
+                <label class="form-label">Срок действия (Дата окончания)</label>
+                <input type="date" id="newExpiresAt" class="form-input-ctrl">
+                <div class="quick-days-row">
+                    <button type="button" class="quick-day-btn" onclick="setQuickExpiresNew(3)">+3 дня</button>
+                    <button type="button" class="quick-day-btn" onclick="setQuickExpiresNew(7)">+7 дней</button>
+                    <button type="button" class="quick-day-btn" onclick="setQuickExpiresNew(30)">+1 месяц</button>
+                    <button type="button" class="quick-day-btn" onclick="setQuickExpiresNew(365)">+1 год</button>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label class="form-label">Ключ доступа (Токен)</label>
+                <div style="display: flex; gap: 6px;">
+                    <input type="text" id="newToken" class="form-input-ctrl" placeholder="Сгенерируется автоматически">
+                    <button type="button" class="nav-btn" onclick="generateNewRandomToken()">Сгенерировать</button>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label class="form-label">Лимит устройств (по умолчанию 3)</label>
+                <input type="number" id="newMaxDevices" class="form-input-ctrl" value="3" min="1" max="10">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px;">
+                <button type="button" class="nav-btn" onclick="closeModal('createUserModal')">Отмена</button>
+                <button type="button" class="add-user-btn" onclick="saveNewUser()">Сохранить и активировать</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования / продления пользователя -->
+    <div id="editUserModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">✏️ Редактирование подписки</div>
+                <button class="modal-close" onclick="closeModal('editUserModal')">✕</button>
+            </div>
+            
+            <input type="hidden" id="editUserId">
+
+            <div class="form-row">
+                <label class="form-label">Пользователь</label>
+                <div id="editUserSummary" style="font-weight: 700; color: #f9fafb; font-size: 0.95rem;"></div>
+            </div>
+
+            <div class="form-row">
+                <label class="form-label">Тарифный план</label>
+                <select id="editPlan" class="form-input-ctrl">
+                    <option value="vip">VIP / Премиум</option>
+                    <option value="premium">PREMIUM ✨</option>
+                    <option value="trial">Тестовый доступ (Trial 🎁)</option>
+                    <option value="lifetime">Бессрочный (Навсегда ♾️)</option>
+                    <option value="free">FREE (Базовый)</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label class="form-label">Срок действия (Дата окончания)</label>
+                <input type="date" id="editExpiresAt" class="form-input-ctrl">
+                <div class="quick-days-row">
+                    <button type="button" class="quick-day-btn" onclick="addDaysToEdit(7)">+7 дней</button>
+                    <button type="button" class="quick-day-btn" onclick="addDaysToEdit(30)">+1 месяц</button>
+                    <button type="button" class="quick-day-btn" onclick="addDaysToEdit(90)">+3 месяца</button>
+                    <button type="button" class="quick-day-btn" onclick="addDaysToEdit(365)">+1 год</button>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label class="form-label">Ключ доступа (Токен)</label>
+                <input type="text" id="editToken" class="form-input-ctrl">
+            </div>
+
+            <div class="form-row">
+                <label class="form-label">Лимит устройств</label>
+                <input type="number" id="editMaxDevices" class="form-input-ctrl" min="1" max="10">
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                <button type="button" class="action-btn del" onclick="deleteUserPrompt()">Удалить пользователя</button>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="nav-btn" onclick="closeModal('editUserModal')">Отмена</button>
+                    <button type="button" class="add-user-btn" onclick="saveUserEdit()">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allUsers = [];
+        let currentFilter = 'all';
+        let searchQuery = '';
+
+        // Проверка авторизации админа через Supabase Auth
+        async function checkAuth() {
+            try {
+                if (!supabaseClient) return;
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                const overlay = document.getElementById('authOverlay');
+                if (session) {
+                    overlay.style.display = 'none';
+                    loadUsers();
+                } else {
+                    overlay.style.display = 'flex';
+                }
+            } catch (e) {
+                document.getElementById('authOverlay').style.display = 'flex';
+            }
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value.trim();
+            const errDiv = document.getElementById('authError');
+            const btn = document.getElementById('authBtn');
+
+            if (!email || !password) {
+                errDiv.innerText = "Введите Email и Пароль!";
+                errDiv.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Проверка...";
+            errDiv.style.display = 'none';
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            btn.disabled = false;
+            btn.innerText = "Войти в панель";
+
+            if (error) {
+                errDiv.innerText = error.message;
+                errDiv.style.display = 'block';
+            } else {
+                document.getElementById('authOverlay').style.display = 'none';
+                loadUsers();
+            }
+        }
+
+        async function handleLogout() {
+            await supabaseClient.auth.signOut();
+            window.location.reload();
+        }
+
+        // Загрузка пользователей
+        async function loadUsers() {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">Загрузка аккаунтов из базы...</td></tr>`;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('app_users')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                allUsers = data || [];
+                updateStats();
+                renderUsersTable();
+            } catch (err) {
+                console.error("Ошибка загрузки пользователей:", err);
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 40px; color: #f87171;">
+                    Ошибка при загрузке: ${err.message || err}<br>
+                    <small style="color: var(--text-muted);">Убедитесь, что таблица <code>app_users</code> существует в базе Supabase.</small>
+                </td></tr>`;
+            }
+        }
+
+        // Подсчет статистики и оставшихся дней
+        function calculateSubscriptionInfo(user) {
+            const plan = (user.plan || 'free').toLowerCase();
+            const isLifetime = plan === 'lifetime' || user.is_lifetime === true;
+            
+            if (isLifetime) {
+                return {
+                    status: 'lifetime',
+                    badgeHtml: `<span class="plan-badge lifetime">♾️ LIFETIME</span>`,
+                    pillHtml: `<span class="status-pill active"><span class="status-dot"></span>Бессрочно</span>`,
+                    daysLeftText: '♾️ Навсегда',
+                    daysLeftNum: 99999,
+                    isExpiring: false,
+                    isExpired: false
+                };
+            }
+
+            const expiresAt = user.expires_at || user.access_until || user.expiration_date;
+
+            if (!expiresAt) {
+                if (plan === 'free') {
+                    return {
+                        status: 'free',
+                        badgeHtml: `<span class="plan-badge free">FREE</span>`,
+                        pillHtml: `<span class="status-pill"><span class="status-dot" style="background:#9ca3af;"></span>Базовый</span>`,
+                        daysLeftText: '—',
+                        daysLeftNum: 0,
+                        isExpiring: false,
+                        isExpired: false
+                    };
+                }
+                // Если план VIP, но дата не задана - считаем активной
+                return {
+                    status: 'active',
+                    badgeHtml: `<span class="plan-badge vip">VIP</span>`,
+                    pillHtml: `<span class="status-pill active"><span class="status-dot"></span>Активна</span>`,
+                    daysLeftText: 'Без ограничения',
+                    daysLeftNum: 9999,
+                    isExpiring: false,
+                    isExpired: false
+                };
+            }
+
+            const now = new Date();
+            const expDate = new Date(expiresAt);
+            const diffMs = expDate.getTime() - now.getTime();
+            const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+            let badgeClass = 'vip';
+            if (plan === 'trial') badgeClass = 'trial';
+            else if (plan === 'premium') badgeClass = 'premium';
+
+            if (diffDays <= 0) {
+                return {
+                    status: 'expired',
+                    badgeHtml: `<span class="plan-badge ${badgeClass}">${plan.toUpperCase()}</span>`,
+                    pillHtml: `<span class="status-pill expired"><span class="status-dot"></span>Истёк</span>`,
+                    daysLeftText: `<span style="color:#ef4444; font-weight:700;">Истекла (${Math.abs(diffDays)} дн. назад)</span>`,
+                    daysLeftNum: diffDays,
+                    isExpiring: false,
+                    isExpired: true
+                };
+            } else if (diffDays <= 3) {
+                return {
+                    status: 'expiring',
+                    badgeHtml: `<span class="plan-badge ${badgeClass}">${plan.toUpperCase()}</span>`,
+                    pillHtml: `<span class="status-pill expiring"><span class="status-dot"></span>Скоро истёк</span>`,
+                    daysLeftText: `<span style="color:#f59e0b; font-weight:700;">🟡 ${diffDays} дн.</span>`,
+                    daysLeftNum: diffDays,
+                    isExpiring: true,
+                    isExpired: false
+                };
+            } else {
+                return {
+                    status: 'active',
+                    badgeHtml: `<span class="plan-badge ${badgeClass}">${plan.toUpperCase()}</span>`,
+                    pillHtml: `<span class="status-pill active"><span class="status-dot"></span>Активна</span>`,
+                    daysLeftText: `<span style="color:#10b981; font-weight:700;">🟢 ${diffDays} дн.</span>`,
+                    daysLeftNum: diffDays,
+                    isExpiring: false,
+                    isExpired: false
+                };
+            }
+        }
+
+        function updateStats() {
+            let total = allUsers.length;
+            let activeVip = 0;
+            let expiringSoon = 0;
+            let expired = 0;
+            let trial = 0;
+
+            allUsers.forEach(u => {
+                const info = calculateSubscriptionInfo(u);
+                const plan = (u.plan || 'free').toLowerCase();
+
+                if (plan === 'trial') trial++;
+                if (info.isExpired) expired++;
+                else if (info.isExpiring) {
+                    expiringSoon++;
+                    activeVip++;
+                } else if (info.status === 'active' || info.status === 'lifetime') {
+                    activeVip++;
+                }
+            });
+
+            document.getElementById('statTotalUsers').innerText = total;
+            document.getElementById('statActiveVip').innerText = activeVip;
+            document.getElementById('statExpiringSoon').innerText = expiringSoon;
+            document.getElementById('statExpired').innerText = expired;
+            document.getElementById('statTrialUsers').innerText = trial;
+            document.getElementById('countAll').innerText = total;
+        }
+
+        function renderUsersTable() {
+            const tbody = document.getElementById('usersTableBody');
+            
+            const filtered = allUsers.filter(u => {
+                const info = calculateSubscriptionInfo(u);
+                
+                // Фильтр по чипам
+                if (currentFilter === 'active' && (info.isExpired || info.status === 'free')) return false;
+                if (currentFilter === 'expiring' && !info.isExpiring) return false;
+                if (currentFilter === 'expired' && !info.isExpired) return false;
+                if (currentFilter === 'trial' && (u.plan || '').toLowerCase() !== 'trial') return false;
+                if (currentFilter === 'lifetime' && info.status !== 'lifetime') return false;
+
+                // Поиск
+                if (searchQuery) {
+                    const q = searchQuery.toLowerCase();
+                    const tgId = String(u.telegram_id || '');
+                    const username = (u.username || '').toLowerCase();
+                    const name = (u.first_name || '').toLowerCase();
+                    const token = (u.access_token || '').toLowerCase();
+                    return tgId.includes(q) || username.includes(q) || name.includes(q) || token.includes(q);
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 36px; color: var(--text-muted);">
+                    Пользователи не найдены 🔍
+                </td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(u => {
+                const info = calculateSubscriptionInfo(u);
+                const tgUser = u.username ? `@${u.username}` : (u.first_name || 'Без никнейма');
+                const tgLink = u.username ? `<a href="https://t.me/${u.username}" target="_blank" style="color:#38bdf8; text-decoration:none;">@${u.username} ↗</a>` : `<span style="color:var(--text-muted);">—</span>`;
+                const token = u.access_token || '';
+                
+                const expiresDateStr = u.expires_at ? new Date(u.expires_at).toLocaleDateString('ru-RU') : (info.status === 'lifetime' ? 'Бессрочно' : '—');
+                
+                const devices = Array.isArray(u.devices) ? u.devices : [];
+                const maxDev = u.max_devices || 3;
+
+                return `
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600; color: #fff;">${u.first_name || 'Пользователь'}</div>
+                            <div style="font-size: 0.76rem; color: var(--text-muted);">${tgLink}</div>
+                        </td>
+                        <td>
+                            <code style="background: #1f2937; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; color: #e5e7eb;">
+                                ${u.telegram_id || '—'}
+                            </code>
+                        </td>
+                        <td>
+                            ${token ? `
+                                <div class="token-cell" title="${token}">
+                                    <span>${token}</span>
+                                    <button class="copy-icon-btn" onclick="copyTokenToClipboard('${token}')" title="Скопировать токен">📋</button>
+                                    <button class="copy-icon-btn" onclick="copyDirectMapLink('${token}')" title="Скопировать прямую ссылку на карту с авто-входом">🔗</button>
+                                </div>
+                            ` : `<span style="color:var(--text-muted);">Нет токена</span>`}
+                        </td>
+                        <td>
+                            ${info.badgeHtml}
+                        </td>
+                        <td>
+                            <div style="font-size: 0.82rem; color: #e5e7eb;">${expiresDateStr}</div>
+                            <div style="margin-top: 2px;">${info.pillHtml}</div>
+                        </td>
+                        <td>
+                            ${info.daysLeftText}
+                        </td>
+                        <td>
+                            <div class="device-counter">
+                                <span>📱 ${devices.length} / ${maxDev}</span>
+                                ${devices.length > 0 ? `
+                                    <button class="device-reset-btn" onclick="resetUserDevices('${u.id || u.telegram_id || u.access_token}')" title="Сбросить привязанные устройства">
+                                        🔄 Сброс
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="actions-group">
+                                <button class="action-btn extend" onclick="quickExtend30('${u.id || u.telegram_id || u.access_token}', 30)" title="Продлить на 30 дней">
+                                    +30 дн
+                                </button>
+                                <button class="action-btn edit" onclick="openEditModal('${u.id || u.telegram_id || u.access_token}')" title="Редактировать подписку">
+                                    ✏️
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function setFilter(filter, btn) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            renderUsersTable();
+        }
+
+        function handleSearch() {
+            searchQuery = document.getElementById('userSearchInput').value.trim();
+            renderUsersTable();
+        }
+
+        // Копирование в буфер
+        function copyTokenToClipboard(token) {
+            if (!token) return;
+            navigator.clipboard.writeText(token).then(() => {
+                alert(`Ключ доступа ${token} скопирован!`);
+            });
+        }
+
+        function copyDirectMapLink(token) {
+            if (!token) return;
+            const currentOrigin = window.location.origin;
+            const link = `${currentOrigin}/index.html?token=${encodeURIComponent(token)}`;
+            navigator.clipboard.writeText(link).then(() => {
+                alert(`Прямая ссылка для клиента скопирована в буфер:\n\n${link}`);
+            });
+        }
+
+        // Сброс привязки устройств пользователя
+        async function resetUserDevices(identifier) {
+            if (!confirm("Сбросить привязанные устройства для этого пользователя? Он сможет войти с нового телефона.")) return;
+            
+            const user = findUserByIdentifier(identifier);
+            if (!user) return;
+
+            try {
+                let query = supabaseClient.from('app_users').update({ devices: [] });
+                if (user.id) query = query.eq('id', user.id);
+                else if (user.telegram_id) query = query.eq('telegram_id', user.telegram_id);
+                else query = query.eq('access_token', user.access_token);
+
+                const { error } = await query;
+                if (error) throw error;
+
+                user.devices = [];
+                renderUsersTable();
+                alert("Устройства пользователя успешно сброшены!");
+            } catch (err) {
+                alert("Ошибка сброса устройств: " + err.message);
+            }
+        }
+
+        // Быстрое продление на 30 дней
+        async function quickExtend30(identifier, days = 30) {
+            const user = findUserByIdentifier(identifier);
+            if (!user) return;
+
+            let baseDate = new Date();
+            if (user.expires_at) {
+                const currentExp = new Date(user.expires_at);
+                if (currentExp > baseDate) baseDate = currentExp;
+            }
+            baseDate.setDate(baseDate.getDate() + days);
+            const newExpires = baseDate.toISOString();
+
+            try {
+                let query = supabaseClient.from('app_users').update({ 
+                    expires_at: newExpires,
+                    plan: (user.plan === 'free' ? 'vip' : user.plan)
+                });
+                if (user.id) query = query.eq('id', user.id);
+                else if (user.telegram_id) query = query.eq('telegram_id', user.telegram_id);
+                else query = query.eq('access_token', user.access_token);
+
+                const { error } = await query;
+                if (error) throw error;
+
+                user.expires_at = newExpires;
+                if (user.plan === 'free') user.plan = 'vip';
+                updateStats();
+                renderUsersTable();
+                alert(`Подписка успешно продлена на ${days} дней! Новая дата: ${baseDate.toLocaleDateString('ru-RU')}`);
+            } catch (err) {
+                alert("Ошибка продления: " + err.message);
+            }
+        }
+
+        function findUserByIdentifier(id) {
+            return allUsers.find(u => String(u.id) === String(id) || String(u.telegram_id) === String(id) || String(u.access_token) === String(id));
+        }
+
+        // Модальное окно создания пользователя
+        function openCreateUserModal() {
+            document.getElementById('newTelegramId').value = '';
+            document.getElementById('newFirstName').value = '';
+            document.getElementById('newPlan').value = 'vip';
+            setQuickExpiresNew(30);
+            generateNewRandomToken();
+            document.getElementById('newMaxDevices').value = '3';
+            document.getElementById('createUserModal').classList.add('active');
+        }
+
+        function handlePlanChangeNew() {
+            const plan = document.getElementById('newPlan').value;
+            const expRow = document.getElementById('newExpiresRow');
+            if (plan === 'lifetime') {
+                expRow.style.display = 'none';
+            } else {
+                expRow.style.display = 'flex';
+                if (plan === 'trial') setQuickExpiresNew(3);
+                else if (plan === 'vip' || plan === 'premium') setQuickExpiresNew(30);
+            }
+        }
+
+        function setQuickExpiresNew(days) {
+            const d = new Date();
+            d.setDate(d.getDate() + days);
+            document.getElementById('newExpiresAt').value = d.toISOString().split('T')[0];
+        }
+
+        function generateNewRandomToken() {
+            const rand = Math.random().toString(36).substring(2, 8) + Math.random().toString(36).substring(2, 6);
+            document.getElementById('newToken').value = `loc_${rand}`;
+        }
+
+        async function saveNewUser() {
+            const rawTg = document.getElementById('newTelegramId').value.trim();
+            const firstName = document.getElementById('newFirstName').value.trim() || 'Пользователь';
+            const plan = document.getElementById('newPlan').value;
+            const expDateVal = document.getElementById('newExpiresAt').value;
+            const token = document.getElementById('newToken').value.trim() || `loc_${Math.random().toString(36).substring(2, 10)}`;
+            const maxDevices = parseInt(document.getElementById('newMaxDevices').value) || 3;
+
+            let telegramId = null;
+            let username = '';
+
+            if (rawTg.startsWith('@')) {
+                username = rawTg.replace('@', '');
+            } else if (!isNaN(rawTg) && rawTg !== '') {
+                telegramId = parseInt(rawTg);
+            } else if (rawTg) {
+                username = rawTg;
+            }
+
+            let expiresAt = null;
+            if (plan !== 'lifetime' && expDateVal) {
+                const d = new Date(expDateVal);
+                d.setHours(23, 59, 59, 999);
+                expiresAt = d.toISOString();
+            }
+
+            const newUserObj = {
+                first_name: firstName,
+                username: username,
+                telegram_id: telegramId,
+                plan: plan,
+                access_token: token,
+                expires_at: expiresAt,
+                max_devices: maxDevices,
+                devices: [],
+                favorites: [],
+                created_at: new Date().toISOString()
+            };
+
+            try {
+                const { data, error } = await supabaseClient.from('app_users').insert([newUserObj]).select();
+                if (error) throw error;
+
+                closeModal('createUserModal');
+                await loadUsers();
+                alert(`Доступ успешно выдан!\nКлюч пользователя: ${token}`);
+            } catch (err) {
+                alert("Ошибка сохранения пользователя: " + err.message);
+            }
+        }
+
+        // Редактирование пользователя
+        let currentEditingUser = null;
+
+        function openEditModal(identifier) {
+            const user = findUserByIdentifier(identifier);
+            if (!user) return;
+
+            currentEditingUser = user;
+            document.getElementById('editUserId').value = user.id || user.telegram_id || user.access_token;
+            
+            const tgInfo = user.username ? `@${user.username}` : (user.telegram_id ? `ID: ${user.telegram_id}` : '');
+            document.getElementById('editUserSummary').innerText = `${user.first_name || 'Пользователь'} ${tgInfo ? '(' + tgInfo + ')' : ''}`;
+            
+            document.getElementById('editPlan').value = (user.plan || 'free').toLowerCase();
+            
+            if (user.expires_at) {
+                document.getElementById('editExpiresAt').value = user.expires_at.split('T')[0];
+            } else {
+                document.getElementById('editExpiresAt').value = '';
+            }
+
+            document.getElementById('editToken').value = user.access_token || '';
+            document.getElementById('editMaxDevices').value = user.max_devices || 3;
+
+            document.getElementById('editUserModal').classList.add('active');
+        }
+
+        function addDaysToEdit(days) {
+            let base = new Date();
+            const currVal = document.getElementById('editExpiresAt').value;
+            if (currVal) {
+                const parsed = new Date(currVal);
+                if (!isNaN(parsed)) base = parsed;
+            }
+            base.setDate(base.getDate() + days);
+            document.getElementById('editExpiresAt').value = base.toISOString().split('T')[0];
+        }
+
+        async function saveUserEdit() {
+            if (!currentEditingUser) return;
+
+            const plan = document.getElementById('editPlan').value;
+            const expDateVal = document.getElementById('editExpiresAt').value;
+            const token = document.getElementById('editToken').value.trim();
+            const maxDev = parseInt(document.getElementById('editMaxDevices').value) || 3;
+
+            let expiresAt = null;
+            if (plan !== 'lifetime' && expDateVal) {
+                const d = new Date(expDateVal);
+                d.setHours(23, 59, 59, 999);
+                expiresAt = d.toISOString();
+            }
+
+            const updates = {
+                plan: plan,
+                access_token: token,
+                expires_at: expiresAt,
+                max_devices: maxDev
+            };
+
+            try {
+                let query = supabaseClient.from('app_users').update(updates);
+                if (currentEditingUser.id) query = query.eq('id', currentEditingUser.id);
+                else if (currentEditingUser.telegram_id) query = query.eq('telegram_id', currentEditingUser.telegram_id);
+                else query = query.eq('access_token', currentEditingUser.access_token);
+
+                const { error } = await query;
+                if (error) throw error;
+
+                Object.assign(currentEditingUser, updates);
+                closeModal('editUserModal');
+                updateStats();
+                renderUsersTable();
+                alert("Данные пользователя успешно обновлены!");
+            } catch (err) {
+                alert("Ошибка сохранения изменений: " + err.message);
+            }
+        }
+
+        async function deleteUserPrompt() {
+            if (!currentEditingUser) return;
+            if (!confirm(`Вы действительно хотите удалить пользователя ${currentEditingUser.first_name || currentEditingUser.username || ''}? Это действие необратимо!`)) return;
+
+            try {
+                let query = supabaseClient.from('app_users').delete();
+                if (currentEditingUser.id) query = query.eq('id', currentEditingUser.id);
+                else if (currentEditingUser.telegram_id) query = query.eq('telegram_id', currentEditingUser.telegram_id);
+                else query = query.eq('access_token', currentEditingUser.access_token);
+
+                const { error } = await query;
+                if (error) throw error;
+
+                closeModal('editUserModal');
+                await loadUsers();
+                alert("Пользователь удален из базы.");
+            } catch (err) {
+                alert("Ошибка удаления: " + err.message);
+            }
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // Старт проверки при загрузке
+        document.addEventListener('DOMContentLoaded', checkAuth);
+    </script>
+</body>
+</html>

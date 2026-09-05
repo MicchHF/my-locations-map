@@ -36,8 +36,6 @@ body.dark-mode {
 html, body {
     width: 100%;
     height: 100%;
-    height: 100dvh;
-    min-height: -webkit-fill-available;
     margin: 0;
     padding: 0;
     background-color: var(--bg-main);
@@ -60,11 +58,14 @@ html, body {
     bottom: 0;
     width: 100%;
     height: 100%;
-    height: 100dvh;
-    min-height: -webkit-fill-available;
     display: flex;
     background: var(--bg-main);
     overflow: hidden;
+}
+
+/* Черная фиксированная полоса сверху для предотвращения наложений и прозрачности */
+.mobile-top-bar {
+    display: none;
 }
 
 body.dark-mode #map [class*="ground-pane"] {
@@ -285,7 +286,7 @@ body.dark-mode #map [class*="ground-pane"] {
 }
 
 .sidebar-header { 
-    padding: max(calc(env(safe-area-inset-top) + 16px), 20px) 18px 14px 18px; 
+    padding: calc(env(safe-area-inset-top, 0px) + 14px) 18px 14px 18px; 
     background: var(--bg-card); 
     border-bottom: 1px solid var(--border-color); 
 }
@@ -985,10 +986,10 @@ body.dark-mode .fav-btn.is-active {
     color: #ffffff;
 }
 
-/* Верхний фильтр категорий со скруглением и маской прозрачности */
+/* Верхний фильтр категорий */
 .top-cat-filter-bar {
     position: fixed;
-    top: max(calc(env(safe-area-inset-top) + 12px), 14px);
+    top: calc(env(safe-area-inset-top, 0px) + 10px);
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 24px);
@@ -1531,11 +1532,31 @@ body.dark-mode .mobile-search-cancel-btn {
 
 /* Мобильная адаптация */
 @media (max-width: 768px) {
+    /* Черная фиксированная полоса сверху для надежной защиты от прозрачности */
+    .mobile-top-bar {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: env(safe-area-inset-top, 0px);
+        background: #000000;
+        z-index: 99999;
+        pointer-events: none;
+    }
+
     #sidebar { 
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
         width: 100% !important; 
         height: 100% !important; 
-        max-height: 100dvh !important;
-        display: none; 
+        display: none !important; 
+        flex-direction: column !important;
+        z-index: 500 !important;
+        background: var(--bg-card) !important;
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch !important;
     }
@@ -1548,33 +1569,26 @@ body.dark-mode .mobile-search-cancel-btn {
         bottom: 0 !important;
         width: 100% !important;
         height: 100% !important;
-        height: 100dvh !important;
-        min-height: -webkit-fill-available !important;
         z-index: 1 !important;
         background-color: var(--bg-main) !important;
+        pointer-events: auto !important;
     }
     #map {
         width: 100% !important;
         height: 100% !important;
-        height: 100dvh !important;
-        min-height: 100% !important;
-        min-height: -webkit-fill-available !important;
         background-color: var(--bg-main) !important;
     }
 
+    /* При открытии списка карта не исчезает и не меняет геометрию — подпрыгивания исключены */
     .show-list #map-container { 
-        opacity: 0;
-        pointer-events: none;
-        visibility: hidden;
+        pointer-events: none !important;
     }
     .show-list #sidebar { 
         display: flex !important;
         opacity: 1;
         visibility: visible;
-        transform: translateY(0);
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch !important;
-        animation: listFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
     .show-list .top-cat-filter-bar { 
         opacity: 0;
@@ -1600,33 +1614,22 @@ body.dark-mode .mobile-search-cancel-btn {
         opacity: 1;
         pointer-events: auto;
         visibility: visible;
-        animation: mapFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    @keyframes listFadeIn {
-        from { opacity: 0; transform: translateY(12px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes mapFadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
     }
 
     .theme-toggle-floating-btn {
         right: 12px;
-        top: max(calc(env(safe-area-inset-top) + 60px), 64px);
+        top: calc(env(safe-area-inset-top, 0px) + 58px);
     }
 
     .map-bottom-right-controls {
         right: 12px;
-        bottom: max(calc(env(safe-area-inset-bottom) + 78px), 82px);
+        bottom: max(calc(env(safe-area-inset-bottom) + 72px), 78px);
     }
 
     .mobile-toggle-bar {
         display: flex;
         position: fixed;
-        bottom: max(calc(env(safe-area-inset-bottom) + 14px), 20px);
+        bottom: max(calc(env(safe-area-inset-bottom) + 12px), 18px);
         left: 50%;
         transform: translateX(-50%);
         background: var(--glass-bg);
@@ -1635,7 +1638,7 @@ body.dark-mode .mobile-search-cancel-btn {
         padding: 5px;
         border-radius: 9999px;
         border: 1px solid var(--glass-border);
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
         z-index: 1000;
         gap: 5px;
         align-items: center;
