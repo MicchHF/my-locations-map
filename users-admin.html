@@ -128,15 +128,23 @@
             gap: 6px;
             position: relative;
             overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: #374151;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
         .stat-card::after {
             content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
         }
         .stat-card.total::after { background: var(--accent-blue); }
-        .stat-card.active::after { background: var(--accent-green); }
+        .stat-card.active::after { background: #8b5cf6; }
+        .stat-card.lifetime::after { background: #10b981; }
+        .stat-card.trial::after { background: #f59e0b; }
         .stat-card.expiring::after { background: var(--accent-amber); }
         .stat-card.expired::after { background: var(--accent-rose); }
-        .stat-card.trial::after { background: var(--accent-purple); }
 
         .stat-label { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
         .stat-value { font-size: 1.7rem; font-weight: 800; color: #fff; line-height: 1.1; }
@@ -353,6 +361,7 @@
                 max-width: 100%;
             }
             .header-subtitle { display: none; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .search-box { min-width: 100%; }
         }
     </style>
@@ -394,30 +403,35 @@
     <main class="admin-main">
         <!-- Виджеты статистики -->
         <section class="stats-grid">
-            <div class="stat-card total">
+            <div class="stat-card total" onclick="setFilter('all')">
                 <span class="stat-label">Всего аккаунтов</span>
                 <span class="stat-value" id="statTotalUsers">0</span>
                 <span class="stat-desc">Пользователей в базе</span>
             </div>
-            <div class="stat-card active">
+            <div class="stat-card active" onclick="setFilter('vip')">
                 <span class="stat-label">Активных VIP / Премиум</span>
                 <span class="stat-value" id="statActiveVip">0</span>
-                <span class="stat-desc">С действующей подпиской</span>
+                <span class="stat-desc">С платной подпиской</span>
             </div>
-            <div class="stat-card expiring">
+            <div class="stat-card lifetime" onclick="setFilter('lifetime')">
+                <span class="stat-label">Навсегда / Lifetime</span>
+                <span class="stat-value" id="statLifetimeUsers">0</span>
+                <span class="stat-desc">Бессрочный доступ</span>
+            </div>
+            <div class="stat-card trial" onclick="setFilter('trial')">
+                <span class="stat-label">Тестовый доступ</span>
+                <span class="stat-value" id="statTrialUsers">0</span>
+                <span class="stat-desc">Пробные периоды</span>
+            </div>
+            <div class="stat-card expiring" onclick="setFilter('expiring')">
                 <span class="stat-label">Истекают скоро (≤3 дн.)</span>
                 <span class="stat-value" id="statExpiringSoon">0</span>
                 <span class="stat-desc">Требуют продления</span>
             </div>
-            <div class="stat-card expired">
+            <div class="stat-card expired" onclick="setFilter('expired')">
                 <span class="stat-label">Истёк доступ</span>
                 <span class="stat-value" id="statExpired">0</span>
                 <span class="stat-desc">Подписка завершилась</span>
-            </div>
-            <div class="stat-card trial">
-                <span class="stat-label">Тестовый доступ</span>
-                <span class="stat-value" id="statTrialUsers">0</span>
-                <span class="stat-desc">Пробные периоды</span>
             </div>
         </section>
 
@@ -429,12 +443,13 @@
             </div>
 
             <div class="filter-chips">
-                <button class="filter-chip active" onclick="setFilter('all', this)">Все (<span id="countAll">0</span>)</button>
-                <button class="filter-chip" onclick="setFilter('active', this)">🟢 Активные</button>
-                <button class="filter-chip" onclick="setFilter('expiring', this)">🟡 Истекающие (≤3 дн.)</button>
-                <button class="filter-chip" onclick="setFilter('expired', this)">🔴 Истёкшие</button>
-                <button class="filter-chip" onclick="setFilter('trial', this)">🎁 Trial</button>
-                <button class="filter-chip" onclick="setFilter('lifetime', this)">♾️ Навсегда</button>
+                <button class="filter-chip active" id="chip-all" onclick="setFilter('all', this)">Все (<span id="countAll">0</span>)</button>
+                <button class="filter-chip" id="chip-vip" onclick="setFilter('vip', this)">✨ VIP / Премиум</button>
+                <button class="filter-chip" id="chip-lifetime" onclick="setFilter('lifetime', this)">♾️ Навсегда</button>
+                <button class="filter-chip" id="chip-trial" onclick="setFilter('trial', this)">🎁 Trial</button>
+                <button class="filter-chip" id="chip-active" onclick="setFilter('active', this)">🟢 Все активные</button>
+                <button class="filter-chip" id="chip-expiring" onclick="setFilter('expiring', this)">🟡 Истекающие (≤3 дн.)</button>
+                <button class="filter-chip" id="chip-expired" onclick="setFilter('expired', this)">🔴 Истёкшие</button>
             </div>
 
             <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
@@ -761,29 +776,45 @@
         function updateStats() {
             let total = allUsers.length;
             let activeVip = 0;
+            let lifetime = 0;
+            let trial = 0;
             let expiringSoon = 0;
             let expired = 0;
-            let trial = 0;
 
             allUsers.forEach(u => {
                 const info = calculateSubscriptionInfo(u);
                 const plan = (u.plan || 'free').toLowerCase();
+                const isLifetime = plan === 'lifetime' || u.is_lifetime === true;
 
-                if (plan === 'trial') trial++;
-                if (info.isExpired) expired++;
-                else if (info.isExpiring) {
-                    expiringSoon++;
-                    activeVip++;
-                } else if (info.status === 'active' || info.status === 'lifetime') {
-                    activeVip++;
+                if (isLifetime) {
+                    lifetime++;
+                } else if (plan === 'trial') {
+                    trial++;
+                    if (info.isExpired) {
+                        expired++;
+                    } else if (info.isExpiring) {
+                        expiringSoon++;
+                    }
+                } else if (plan === 'vip' || plan === 'premium') {
+                    if (info.isExpired) {
+                        expired++;
+                    } else {
+                        activeVip++;
+                        if (info.isExpiring) {
+                            expiringSoon++;
+                        }
+                    }
+                } else {
+                    if (info.isExpired) expired++;
                 }
             });
 
             document.getElementById('statTotalUsers').innerText = total;
             document.getElementById('statActiveVip').innerText = activeVip;
+            document.getElementById('statLifetimeUsers').innerText = lifetime;
+            document.getElementById('statTrialUsers').innerText = trial;
             document.getElementById('statExpiringSoon').innerText = expiringSoon;
             document.getElementById('statExpired').innerText = expired;
-            document.getElementById('statTrialUsers').innerText = trial;
             document.getElementById('countAll').innerText = total;
 
             const shortUsers = allUsers.filter(u => !u.access_token || u.access_token.length < 15 || u.access_token.startsWith('DL-'));
@@ -804,13 +835,16 @@
             
             const filtered = allUsers.filter(u => {
                 const info = calculateSubscriptionInfo(u);
+                const plan = (u.plan || 'free').toLowerCase();
+                const isLifetime = plan === 'lifetime' || u.is_lifetime === true;
                 
                 // Фильтр по чипам
+                if (currentFilter === 'vip' && (info.isExpired || isLifetime || plan === 'trial' || (plan !== 'vip' && plan !== 'premium'))) return false;
+                if (currentFilter === 'lifetime' && !isLifetime) return false;
+                if (currentFilter === 'trial' && plan !== 'trial') return false;
                 if (currentFilter === 'active' && (info.isExpired || info.status === 'free')) return false;
                 if (currentFilter === 'expiring' && !info.isExpiring) return false;
                 if (currentFilter === 'expired' && !info.isExpired) return false;
-                if (currentFilter === 'trial' && (u.plan || '').toLowerCase() !== 'trial') return false;
-                if (currentFilter === 'lifetime' && info.status !== 'lifetime') return false;
 
                 // Поиск
                 if (searchQuery) {
@@ -917,7 +951,8 @@
         function setFilter(filter, btn) {
             currentFilter = filter;
             document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-            btn.classList.add('active');
+            const targetBtn = btn || document.getElementById('chip-' + filter);
+            if (targetBtn) targetBtn.classList.add('active');
             renderUsersTable();
         }
 
