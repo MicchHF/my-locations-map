@@ -148,7 +148,7 @@
                             <div id="userProfileSubRow" style="font-size: 0.74rem; color: #94a3b8; display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                 <span id="userDisplayName" style="color: #e2e8f0; font-weight: 600;">👤 Пользователь</span>
                                 <span>•</span>
-                                <span id="userPlanLabel" style="color: #38bdf8; font-weight: 600;">Тариф: FREE</span>
+                                <span id="userPlanLabel" style="color: #fcd34d; font-weight: 600;">Trial</span>
                             </div>
                         </div>
                     </div>
@@ -534,13 +534,17 @@
                 };
             }
 
-            const plan = (profile.plan || 'free').toLowerCase();
+            const rawPlan = (profile.plan || 'trial').toLowerCase();
+            const plan = rawPlan === 'free' ? 'trial' : (rawPlan === 'vip' ? 'premium' : rawPlan);
             if (plan === 'lifetime' || profile.is_lifetime === true) {
-                return { allowed: true, plan: 'lifetime', isLifetime: true };
+                return { allowed: true, plan: 'lifetime', isLifetime: true, tierLevel: 2 };
             }
 
             const expiresAt = profile.expires_at || profile.access_until || profile.expiration_date;
             if (!expiresAt) {
+                if (plan === 'supporter') {
+                    return { allowed: true, plan: 'supporter', isLifetime: true, tierLevel: 2 };
+                }
                 return {
                     allowed: false,
                     reason: 'not_activated',
@@ -559,7 +563,8 @@
             }
 
             const diffDays = Math.ceil((expDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-            return { allowed: true, plan: plan, expDate: expDate, diffDays: diffDays };
+            const tier = (plan === 'platinum' || plan === 'supporter') ? 2 : (plan === 'premium' ? 1 : 0);
+            return { allowed: true, plan: plan, tierLevel: tier, expDate: expDate, diffDays: diffDays };
         }
 
         function isUserSubscriptionExpired(profile) {
@@ -568,10 +573,14 @@
 
         function getUserDaysLeftText(profile) {
             if (!profile) return '—';
-            const plan = (profile.plan || 'free').toLowerCase();
+            const rawPlan = (profile.plan || 'trial').toLowerCase();
+            const plan = rawPlan === 'free' ? 'trial' : (rawPlan === 'vip' ? 'premium' : rawPlan);
             if (plan === 'lifetime' || profile.is_lifetime === true) return '♾️ Навсегда';
             const expiresAt = profile.expires_at || profile.access_until || profile.expiration_date;
-            if (!expiresAt) return plan === 'free' ? 'Не активирован' : 'Активна';
+            if (!expiresAt) {
+                if (plan === 'supporter') return 'Бессрочно';
+                return 'Не активирован';
+            }
             const diffDays = Math.ceil((new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
             if (diffDays <= 0) return 'Истекла';
             return `${diffDays} дн.`;
@@ -590,10 +599,14 @@
             let userTag = currentUser.username ? `@${currentUser.username}` : (currentUser.first_name || "Пользователь");
             if (nameEl) nameEl.innerText = userTag;
 
-            let planText = "FREE (Без доступа)";
-            if (currentUser.plan === 'vip' || currentUser.plan === 'premium') planText = "PREMIUM ✨";
-            else if (currentUser.plan === 'trial') planText = "ПРОБНЫЙ ПЕРИОД 7 ДНЕЙ 🎁";
-            else if (currentUser.plan === 'lifetime') planText = "LIFETIME (Навсегда) ♾️";
+            let planText = "Trial (Пробный период)";
+            const rawPlan = (currentUser.plan || 'trial').toLowerCase();
+            const p = rawPlan === 'free' ? 'trial' : (rawPlan === 'vip' ? 'premium' : rawPlan);
+            if (p === 'platinum') planText = "PLATINUM (Уровень 2) 💎";
+            else if (p === 'supporter') planText = "SUPPORTER (Уровень 2) 🌟";
+            else if (p === 'lifetime' || currentUser.is_lifetime === true) planText = "LIFETIME (Навсегда / Уровень 2) ♾️";
+            else if (p === 'premium') planText = "PREMIUM (Уровень 1) ✨";
+            else if (p === 'trial') planText = "TRIAL (7 дней) 🎁";
             if (planEl) planEl.innerText = planText;
 
             if (tokenEl) tokenEl.innerText = currentUser.access_token || "—";
@@ -817,21 +830,30 @@
             let userTag = currentUser.username ? `@${currentUser.username}` : (currentUser.first_name || "Пользователь");
             nameEl.innerText = `👤 ${userTag}`;
 
-            let planLabel = "FREE";
-            let planColor = "#38bdf8";
+            let planLabel = "Trial";
+            let planColor = "#fcd34d";
 
-            const plan = (currentUser.plan || 'free').toLowerCase();
+            const rawPlan = (currentUser.plan || 'trial').toLowerCase();
+            const plan = rawPlan === 'free' ? 'trial' : (rawPlan === 'vip' ? 'premium' : rawPlan);
             if (plan === 'lifetime' || currentUser.is_lifetime === true) {
                 planLabel = "LIFETIME ♾️";
                 planColor = "#34d399";
+            } else if (plan === 'platinum') {
+                const daysLeft = getUserDaysLeftText(currentUser);
+                planLabel = `Platinum 💎 (${daysLeft})`;
+                planColor = "#a78bfa";
+            } else if (plan === 'supporter') {
+                const daysLeft = getUserDaysLeftText(currentUser);
+                planLabel = `Supporter 🌟 (${daysLeft})`;
+                planColor = "#38bdf8";
+            } else if (plan === 'premium') {
+                const daysLeft = getUserDaysLeftText(currentUser);
+                planLabel = `Premium ✨ (${daysLeft})`;
+                planColor = "#fbbf24";
             } else if (plan === 'trial') {
                 const daysLeft = getUserDaysLeftText(currentUser);
-                planLabel = `ТЕСТ 🎁 (${daysLeft})`;
+                planLabel = `Trial 🎁 (${daysLeft})`;
                 planColor = "#fcd34d";
-            } else if (plan === 'premium' || plan === 'vip') {
-                const daysLeft = getUserDaysLeftText(currentUser);
-                planLabel = `VIP ✨ (${daysLeft})`;
-                planColor = "#fbbf24";
             }
 
             planEl.innerText = planLabel;

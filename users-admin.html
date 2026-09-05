@@ -140,7 +140,8 @@
             content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
         }
         .stat-card.total::after { background: var(--accent-blue); }
-        .stat-card.active::after { background: #8b5cf6; }
+        .stat-card.premium::after, .stat-card.active::after { background: #0284c7; }
+        .stat-card.platinum::after { background: #a855f7; }
         .stat-card.lifetime::after { background: #10b981; }
         .stat-card.trial::after { background: #f59e0b; }
         .stat-card.expiring::after { background: var(--accent-amber); }
@@ -231,8 +232,9 @@
             display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px;
             border-radius: 8px; font-size: 0.74rem; font-weight: 700; text-transform: uppercase;
         }
-        .plan-badge.vip { background: rgba(139, 92, 246, 0.2); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.4); }
-        .plan-badge.premium { background: rgba(2, 132, 199, 0.2); color: #7dd3fc; border: 1px solid rgba(2, 132, 199, 0.4); }
+        .plan-badge.vip, .plan-badge.premium { background: rgba(2, 132, 199, 0.2); color: #7dd3fc; border: 1px solid rgba(2, 132, 199, 0.4); }
+        .plan-badge.platinum { background: rgba(168, 85, 247, 0.2); color: #e9d5ff; border: 1px solid rgba(168, 85, 247, 0.45); box-shadow: 0 0 8px rgba(168, 85, 247, 0.25); }
+        .plan-badge.supporter { background: rgba(236, 72, 153, 0.2); color: #fbcfe8; border: 1px solid rgba(236, 72, 153, 0.45); }
         .plan-badge.trial { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.4); }
         .plan-badge.free { background: rgba(107, 114, 128, 0.2); color: #d1d5db; border: 1px solid rgba(107, 114, 128, 0.4); }
         .plan-badge.lifetime { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); }
@@ -408,20 +410,25 @@
                 <span class="stat-value" id="statTotalUsers">0</span>
                 <span class="stat-desc">Пользователей в базе</span>
             </div>
-            <div class="stat-card active" onclick="setFilter('vip')">
-                <span class="stat-label">Активных VIP / Премиум</span>
-                <span class="stat-value" id="statActiveVip">0</span>
+            <div class="stat-card active" onclick="setFilter('premium')">
+                <span class="stat-label">Premium (Ур. 1)</span>
+                <span class="stat-value" id="statActivePremium">0</span>
                 <span class="stat-desc">С платной подпиской</span>
+            </div>
+            <div class="stat-card platinum" onclick="setFilter('platinum')">
+                <span class="stat-label">Platinum & Supporter (Ур. 2)</span>
+                <span class="stat-value" id="statPlatinumUsers">0</span>
+                <span class="stat-desc">Высший уровень доступа</span>
             </div>
             <div class="stat-card lifetime" onclick="setFilter('lifetime')">
                 <span class="stat-label">Навсегда / Lifetime</span>
                 <span class="stat-value" id="statLifetimeUsers">0</span>
-                <span class="stat-desc">Бессрочный доступ</span>
+                <span class="stat-desc">Бессрочный доступ (Ур. 2)</span>
             </div>
             <div class="stat-card trial" onclick="setFilter('trial')">
-                <span class="stat-label">Тестовый доступ</span>
+                <span class="stat-label">Trial</span>
                 <span class="stat-value" id="statTrialUsers">0</span>
-                <span class="stat-desc">Пробные периоды</span>
+                <span class="stat-desc">Пробный доступ</span>
             </div>
             <div class="stat-card expiring" onclick="setFilter('expiring')">
                 <span class="stat-label">Истекают скоро (≤3 дн.)</span>
@@ -444,7 +451,9 @@
 
             <div class="filter-chips">
                 <button class="filter-chip active" id="chip-all" onclick="setFilter('all', this)">Все (<span id="countAll">0</span>)</button>
-                <button class="filter-chip" id="chip-vip" onclick="setFilter('vip', this)">✨ VIP / Премиум</button>
+                <button class="filter-chip" id="chip-premium" onclick="setFilter('premium', this)">✨ Premium</button>
+                <button class="filter-chip" id="chip-platinum" onclick="setFilter('platinum', this)">💎 Platinum</button>
+                <button class="filter-chip" id="chip-supporter" onclick="setFilter('supporter', this)">🌟 Supporter</button>
                 <button class="filter-chip" id="chip-lifetime" onclick="setFilter('lifetime', this)">♾️ Навсегда</button>
                 <button class="filter-chip" id="chip-trial" onclick="setFilter('trial', this)">🎁 Trial</button>
                 <button class="filter-chip" id="chip-active" onclick="setFilter('active', this)">🟢 Все активные</button>
@@ -508,11 +517,11 @@
             <div class="form-row">
                 <label class="form-label">Тарифный план</label>
                 <select id="newPlan" class="form-input-ctrl" onchange="handlePlanChangeNew()">
-                    <option value="vip">VIP / Премиум</option>
-                    <option value="premium">PREMIUM ✨</option>
-                    <option value="trial">Тестовый доступ (Trial 🎁)</option>
-                    <option value="lifetime">Бессрочный (Навсегда ♾️)</option>
-                    <option value="free">FREE (Базовый)</option>
+                    <option value="trial">Trial (Пробный период 🎁)</option>
+                    <option value="premium" selected>PREMIUM ✨ (Уровень 1)</option>
+                    <option value="platinum">PLATINUM 💎 (Уровень 2)</option>
+                    <option value="supporter">SUPPORTER 🌟 (Уровень 2 / Ручной)</option>
+                    <option value="lifetime">LIFETIME ♾️ (Навсегда / Высший уровень)</option>
                 </select>
             </div>
 
@@ -520,9 +529,9 @@
                 <label class="form-label">Срок действия (Дата окончания)</label>
                 <input type="date" id="newExpiresAt" class="form-input-ctrl">
                 <div class="quick-days-row">
-                    <button type="button" class="quick-day-btn" onclick="setQuickExpiresNew(3)">+3 дня</button>
                     <button type="button" class="quick-day-btn" onclick="setQuickExpiresNew(7)">+7 дней</button>
                     <button type="button" class="quick-day-btn" onclick="setQuickExpiresNew(30)">+1 месяц</button>
+                    <button type="button" class="quick-day-btn" onclick="setQuickExpiresNew(90)">+3 месяца</button>
                     <button type="button" class="quick-day-btn" onclick="setQuickExpiresNew(365)">+1 год</button>
                 </div>
             </div>
@@ -565,11 +574,11 @@
             <div class="form-row">
                 <label class="form-label">Тарифный план</label>
                 <select id="editPlan" class="form-input-ctrl">
-                    <option value="vip">VIP / Премиум</option>
-                    <option value="premium">PREMIUM ✨</option>
-                    <option value="trial">Тестовый доступ (Trial 🎁)</option>
-                    <option value="lifetime">Бессрочный (Навсегда ♾️)</option>
-                    <option value="free">FREE (Базовый)</option>
+                    <option value="trial">Trial (Пробный период 🎁)</option>
+                    <option value="premium">PREMIUM ✨ (Уровень 1)</option>
+                    <option value="platinum">PLATINUM 💎 (Уровень 2)</option>
+                    <option value="supporter">SUPPORTER 🌟 (Уровень 2 / Ручной)</option>
+                    <option value="lifetime">LIFETIME ♾️ (Навсегда / Высший уровень)</option>
                 </select>
             </div>
 
@@ -690,12 +699,14 @@
 
         // Подсчет статистики и оставшихся дней
         function calculateSubscriptionInfo(user) {
-            const plan = (user.plan || 'free').toLowerCase();
+            const rawPlan = (user.plan || 'trial').toLowerCase();
+            let plan = rawPlan === 'free' ? 'trial' : (rawPlan === 'vip' ? 'premium' : rawPlan);
             const isLifetime = plan === 'lifetime' || user.is_lifetime === true;
             
             if (isLifetime) {
                 return {
                     status: 'lifetime',
+                    tierLevel: 2,
                     badgeHtml: `<span class="plan-badge lifetime">♾️ LIFETIME</span>`,
                     pillHtml: `<span class="status-pill active"><span class="status-dot"></span>Бессрочно</span>`,
                     daysLeftText: '♾️ Навсегда',
@@ -708,21 +719,36 @@
             const expiresAt = user.expires_at || user.access_until || user.expiration_date;
 
             if (!expiresAt) {
-                if (plan === 'free') {
+                if (plan === 'trial') {
                     return {
-                        status: 'free',
-                        badgeHtml: `<span class="plan-badge free">FREE</span>`,
-                        pillHtml: `<span class="status-pill"><span class="status-dot" style="background:#9ca3af;"></span>Базовый</span>`,
-                        daysLeftText: '—',
+                        status: 'trial',
+                        tierLevel: 0,
+                        badgeHtml: `<span class="plan-badge trial">🎁 TRIAL</span>`,
+                        pillHtml: `<span class="status-pill"><span class="status-dot" style="background:#f59e0b;"></span>Не активирован</span>`,
+                        daysLeftText: 'Не активирован',
                         daysLeftNum: 0,
                         isExpiring: false,
                         isExpired: false
                     };
                 }
-                // Если план VIP, но дата не задана - считаем активной
+                if (plan === 'supporter') {
+                    return {
+                        status: 'active',
+                        tierLevel: 2,
+                        badgeHtml: `<span class="plan-badge supporter">🌟 SUPPORTER</span>`,
+                        pillHtml: `<span class="status-pill active"><span class="status-dot"></span>Бессрочно (Ручной)</span>`,
+                        daysLeftText: 'Бессрочно (Ручной)',
+                        daysLeftNum: 9999,
+                        isExpiring: false,
+                        isExpired: false
+                    };
+                }
+                const badgeCls = plan === 'platinum' ? 'platinum' : 'premium';
+                const badgeLabel = plan === 'platinum' ? '💎 PLATINUM' : '✨ PREMIUM';
                 return {
                     status: 'active',
-                    badgeHtml: `<span class="plan-badge vip">VIP</span>`,
+                    tierLevel: plan === 'platinum' ? 2 : 1,
+                    badgeHtml: `<span class="plan-badge ${badgeCls}">${badgeLabel}</span>`,
                     pillHtml: `<span class="status-pill active"><span class="status-dot"></span>Активна</span>`,
                     daysLeftText: 'Без ограничения',
                     daysLeftNum: 9999,
@@ -736,14 +762,33 @@
             const diffMs = expDate.getTime() - now.getTime();
             const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
-            let badgeClass = 'vip';
-            if (plan === 'trial') badgeClass = 'trial';
-            else if (plan === 'premium') badgeClass = 'premium';
+            let badgeClass = 'premium';
+            let planDisplay = '✨ PREMIUM';
+            let tierLevel = 1;
+
+            if (plan === 'trial') {
+                badgeClass = 'trial';
+                planDisplay = '🎁 TRIAL';
+                tierLevel = 0;
+            } else if (plan === 'platinum') {
+                badgeClass = 'platinum';
+                planDisplay = '💎 PLATINUM';
+                tierLevel = 2;
+            } else if (plan === 'supporter') {
+                badgeClass = 'supporter';
+                planDisplay = '🌟 SUPPORTER';
+                tierLevel = 2;
+            } else {
+                badgeClass = 'premium';
+                planDisplay = '✨ PREMIUM';
+                tierLevel = 1;
+            }
 
             if (diffDays <= 0) {
                 return {
                     status: 'expired',
-                    badgeHtml: `<span class="plan-badge ${badgeClass}">${plan.toUpperCase()}</span>`,
+                    tierLevel: tierLevel,
+                    badgeHtml: `<span class="plan-badge ${badgeClass}">${planDisplay}</span>`,
                     pillHtml: `<span class="status-pill expired"><span class="status-dot"></span>Истёк</span>`,
                     daysLeftText: `<span style="color:#ef4444; font-weight:700;">Истекла (${Math.abs(diffDays)} дн. назад)</span>`,
                     daysLeftNum: diffDays,
@@ -753,7 +798,8 @@
             } else if (diffDays <= 3) {
                 return {
                     status: 'expiring',
-                    badgeHtml: `<span class="plan-badge ${badgeClass}">${plan.toUpperCase()}</span>`,
+                    tierLevel: tierLevel,
+                    badgeHtml: `<span class="plan-badge ${badgeClass}">${planDisplay}</span>`,
                     pillHtml: `<span class="status-pill expiring"><span class="status-dot"></span>Скоро истёк</span>`,
                     daysLeftText: `<span style="color:#f59e0b; font-weight:700;">🟡 ${diffDays} дн.</span>`,
                     daysLeftNum: diffDays,
@@ -763,7 +809,8 @@
             } else {
                 return {
                     status: 'active',
-                    badgeHtml: `<span class="plan-badge ${badgeClass}">${plan.toUpperCase()}</span>`,
+                    tierLevel: tierLevel,
+                    badgeHtml: `<span class="plan-badge ${badgeClass}">${planDisplay}</span>`,
                     pillHtml: `<span class="status-pill active"><span class="status-dot"></span>Активна</span>`,
                     daysLeftText: `<span style="color:#10b981; font-weight:700;">🟢 ${diffDays} дн.</span>`,
                     daysLeftNum: diffDays,
@@ -775,7 +822,8 @@
 
         function updateStats() {
             let total = allUsers.length;
-            let activeVip = 0;
+            let activePremium = 0;
+            let platinumUsers = 0;
             let lifetime = 0;
             let trial = 0;
             let expiringSoon = 0;
@@ -783,7 +831,8 @@
 
             allUsers.forEach(u => {
                 const info = calculateSubscriptionInfo(u);
-                const plan = (u.plan || 'free').toLowerCase();
+                const rawPlan = (u.plan || 'trial').toLowerCase();
+                const plan = rawPlan === 'free' ? 'trial' : (rawPlan === 'vip' ? 'premium' : rawPlan);
                 const isLifetime = plan === 'lifetime' || u.is_lifetime === true;
 
                 if (isLifetime) {
@@ -795,14 +844,19 @@
                     } else if (info.isExpiring) {
                         expiringSoon++;
                     }
-                } else if (plan === 'vip' || plan === 'premium') {
+                } else if (plan === 'platinum' || plan === 'supporter') {
                     if (info.isExpired) {
                         expired++;
                     } else {
-                        activeVip++;
-                        if (info.isExpiring) {
-                            expiringSoon++;
-                        }
+                        platinumUsers++;
+                        if (info.isExpiring) expiringSoon++;
+                    }
+                } else if (plan === 'premium') {
+                    if (info.isExpired) {
+                        expired++;
+                    } else {
+                        activePremium++;
+                        if (info.isExpiring) expiringSoon++;
                     }
                 } else {
                     if (info.isExpired) expired++;
@@ -810,7 +864,10 @@
             });
 
             document.getElementById('statTotalUsers').innerText = total;
-            document.getElementById('statActiveVip').innerText = activeVip;
+            const premEl = document.getElementById('statActivePremium');
+            if (premEl) premEl.innerText = activePremium;
+            const platEl = document.getElementById('statPlatinumUsers');
+            if (platEl) platEl.innerText = platinumUsers;
             document.getElementById('statLifetimeUsers').innerText = lifetime;
             document.getElementById('statTrialUsers').innerText = trial;
             document.getElementById('statExpiringSoon').innerText = expiringSoon;
@@ -835,14 +892,17 @@
             
             const filtered = allUsers.filter(u => {
                 const info = calculateSubscriptionInfo(u);
-                const plan = (u.plan || 'free').toLowerCase();
+                const rawPlan = (u.plan || 'trial').toLowerCase();
+                const plan = rawPlan === 'free' ? 'trial' : (rawPlan === 'vip' ? 'premium' : rawPlan);
                 const isLifetime = plan === 'lifetime' || u.is_lifetime === true;
                 
                 // Фильтр по чипам
-                if (currentFilter === 'vip' && (info.isExpired || isLifetime || plan === 'trial' || (plan !== 'vip' && plan !== 'premium'))) return false;
+                if (currentFilter === 'premium' && (info.isExpired || isLifetime || plan !== 'premium')) return false;
+                if (currentFilter === 'platinum' && (info.isExpired || plan !== 'platinum')) return false;
+                if (currentFilter === 'supporter' && (info.isExpired || plan !== 'supporter')) return false;
                 if (currentFilter === 'lifetime' && !isLifetime) return false;
                 if (currentFilter === 'trial' && plan !== 'trial') return false;
-                if (currentFilter === 'active' && (info.isExpired || info.status === 'free')) return false;
+                if (currentFilter === 'active' && info.isExpired) return false;
                 if (currentFilter === 'expiring' && !info.isExpiring) return false;
                 if (currentFilter === 'expired' && !info.isExpired) return false;
 
@@ -1148,10 +1208,15 @@
             baseDate.setDate(baseDate.getDate() + days);
             const newExpires = baseDate.toISOString();
 
+            let targetPlan = (user.plan || 'premium').toLowerCase();
+            if (targetPlan === 'free' || targetPlan === 'trial' || targetPlan === 'vip') {
+                targetPlan = 'premium';
+            }
+
             try {
                 let query = supabaseClient.from('app_users').update({ 
                     expires_at: newExpires,
-                    plan: (user.plan === 'free' ? 'vip' : user.plan)
+                    plan: targetPlan
                 });
                 if (user.id) query = query.eq('id', user.id);
                 else if (user.telegram_id) query = query.eq('telegram_id', user.telegram_id);
@@ -1161,7 +1226,7 @@
                 if (error) throw error;
 
                 user.expires_at = newExpires;
-                if (user.plan === 'free') user.plan = 'vip';
+                user.plan = targetPlan;
                 updateStats();
                 renderUsersTable();
                 alert(`Подписка успешно продлена на ${days} дней! Новая дата: ${baseDate.toLocaleDateString('ru-RU')}`);
@@ -1178,7 +1243,7 @@
         function openCreateUserModal() {
             document.getElementById('newTelegramId').value = '';
             document.getElementById('newFirstName').value = '';
-            document.getElementById('newPlan').value = 'vip';
+            document.getElementById('newPlan').value = 'premium';
             setQuickExpiresNew(30);
             generateNewRandomToken();
             document.getElementById('newMaxDevices').value = '3';
@@ -1188,12 +1253,12 @@
         function handlePlanChangeNew() {
             const plan = document.getElementById('newPlan').value;
             const expRow = document.getElementById('newExpiresRow');
-            if (plan === 'lifetime') {
+            if (plan === 'lifetime' || plan === 'supporter') {
                 expRow.style.display = 'none';
             } else {
                 expRow.style.display = 'flex';
-                if (plan === 'trial') setQuickExpiresNew(3);
-                else if (plan === 'vip' || plan === 'premium') setQuickExpiresNew(30);
+                if (plan === 'trial') setQuickExpiresNew(7);
+                else setQuickExpiresNew(30);
             }
         }
 
@@ -1271,7 +1336,10 @@
             const tgInfo = user.username ? `@${user.username}` : (user.telegram_id ? `ID: ${user.telegram_id}` : '');
             document.getElementById('editUserSummary').innerText = `${user.first_name || 'Пользователь'} ${tgInfo ? '(' + tgInfo + ')' : ''}`;
             
-            document.getElementById('editPlan').value = (user.plan || 'free').toLowerCase();
+            let p = (user.plan || 'trial').toLowerCase();
+            if (p === 'free') p = 'trial';
+            if (p === 'vip') p = 'premium';
+            document.getElementById('editPlan').value = p;
             
             if (user.expires_at) {
                 document.getElementById('editExpiresAt').value = user.expires_at.split('T')[0];
