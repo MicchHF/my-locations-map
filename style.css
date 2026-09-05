@@ -1009,6 +1009,44 @@ body.dark-mode .fav-btn.is-active {
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Полоса категорий в режиме списка (продублированная как на карте) */
+.list-mode-cat-bar {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-top: 10px !important;
+    margin-bottom: 2px !important;
+    padding: 5px 8px !important;
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-radius: 9999px !important;
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04) !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    z-index: 10 !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    overflow: hidden !important;
+}
+
+body.dark-mode .list-mode-cat-bar {
+    background: rgba(30, 41, 59, 0.8) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
+}
+
+.list-mode-cat-bar .cat-chips-scroll {
+    mask-image: linear-gradient(to right, transparent 0px, black 12px, black calc(100% - 16px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0px, black 12px, black calc(100% - 16px), transparent 100%);
+}
+
 .toggle-all-btn {
     display: inline-flex;
     align-items: center;
@@ -1450,7 +1488,7 @@ body.dark-mode .toggle-all-btn.off:hover,
 
 .mobile-search-overlay.active { display: flex; }
 
-body.mobile-search-open .top-cat-filter-bar {
+body.mobile-search-open #topCatFilterBar {
     opacity: 0 !important;
     pointer-events: none !important;
     transform: translate(-50%, -12px) !important;
@@ -1557,8 +1595,10 @@ body.dark-mode .mobile-search-cancel-btn {
         flex-direction: column !important;
         z-index: 500 !important;
         background: var(--bg-card) !important;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch !important;
+        overflow: hidden !important;
+    }
+    .sidebar-header {
+        flex-shrink: 0;
     }
     
     #map-container {
@@ -1587,10 +1627,9 @@ body.dark-mode .mobile-search-cancel-btn {
         display: flex !important;
         opacity: 1;
         visibility: visible;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch !important;
+        overflow: hidden !important;
     }
-    .show-list .top-cat-filter-bar { 
+    .show-list #topCatFilterBar { 
         opacity: 0;
         pointer-events: none;
         transform: translate(-50%, -10px);
@@ -2255,8 +2294,8 @@ body.dark-mode .vertical-toggle-all-btn.off:hover,
         box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
     }
 
-    /* На десктопе скрываем верхнюю горизонтальную полосу, так как справа есть вертикальное меню */
-    .top-cat-filter-bar {
+    /* На десктопе скрываем плавающую горизонтальную полосу над картой, так как справа есть вертикальное меню */
+    #topCatFilterBar {
         display: none !important;
     }
 

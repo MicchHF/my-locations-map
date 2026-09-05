@@ -170,6 +170,12 @@
                         <span id="desktopMetroText">Метро</span>
                     </button>
                 </div>
+
+                <!-- Полоса сортировки и фильтрации по категориям в режиме списка (продублирована как на карте) -->
+                <div id="listCatFilterBar" class="top-cat-filter-bar list-mode-cat-bar">
+                    <button id="listToggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
+                    <div id="listCatChipsScroll" class="cat-chips-scroll"></div>
+                </div>
             </div>
             
             <div id="locations-list"></div>
@@ -1571,9 +1577,11 @@
         function renderBothCatFilterBars(categories) {
             ensureCategoryVisibilityInitialized();
             const mapContainer = document.getElementById('catChipsScroll');
+            const listContainer = document.getElementById('listCatChipsScroll');
             const verticalContainer = document.getElementById('verticalCatChipsScroll');
 
             if (mapContainer) mapContainer.innerHTML = '';
+            if (listContainer) listContainer.innerHTML = '';
             if (verticalContainer) verticalContainer.innerHTML = '';
 
             const uniqueCats = Array.from(new Set(categories || getAllCategoryNames())).filter(Boolean);
@@ -1585,6 +1593,15 @@
                 uniqueCats.forEach(catName => {
                     const isVis = categoryVisibility[catName] === true;
                     mapContainer.appendChild(createChipElement(catName, isVis));
+                });
+            }
+
+            // Чипы в режиме списка
+            if (listContainer) {
+                listContainer.appendChild(createFavChip(favCount));
+                uniqueCats.forEach(catName => {
+                    const isVis = categoryVisibility[catName] === true;
+                    listContainer.appendChild(createChipElement(catName, isVis));
                 });
             }
 
@@ -1695,19 +1712,22 @@
             const isAllActive = totalCount > 0 && activeCount === totalCount && !showFavoritesOnly;
 
             const mapToggleBtn = document.getElementById('toggleAllBtn');
+            const listToggleBtn = document.getElementById('listToggleAllBtn');
             const vertToggleBtn = document.getElementById('verticalToggleAllBtn');
 
-            if (mapToggleBtn) {
-                if (isAllActive) {
-                    mapToggleBtn.classList.remove('off');
-                    mapToggleBtn.innerText = '👁️ Все';
-                    mapToggleBtn.title = 'Скрыть все точки';
-                } else {
-                    mapToggleBtn.classList.add('off');
-                    mapToggleBtn.innerText = '🙈 Все';
-                    mapToggleBtn.title = 'Показать все точки';
+            [mapToggleBtn, listToggleBtn].forEach(btn => {
+                if (btn) {
+                    if (isAllActive) {
+                        btn.classList.remove('off');
+                        btn.innerText = '👁️ Все';
+                        btn.title = 'Скрыть все точки';
+                    } else {
+                        btn.classList.add('off');
+                        btn.innerText = '🙈 Все';
+                        btn.title = 'Показать все точки';
+                    }
                 }
-            }
+            });
 
             if (vertToggleBtn) {
                 if (isAllActive) {
