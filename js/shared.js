@@ -5,7 +5,8 @@ const SUPABASE_URL = "https://cwkgylbtcjfmweoldhyb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_KnWO20wlfuWd0NYKMNKRvw_l1rttjaT";
 const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
-const BOT_USERNAME = "dalazareva_locations_bot";
+window.BOT_USERNAME = window.BOT_USERNAME || "dalazareva_locations_bot";
+var BOT_USERNAME = window.BOT_USERNAME;
 
 // 2. Цвета и список категорий
 const CATEGORY_COLORS = {
