@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Даша Лазарева — @dalazareva</title>
+    <meta name="description" content="Официальная страница Даши Лазаревой: авторская интерактивная карта локаций Москвы, Telegram-канал и проекты.">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Даша Лазарева — @dalazareva">
+    <meta property="og:description" content="Авторская интерактивная карта локаций Москвы, Telegram-канал и проекты.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://dalazareva.ru">
+    
+    <!-- PWA & Mobile Meta -->
+    <meta name="theme-color" content="#090a0f">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Даша Лазарева">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Unbounded:wght@600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg: #090a0f;
+            --surface: rgba(18, 22, 31, 0.75);
+            --surface-hover: rgba(26, 32, 45, 0.9);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.2);
+            --accent: #f43f5e;
+            --accent-glow: rgba(244, 63, 94, 0.25);
+            --cyan: #06b6d4;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(244, 63, 94, 0.12) 0%, transparent 60%),
+                radial-gradient(circle at 10% 90%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+                linear-gradient(180deg, #090a0f 0%, #0d1117 100%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: calc(env(safe-area-inset-top, 24px) + 20px) 16px calc(env(safe-area-inset-bottom, 24px) + 20px);
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 460px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 auto;
+        }
+
+        /* PROFILE SECTION */
+        .profile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .avatar-wrap {
+            position: relative;
+            width: 104px;
+            height: 104px;
+            margin-bottom: 20px;
+        }
+
+        .avatar-ring {
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f43f5e 0%, #06b6d4 100%);
+            opacity: 0.85;
+            animation: rotateGlow 8s linear infinite;
+        }
+
+        @keyframes rotateGlow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .avatar {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #1e2533, #0f131c);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Unbounded', sans-serif;
+            font-size: 34px;
+            font-weight: 800;
+            color: #fff;
+            border: 2px solid var(--bg);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            user-select: none;
+        }
+
+        .name {
+            font-family: 'Unbounded', sans-serif;
+            font-weight: 800;
+            font-size: 24px;
+            letter-spacing: -0.5px;
+            color: #fff;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .verified-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            border-radius: 50%;
+            color: #090a0f;
+            font-size: 11px;
+            font-weight: 900;
+            flex-shrink: 0;
+        }
+
+        .handle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .handle:hover {
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .bio {
+            color: var(--text-secondary);
+            font-size: 14.5px;
+            line-height: 1.55;
+            max-width: 360px;
+        }
+
+        /* LINKS STACK */
+        .links-stack {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 36px;
+        }
+
+        .link-card {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            border-radius: 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .link-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at right center, var(--card-glow, rgba(255,255,255,0.06)), transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .link-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--card-border-hover, var(--border-hover));
+            background: var(--surface-hover);
+            box-shadow: 0 12px 30px -10px var(--card-shadow, rgba(0, 0, 0, 0.5));
+        }
+
+        .link-card:hover::before {
+            opacity: 1;
+        }
+
+        .link-card:active {
+            transform: scale(0.98);
+        }
+
+        /* CARD SPECIFIC THEMING */
+        .card-map {
+            --card-glow: rgba(244, 63, 94, 0.15);
+            --card-border-hover: rgba(244, 63, 94, 0.4);
+            --card-shadow: rgba(244, 63, 94, 0.2);
+        }
+
+        .card-tg {
+            --card-glow: rgba(6, 182, 212, 0.15);
+            --card-border-hover: rgba(6, 182, 212, 0.4);
+            --card-shadow: rgba(6, 182, 212, 0.2);
+        }
+
+        .card-bot {
+            --card-glow: rgba(168, 85, 247, 0.15);
+            --card-border-hover: rgba(168, 85, 247, 0.4);
+            --card-shadow: rgba(168, 85, 247, 0.2);
+        }
+
+        .card-collab {
+            --card-glow: rgba(245, 158, 11, 0.15);
+            --card-border-hover: rgba(245, 158, 11, 0.4);
+            --card-shadow: rgba(245, 158, 11, 0.2);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .card-map .card-icon {
+            background: linear-gradient(135deg, rgba(244, 63, 94, 0.2), rgba(244, 63, 94, 0.05));
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            color: #f43f5e;
+        }
+
+        .card-tg .card-icon {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(6, 182, 212, 0.05));
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            color: #06b6d4;
+        }
+
+        .card-bot .card-icon {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0.05));
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            color: #a855f7;
+        }
+
+        .card-collab .card-icon {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.05));
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #f59e0b;
+        }
+
+        .card-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            position: relative;
+            z-index: 2;
+            min-width: 0;
+        }
+
+        .card-title {
+            font-family: 'Unbounded', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge-pill {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-rose {
+            background: rgba(244, 63, 94, 0.15);
+            color: #fb7185;
+            border: 1px solid rgba(244, 63, 94, 0.3);
+        }
+
+        .badge-cyan {
+            background: rgba(6, 182, 212, 0.15);
+            color: #22d3ee;
+            border: 1px solid rgba(6, 182, 212, 0.3);
+        }
+
+        .badge-purple {
+            background: rgba(168, 85, 247, 0.15);
+            color: #c084fc;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .badge-amber {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .card-desc {
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-arrow {
+            color: var(--text-muted);
+            font-size: 18px;
+            position: relative;
+            z-index: 2;
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+
+        .link-card:hover .card-arrow {
+            transform: translateX(4px);
+            color: #fff;
+        }
+
+        /* FOOTER */
+        footer {
+            width: 100%;
+            text-align: center;
+            font-size: 12.5px;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+        }
+
+        footer span {
+            color: #94a3b8;
+        }
+
+        .copyright {
+            opacity: 0.7;
+            font-size: 11.5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Profile Header -->
+        <header class="profile">
+            <div class="avatar-wrap">
+                <div class="avatar-ring"></div>
+                <div class="avatar">ДЛ</div>
+            </div>
+            <h1 class="name">
+                Даша Лазарева
+                <span class="verified-badge" title="Подтверждённый аккаунт">✓</span>
+            </h1>
+            <a href="https://t.me/dalazareva" target="_blank" rel="noopener noreferrer" class="handle">
+                <span>@dalazareva</span>
+            </a>
+            <p class="bio">
+                Эстетичные локации, любимые кофейни и фото-споты Москвы ✨
+            </p>
+        </header>
+
+        <!-- Main Links List -->
+        <main class="links-stack">
+            <!-- 1. Интерактивная Карта -->
+            <a href="https://map.dalazareva.ru" id="mapLink" class="link-card card-map">
+                <div class="card-icon">📍</div>
+                <div class="card-content">
+                    <div class="card-title">
+                        Карта локаций
+                        <span class="badge-pill badge-rose">Интерактив</span>
+                    </div>
+                    <div class="card-desc">Авторский гид по местам, кофейням и фото-спотам</div>
+                </div>
+                <div class="card-arrow">➔</div>
+            </a>
+
+            <!-- 2. Telegram Канал -->
+            <a href="https://t.me/dalazareva" target="_blank" rel="noopener noreferrer" class="link-card card-tg">
+                <div class="card-icon">✈️</div>
+                <div class="card-content">
+                    <div class="card-title">
+                        Telegram-канал
+                        <span class="badge-pill badge-cyan">Блог</span>
+                    </div>
+                    <div class="card-desc">Новые открытия, обзоры и эстетика каждого дня</div>
+                </div>
+                <div class="card-arrow">➔</div>
+            </a>
+
+            <!-- 3. Telegram-бот карты -->
+            <a href="https://t.me/dalazareva_locations_bot" target="_blank" rel="noopener noreferrer" class="link-card card-bot">
+                <div class="card-icon">🤖</div>
+                <div class="card-content">
+                    <div class="card-title">
+                        Telegram-бот карты
+                        <span class="badge-pill badge-purple">Бот</span>
+                    </div>
+                    <div class="card-desc">Запуск прямо в Telegram, избранное и уведомления</div>
+                </div>
+                <div class="card-arrow">➔</div>
+            </a>
+
+            <!-- 4. Сотрудничество и PR -->
+            <a href="https://t.me/dalazareva" target="_blank" rel="noopener noreferrer" class="link-card card-collab">
+                <div class="card-icon">💌</div>
+                <div class="card-content">
+                    <div class="card-title">
+                        Сотрудничество & PR
+                        <span class="badge-pill badge-amber">Связь</span>
+                    </div>
+                    <div class="card-desc">По вопросам коллабораций, рекламы и съемок</div>
+                </div>
+                <div class="card-arrow">➔</div>
+            </a>
+        </main>
+
+        <!-- Footer -->
+        <footer>
+            <div>Добро пожаловать в мой мир ✨</div>
+            <div class="copyright">© 2026 dalazareva.ru • Все права защищены</div>
+        </footer>
+    </div>
+
+    <script>
+        // Адаптация ссылки на карту в среде предпросмотра
+        if (!window.location.hostname.includes('dalazareva.ru') && !window.location.hostname.includes('lazareva.ru')) {
+            const mapLink = document.getElementById('mapLink');
+            if (mapLink) {
+                mapLink.href = './index.html';
+                mapLink.title = 'Перейти к интерактивной карте локаций';
+            }
+        }
+
+        // Очистка старых кэширующих Service Worker карты для основного домена dalazareva.ru
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for (let reg of registrations) {
+                    if (window.location.hostname === 'dalazareva.ru' || window.location.hostname === 'www.dalazareva.ru') {
+                        reg.unregister();
+                    }
+                }
+            });
+            if ('caches' in window && (window.location.hostname === 'dalazareva.ru' || window.location.hostname === 'www.dalazareva.ru')) {
+                caches.keys().then(function(names) {
+                    for (let name of names) {
+                        if (name.includes('dalazareva-cache')) {
+                            caches.delete(name);
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

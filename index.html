@@ -1,0 +1,2658 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta id="themeColorMeta" name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="@dalazareva локации📍">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="referrer" content="no-referrer">
+    <link id="manifestLink" rel="manifest" href="manifest.json">
+    
+    <title>@dalazareva локации📍</title>
+    <meta name="description" content="Интерактивная карта локаций Москвы, кофеен, фото-спотов и панель администратора">
+    <meta property="og:title" content="@dalazareva локации📍">
+    <meta property="og:description" content="Интерактивная карта локаций Москвы, кофеен, фото-спотов и панель администратора">
+    
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="apple-touch-icon-precomposed" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Telegram WebApp SDK: немедленный ready() для мгновенного снятия серой заставки Telegram -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        if (!window.Telegram || !window.Telegram.WebApp) {
+            document.write('<script src="js/telegram-web-app.js"><\/script>');
+        }
+    </script>
+    <script>
+        try {
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.ready();
+                window.Telegram.WebApp.expand();
+                if (window.Telegram.WebApp.setHeaderColor) window.Telegram.WebApp.setHeaderColor('#000000');
+                if (window.Telegram.WebApp.setBackgroundColor) window.Telegram.WebApp.setBackgroundColor('#000000');
+            }
+        } catch(e) {}
+    </script>
+
+    <!-- PWA Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('./sw.js').catch(function() {});
+            });
+        }
+    </script>
+
+    <!-- SDK и внешние библиотеки -->
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=7370bad5-a627-4414-a1e8-b2023bda7a61&lang=ru_RU"></script>
+    <script src="js/supabase.js"></script>
+    <script>
+        if (!window.supabase && !window.supabaseClient) {
+            var s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+            s.async = false;
+            document.head.appendChild(s);
+        }
+    </script>
+    
+    <!-- Единый модуль базы и утилит -->
+    <script src="js/shared.js"></script>
+
+    <style>
+        /* Кнопка лайка: заметный, премиальный бейдж */
+        .fav-btn {
+            background: rgba(244, 63, 94, 0.08) !important;
+            border: 1px solid rgba(244, 63, 94, 0.25) !important;
+            border-radius: 999px !important;
+            outline: none !important;
+            cursor: pointer;
+            padding: 6px 10px !important;
+            margin: 0;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            flex-shrink: 0;
+            font-size: 0.88rem;
+            color: #f43f5e;
+            font-weight: 700;
+        }
+        .fav-btn:hover {
+            transform: scale(1.06);
+            background: rgba(244, 63, 94, 0.15) !important;
+        }
+        .fav-btn:active {
+            transform: scale(0.92);
+        }
+        .fav-btn.is-active {
+            background: #f43f5e !important;
+            color: #ffffff !important;
+            border-color: #f43f5e !important;
+            box-shadow: 0 4px 14px rgba(244, 63, 94, 0.4) !important;
+        }
+
+        /* Чип избранного в верхней строке */
+        .cat-chip.fav-chip {
+            border-color: #f43f5e !important;
+            color: #f43f5e !important;
+            padding: 6px 12px !important;
+        }
+        .cat-chip.fav-chip.active {
+            background: #f43f5e !important;
+            color: #ffffff !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Черная фиксированная полоса сверху для мобильных устройств/TWA -->
+    <div id="mobileTopBar" class="mobile-top-bar"></div>
+
+    <!-- Экран блокировки и авторизации -->
+    <div id="authGate">
+        <div class="auth-gate-card">
+            <div class="auth-gate-icon">📍</div>
+            <div class="auth-gate-title">@dalazareva локации📍</div>
+            <div class="auth-gate-desc" id="authGateDesc">Гид по лучшим кофейням, фото-спотам и локациям Москвы. Для доступа откройте карту в Telegram или введите ключ доступа:</div>
+            
+            <div id="authAlert" class="auth-alert-box"></div>
+
+            <button onclick="openTelegramBotOrLink('https://t.me/dalazareva_locations_bot')" class="tg-direct-btn" style="border:none; cursor:pointer; width:100%;">
+                <span>✈️ Открыть бот в Telegram</span>
+            </button>
+
+            <div class="auth-divider">или по ключу доступа</div>
+
+            <form class="auth-input-group" onsubmit="event.preventDefault(); submitAccessCode(); return false;">
+                <input type="text" id="accessCodeInput" class="auth-input" placeholder="Введите ключ доступа (dl_...)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                <button type="submit" id="submitAccessBtn" class="auth-submit-btn">Войти по ключу</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно профиля пользователя -->
+    <div id="profileModal" class="modal-overlay" onclick="closeProfileModal(event)">
+        <div class="profile-modal-card" onclick="event.stopPropagation()">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                <div style="font-weight: 800; font-size: 1.05rem; color: #0f172a;">👤 Мой профиль</div>
+                <button onclick="closeProfileModal()" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: #64748b;">✕</button>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem;">
+                <div><b>Имя / Ник:</b> <span id="modalUserName">Пользователь</span></div>
+                <div><b>Статус тарифа:</b> <span id="modalUserPlan" style="color: #0284c7; font-weight: 700;">PREMIUM ✨</span></div>
+                <div><b>Подписка активна:</b> <span id="modalUserDaysLeft" style="font-weight: 700; color: #10b981;">—</span></div>
+                <div><b>Активных сессий:</b> <span id="modalUserSessions" style="font-weight: 700; color: #38bdf8;">1 из 3</span></div>
+                
+                <div style="margin-top: 6px;">
+                    <div style="font-size: 0.78rem; color: #64748b; margin-bottom: 4px;">Ваш персональный ключ доступа:</div>
+                    <div class="profile-token-box">
+                        <span id="modalUserTokenText">dl_...</span>
+                        <button onclick="copyUserToken()" style="background: #0f172a; color: #fff; border: none; padding: 4px 8px; border-radius: 6px; font-size: 0.72rem; cursor: pointer;">Копировать</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+                <button onclick="openTelegramBotOrLink('https://t.me/dalazareva_locations_bot?start=sub')" class="tg-direct-btn" style="padding: 10px; font-size: 0.85rem; border: none; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; background: linear-gradient(135deg, #0284c7, #0369a1);">
+                    <span>💎 Продлить / Управление подпиской</span>
+                </button>
+                <button onclick="openTelegramBotOrLink('https://t.me/dalazareva_locations_bot')" class="tg-direct-btn" style="padding: 10px; font-size: 0.85rem; border: none; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <span>✈️ Открыть Telegram-бот</span>
+                </button>
+                <button onclick="logoutUser()" style="background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; padding: 10px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                    🚪 Выйти из аккаунта
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-wrapper">
+        <div id="sidebar">
+            <div class="sidebar-header">
+                <div class="header-top-row">
+                    <div class="tg-badge" onclick="handleBadgeClick()" title="Нажмите для управления тарифом в боте">
+                        <div style="display: flex; flex-direction: column; gap: 3px; width: 100%;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                                <span style="font-size: 0.92rem; font-weight: 800; color: #ffffff; letter-spacing: -0.2px;">@dalazareva локации📍</span>
+                                <span class="tg-badge-icon" id="badgeActionIcon" style="font-size: 0.8rem; color: #94a3b8;">↗</span>
+                            </div>
+                            <div id="userProfileSubRow" style="font-size: 0.74rem; color: #94a3b8; display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                <span id="userDisplayName" style="color: #e2e8f0; font-weight: 600;">👤 Пользователь</span>
+                                <span>•</span>
+                                <span id="userPlanLabel" style="color: #fcd34d; font-weight: 600;">Trial</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="openTelegramBotOrLink('https://t.me/dalazareva')" class="channel-link-btn" title="Перейти в Telegram-канал @dalazareva" style="background:transparent; border:none; cursor:pointer; padding:0; display:flex; align-items:center; justify-content:center;">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="sidebar-search-row">
+                    <div class="search-container">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="searchInput" class="search-input" placeholder="Поиск локаций, метро..." oninput="handleSearch()" onfocus="showSearchSuggestions(this.value, 'searchSuggestionsDropdown')" onblur="hideSearchSuggestionsWithDelay('searchSuggestionsDropdown')">
+                        <div id="searchSuggestionsDropdown" class="search-suggestions-dropdown"></div>
+                    </div>
+                    <button id="desktopMetroBtn" class="desktop-metro-btn" onclick="openMetroDrawer()" title="Фильтр по веткам и станциям метро">
+                        <span>🚇</span>
+                        <span id="desktopMetroText">Метро</span>
+                    </button>
+                </div>
+
+                <button id="listBackToMapBtn" class="list-back-to-map-btn" onclick="switchMobileView('map')">
+                    <span>←</span>
+                    <span>Вернуться на карту</span>
+                </button>
+
+                <!-- Полоса сортировки и фильтрации по категориям в режиме списка -->
+                <div id="listCatFilterBar" class="top-cat-filter-bar list-mode-cat-bar">
+                    <div class="cat-bar-pinned-group">
+                        <button id="listMenuHamburgerBtn" class="top-hamburger-btn" onclick="openCategorySettingsModal()" title="Настройки категорий (☰)">
+                            ☰
+                        </button>
+                        <button id="listToggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()" title="Показать все / Скрыть все точки">👁️ Все</button>
+                        <button id="listTopPinnedFavBtn" class="top-pinned-fav-btn" onclick="toggleFavoritesFilter()" title="Только избранное">
+                            ❤️ <span id="listTopPinnedFavCount">0</span>
+                        </button>
+                    </div>
+                    <div id="listCatChipsScroll" class="cat-chips-scroll"></div>
+                </div>
+            </div>
+            
+            <div id="locations-list"></div>
+        </div>
+
+        <div id="map-container">
+            <div id="map"></div>
+            
+            <!-- Верхняя капсула категорий для карты (с закрепленным меню ☰, глазом 👁️ и сердечком ❤️) -->
+            <div id="topCatFilterBar" class="top-cat-filter-bar">
+                <div class="cat-bar-pinned-group">
+                    <button id="topMenuHamburgerBtn" class="top-hamburger-btn" onclick="openCategorySettingsModal()" title="Настройки категорий (☰)">
+                        ☰
+                    </button>
+                    <button id="toggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()" title="Показать все / Скрыть все точки">👁️ Все</button>
+                    <button id="topPinnedFavBtn" class="top-pinned-fav-btn" onclick="toggleFavoritesFilter()" title="Только избранное">
+                        ❤️ <span id="topPinnedFavCount">0</span>
+                    </button>
+                </div>
+                <div id="catChipsScroll" class="cat-chips-scroll"></div>
+            </div>
+
+            <!-- Вертикальное боковое меню категорий для десктопа (справа на карте: иконки с раскрытием) -->
+            <div id="desktopVerticalCatBar" class="desktop-vertical-cat-bar" title="Фильтр категорий">
+                <div class="vertical-cat-header">
+                    <button id="verticalCatExpandBtn" class="vertical-cat-expand-btn" onclick="toggleDesktopCatBarExpand()" title="Развернуть категории">
+                        <span class="expand-icon">◀</span>
+                        <span class="vertical-cat-header-title">Категории</span>
+                    </button>
+                    <button id="verticalToggleAllBtn" class="vertical-toggle-all-btn" onclick="toggleAllCategories()" title="Показать все / Скрыть все точки">
+                        👁️
+                    </button>
+                </div>
+                <div id="verticalCatChipsScroll" class="vertical-cat-chips-scroll"></div>
+            </div>
+
+            <!-- Плавающий чип активного фильтра метро со сбросом -->
+            <div id="metroActiveChip" class="metro-active-chip">
+                <span id="metroActiveChipLabel">🚇 Метро</span>
+                <button class="metro-reset-chip-btn" onclick="resetMetroFilter()" title="Сбросить фильтр метро">✕</button>
+            </div>
+
+            <button id="themeToggleBtn" class="theme-toggle-floating-btn" onclick="toggleTheme()" title="Переключить тему">
+                🌓
+            </button>
+
+            <!-- Правый нижний блок контролов (геолокация) -->
+            <div class="map-bottom-right-controls">
+                <button id="customGeolocBtn" class="custom-geoloc-btn" onclick="locateUserPosition()" title="Мое местоположение">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" stroke="currentColor" stroke-width="0.5" stroke-linejoin="round" style="display: block; margin: auto;">
+                        <path d="M12 3.2L4.5 20.8l7.5-3.6 7.5 3.6L12 3.2z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Меню метро -->
+    <div id="metroSidebarOverlay" class="metro-sidebar-overlay" onclick="closeMetroDrawer(event)">
+        <div class="metro-sidebar-drawer" onclick="event.stopPropagation()">
+            <div class="metro-drawer-header">
+                <div class="metro-drawer-title">🚇 Фильтр по метро</div>
+                <button class="metro-drawer-close" onclick="closeMetroDrawer()">✕</button>
+            </div>
+            <div class="metro-drawer-body">
+                <div class="metro-section-label">1. Выберите ветку</div>
+                <div id="metroLinesGrid" class="metro-lines-grid"></div>
+
+                <div id="metroLineWholeFilterWrap" class="metro-line-whole-filter-wrap" style="display:none;">
+                    <button id="metroLineWholeFilterBtn" class="metro-line-whole-filter-btn" onclick="selectEntireMetroLine()">
+                        🚇 Показать всю ветку
+                    </button>
+                </div>
+
+                <div class="metro-section-label">2. Выберите станцию</div>
+                <div class="metro-station-search-box">
+                    <span>🔍</span>
+                    <input type="text" id="metroStationSearchInput" placeholder="Поиск станции метро..." oninput="handleMetroStationSearch(this.value)">
+                </div>
+                <div id="metroStationsList" class="metro-stations-list"></div>
+
+                <button class="metro-reset-btn" onclick="resetMetroFilter()">✕ Сбросить фильтр метро</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное меню расширенной настройки категорий (Гамбургер-меню ☰) -->
+    <div id="categorySettingsOverlay" class="cat-settings-overlay" onclick="closeCategorySettingsModal(event)">
+        <div class="cat-settings-drawer" onclick="event.stopPropagation()">
+            <div class="cat-settings-header">
+                <div class="cat-settings-title-wrap">
+                    <span class="cat-settings-icon">☰</span>
+                    <div>
+                        <div class="cat-settings-title">Категории и фильтры</div>
+                        <div class="cat-settings-sub" id="catSettingsSummaryText">Выберите нужные категории</div>
+                    </div>
+                </div>
+                <button class="cat-settings-close-btn" onclick="closeCategorySettingsModal()">✕</button>
+            </div>
+
+            <div class="cat-settings-quick-actions">
+                <button class="cat-quick-btn" onclick="selectAllCategoriesMulti(true)">✅ Выбрать все</button>
+                <button class="cat-quick-btn" onclick="selectAllCategoriesMulti(false)">◻️ Снять все</button>
+                <button class="cat-quick-btn fav-quick-btn" onclick="toggleFavsFromDrawer()">❤️ Избранное</button>
+            </div>
+
+            <div class="cat-settings-search-wrap">
+                <span class="cat-search-icon">🔍</span>
+                <input type="text" id="catFilterSearchInput" class="cat-filter-search-input" placeholder="Поиск по категориям..." oninput="filterCategoryDrawerList(this.value)">
+            </div>
+
+            <div id="catSettingsList" class="cat-settings-list"></div>
+
+            <div class="cat-settings-footer">
+                <div class="cat-settings-extra-actions">
+                    <button class="cat-extra-action-btn" onclick="openSupportLink()" title="Связаться с поддержкой">
+                        💬 Поддержка
+                    </button>
+                    <button class="cat-extra-action-btn" onclick="suggestLocationFromApp()" title="Предложить свою локацию">
+                        📍 Предложить точку
+                    </button>
+                    <button class="cat-extra-action-btn" onclick="openChannelLink()" title="Телеграм-канал">
+                        📢 Канал
+                    </button>
+                </div>
+                <button class="cat-settings-apply-btn" onclick="closeCategorySettingsModal()">
+                    Применить и показать (<span id="catSettingsActiveCount">0</span>)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mobileSearchBackdrop" class="mobile-search-backdrop" onclick="toggleMobileSearch(false)"></div>
+    <div id="mobileSearchOverlay" class="mobile-search-overlay">
+        <div class="mobile-search-input-row">
+            <span>🔍</span>
+            <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="Поиск локаций, метро..." oninput="syncMobileSearch(this.value)" onfocus="handleMobileSearchFocus()">
+            <button id="mobileSearchClearBtn" class="mobile-search-clear-btn" onclick="clearMobileSearchInput()" style="display:none;" title="Очистить">✕</button>
+            <button class="mobile-search-cancel-btn" onclick="toggleMobileSearch(false)">Отмена</button>
+        </div>
+        <div id="mobileSearchSuggestionsDropdown" class="search-suggestions-dropdown mobile-search-suggestions"></div>
+    </div>
+
+    <!-- Центральное нижнее меню: Поиск, Карта, Список, Метро (+ быстрый сброс если активно) -->
+    <div class="mobile-toggle-bar">
+        <button id="btn-search-toggle" class="toggle-btn search-toggle-btn" title="Поиск" onclick="handleBottomSearchClick(event)">
+            <span id="bottomSearchIcon">🔍</span>
+            <span id="bottomSearchReset" class="bottom-filter-reset bottom-search-reset" onclick="handleBottomSearchReset(event)" title="Сбросить поиск" style="display:none;">✕</span>
+        </button>
+        <button id="btn-map-view" class="toggle-btn active" onclick="switchMobileView('map')">🗺️ Карта</button>
+        <button id="btn-list-view" class="toggle-btn" onclick="switchMobileView('list')">📋 Список</button>
+        <button id="btn-metro-toggle" class="toggle-btn metro-toggle-btn" title="Фильтр по метро" onclick="handleBottomMetroClick(event)">
+            <span id="bottomMetroIcon">🚇</span>
+            <span id="bottomMetroText" class="bottom-metro-text">Метро</span>
+            <span id="bottomMetroReset" class="bottom-filter-reset bottom-metro-reset" onclick="handleBottomMetroReset(event)" title="Сбросить фильтр" style="display:none;">✕</span>
+        </button>
+    </div>
+
+    <div id="lightbox" class="lightbox-modal">
+        <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+        <span class="lightbox-nav lightbox-prev" onclick="prevImage()">&#10094;</span>
+        <img id="lightbox-img" class="lightbox-img" src="" alt="Фото">
+        <span class="lightbox-nav lightbox-next" onclick="nextImage()">&#10095;</span>
+        <div id="lightbox-counter" class="lightbox-counter"></div>
+    </div>
+
+    <script>
+        function getTelegramUser() {
+            try {
+                if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
+                    return window.Telegram.WebApp.initDataUnsafe.user;
+                }
+                if (window.Telegram?.WebApp?.initData) {
+                    const params = new URLSearchParams(window.Telegram.WebApp.initData);
+                    const userStr = params.get('user');
+                    if (userStr) return JSON.parse(userStr);
+                }
+            } catch(e) {}
+            return null;
+        }
+
+        function openTelegramBotOrLink(url) {
+            if (!url) return;
+            if (window.Telegram?.WebApp) {
+                if (url.includes('t.me/')) {
+                    try {
+                        if (typeof window.Telegram.WebApp.openTelegramLink === 'function') {
+                            window.Telegram.WebApp.openTelegramLink(url);
+                            return;
+                        }
+                    } catch(e) {
+                        console.warn("Telegram.WebApp.openTelegramLink error:", e);
+                    }
+                } else {
+                    try {
+                        if (typeof window.Telegram.WebApp.openLink === 'function') {
+                            window.Telegram.WebApp.openLink(url);
+                            return;
+                        }
+                    } catch(e) {
+                        console.warn("Telegram.WebApp.openLink error:", e);
+                    }
+                }
+            }
+            window.open(url, '_blank', 'noopener,noreferrer');
+        }
+
+        function updateTelegramBackButton() {
+            if (!window.Telegram?.WebApp?.BackButton) return;
+            const bb = window.Telegram.WebApp.BackButton;
+            const isDrawerOpen = (document.getElementById('metroSidebarOverlay')?.classList.contains('active')) ||
+                                 (document.getElementById('categorySettingsOverlay')?.classList.contains('active')) ||
+                                 (document.getElementById('mobileSearchOverlay')?.classList.contains('active')) ||
+                                 (document.getElementById('profileModal')?.classList.contains('active')) ||
+                                 (document.getElementById('profileModal')?.style.display === 'flex') ||
+                                 (document.getElementById('lightbox')?.style.display === 'flex');
+            const isListView = document.body.classList.contains('show-list');
+            if (isDrawerOpen || isListView) {
+                bb.show();
+            } else {
+                bb.hide();
+            }
+        }
+
+        function handleTelegramBackClick() {
+            if (document.getElementById('lightbox')?.style.display === 'flex') {
+                closeLightbox();
+                return;
+            }
+            if (document.getElementById('metroSidebarOverlay')?.classList.contains('active')) {
+                closeMetroDrawer();
+                return;
+            }
+            if (document.getElementById('categorySettingsOverlay')?.classList.contains('active')) {
+                closeCategorySettingsModal();
+                return;
+            }
+            if (document.getElementById('mobileSearchOverlay')?.classList.contains('active')) {
+                toggleMobileSearch(false);
+                return;
+            }
+            if (document.getElementById('profileModal')?.classList.contains('active') || document.getElementById('profileModal')?.style.display === 'flex') {
+                closeProfileModal();
+                return;
+            }
+            if (document.body.classList.contains('show-list')) {
+                switchMobileView('map');
+                return;
+            }
+        }
+
+        const isInsideTelegram = !!(window.Telegram && window.Telegram.WebApp);
+        if (isInsideTelegram && window.Telegram?.WebApp) {
+            try {
+                window.Telegram.WebApp.ready();
+                window.Telegram.WebApp.expand();
+                window.Telegram.WebApp.setHeaderColor?.('#000000');
+                window.Telegram.WebApp.setBackgroundColor?.('#000000');
+                if (window.Telegram.WebApp.BackButton) {
+                    window.Telegram.WebApp.BackButton.onClick(handleTelegramBackClick);
+                }
+            } catch (e) {}
+        }
+
+        window.BOT_USERNAME = window.BOT_USERNAME || "dalazareva_locations_bot";
+        var BOT_USERNAME = window.BOT_USERNAME;
+
+        let currentUser = {
+            telegram_id: null,
+            first_name: "Пользователь",
+            username: "",
+            access_token: "",
+            devices: [],
+            max_devices: 3,
+            plan: "free",
+            expires_at: null
+        };
+
+        let myMap;
+        window.myMap = null;
+        let clusterer = null;
+        let locationPlacemarksMap = {};
+        let activeBalloonPlacemark = null;
+        let userLocationPlacemark = null;
+        let allLocations = [];
+        let categoryCollections = {};
+        let categoryVisibility = {};
+        let allVisibleState = true;
+        let showFavoritesOnly = false;
+        let currentGallery = [];
+        let currentImageIdx = 0;
+        let selectedMetroFilter = "";
+        let selectedLineFilter = "";
+        let selectedLineName = "";
+        let searchDebounceTimer = null;
+        let hideSuggestionsTimer = null;
+
+        function getAllCategoryNames() {
+            const hasHiddenAccess = canUserAccessHiddenLocations(currentUser);
+            const visibleLocations = hasHiddenAccess ? allLocations : allLocations.filter(l => !isLocationHidden(l));
+            const cats = Array.from(new Set([...DEFAULT_CATEGORIES, ...visibleLocations.map(l => l.category || '📍 Другое')])).filter(Boolean);
+            if (!hasHiddenAccess) {
+                return cats.filter(c => c !== "🔒 Скрытые" && c !== "🔒 Скрытые (Lifetime)" && !c.includes("Скрытые"));
+            }
+            return cats;
+        }
+
+        const safeStorage = {
+            getItem(key) {
+                try { return localStorage.getItem(key); } catch(e) { return window.__memStore?.[key] || null; }
+            },
+            setItem(key, val) {
+                try { localStorage.setItem(key, val); } catch(e) {
+                    window.__memStore = window.__memStore || {};
+                    window.__memStore[key] = String(val);
+                }
+            },
+            removeItem(key) {
+                try { localStorage.removeItem(key); } catch(e) {
+                    if (window.__memStore) delete window.__memStore[key];
+                }
+            }
+        };
+
+        function getCookie(name) {
+            try {
+                const value = `; ${document.cookie}`;
+                const parts = value.split(`; ${name}=`);
+                if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
+            } catch(e) {}
+            return null;
+        }
+
+        function setCookie(name, value, days = 365) {
+            try {
+                const expires = new Date(Date.now() + days * 864e5).toUTCString();
+                document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+            } catch(e) {}
+        }
+
+        function updateDynamicManifest(token) {
+            if (!token) return;
+            try {
+                const link = document.getElementById('manifestLink') || document.querySelector('link[rel="manifest"]');
+                if (link) {
+                    const manifestObj = {
+                        name: "@dalazareva локации📍",
+                        short_name: "@dalazareva",
+                        description: "Интерактивная карта любимых локаций и рекомендаций",
+                        start_url: `index.html?token=${encodeURIComponent(token)}`,
+                        scope: "./",
+                        id: "dalazareva-map-app",
+                        display: "standalone",
+                        orientation: "portrait",
+                        background_color: "#0f172a",
+                        theme_color: "#000000",
+                        prefer_related_applications: false,
+                        icons: [
+                            { src: "icon-192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
+                            { src: "icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
+                            { src: "apple-touch-icon.png", sizes: "180x180", type: "image/png", purpose: "any" }
+                        ]
+                    };
+                    const blob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+                    link.href = URL.createObjectURL(blob);
+                }
+            } catch(e) {}
+        }
+
+        // Немедленная синхронизация токена при старте страницы для Safari / PWA
+        (function initPwaCredentials() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const t = urlParams.get('token') || urlParams.get('auth') || urlParams.get('key') || urlParams.get('code') || urlParams.get('t') || safeStorage.getItem('dalazareva_access_token') || getCookie('dalazareva_access_token');
+                if (t) {
+                    safeStorage.setItem('dalazareva_access_token', t);
+                    setCookie('dalazareva_access_token', t, 365);
+                    updateDynamicManifest(t);
+                }
+            } catch(e) {}
+        })();
+
+        function ensureCategoryVisibilityInitialized() {
+            const allCats = getAllCategoryNames();
+            allCats.forEach(cat => {
+                if (categoryVisibility[cat] === undefined) {
+                    categoryVisibility[cat] = true;
+                }
+            });
+        }
+
+        function getInitialTheme() {
+            const saved = safeStorage.getItem('dalazareva_theme');
+            if (saved) return saved === 'dark';
+            return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+
+        let isDarkMode = getInitialTheme();
+
+        function applyTheme(dark) {
+            isDarkMode = dark;
+            const bgThemeColor = dark ? '#090d16' : '#f4f3f0';
+            if (dark) {
+                document.body.classList.add('dark-mode');
+                const btn = document.getElementById('themeToggleBtn');
+                if (btn) btn.innerText = '☀️';
+            } else {
+                document.body.classList.remove('dark-mode');
+                const btn = document.getElementById('themeToggleBtn');
+                if (btn) btn.innerText = '🌙';
+            }
+            // Верхняя полоса в веб-версии и Telegram WebApp всегда черная (#000000)
+            document.getElementById('themeColorMeta')?.setAttribute('content', '#000000');
+            if (window.Telegram?.WebApp) {
+                try {
+                    window.Telegram.WebApp.setHeaderColor?.('#000000');
+                    window.Telegram.WebApp.setBackgroundColor?.(bgThemeColor);
+                } catch(e) {}
+            }
+        }
+
+        function toggleTheme() {
+            const nextMode = !isDarkMode;
+            safeStorage.setItem('dalazareva_theme', nextMode ? 'dark' : 'light');
+            applyTheme(nextMode);
+        }
+
+        function getFavorites() {
+            try {
+                const favs = safeStorage.getItem('dalazareva_favorites');
+                return favs ? JSON.parse(favs) : [];
+            } catch(e) { return []; }
+        }
+
+        async function toggleFavorite(locId, event) {
+            if (event) { event.stopPropagation(); event.preventDefault(); }
+            let favs = getFavorites().map(String);
+            const idStr = String(locId);
+            const isNowFav = !favs.includes(idStr);
+            
+            if (isNowFav) {
+                favs.push(idStr);
+            } else {
+                favs = favs.filter(id => id !== idStr);
+            }
+            
+            safeStorage.setItem('dalazareva_favorites', JSON.stringify(favs));
+            
+            document.querySelectorAll(`.fav-btn-loc-${idStr}`).forEach(btn => {
+                if (isNowFav) {
+                    btn.classList.add('is-active');
+                    btn.innerHTML = '❤️ <span style="font-size:0.75rem;">В избранном</span>';
+                } else {
+                    btn.classList.remove('is-active');
+                    btn.innerHTML = '🤍 <span style="font-size:0.75rem;">В избранное</span>';
+                }
+            });
+
+            renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
+            if (showFavoritesOnly) applyCombinedFilters();
+
+            const client = window.supabaseClient || (window.getSupabaseClient ? window.getSupabaseClient() : (typeof supabaseClient !== 'undefined' ? supabaseClient : null));
+            if (currentUser && (currentUser.telegram_id || currentUser.access_token) && client) {
+                try {
+                    const query = currentUser.telegram_id
+                        ? client.from('app_users').update({ favorites: favs }).eq('telegram_id', currentUser.telegram_id)
+                        : client.from('app_users').update({ favorites: favs }).eq('access_token', currentUser.access_token);
+                    await query;
+                } catch(e) {
+                    console.error("Ошибка синхронизации избранного:", e);
+                }
+            }
+        }
+
+        function syncUserFavorites(profile) {
+            if (profile && Array.isArray(profile.favorites)) {
+                const cloudFavs = profile.favorites.map(String);
+                safeStorage.setItem('dalazareva_favorites', JSON.stringify(cloudFavs));
+                
+                document.querySelectorAll('.fav-btn').forEach(btn => {
+                    const locId = btn.className.match(/fav-btn-loc-(\S+)/)?.[1];
+                    if (locId) {
+                        const isFav = cloudFavs.includes(String(locId));
+                        if (isFav) {
+                            btn.classList.add('is-active');
+                            btn.innerHTML = '❤️ <span style="font-size:0.75rem;">В избранном</span>';
+                        } else {
+                            btn.classList.remove('is-active');
+                            btn.innerHTML = '🤍 <span style="font-size:0.75rem;">В избранное</span>';
+                        }
+                    }
+                });
+            }
+        }
+
+        function updatePinnedFavButtons() {
+            const favCount = getFavorites().length;
+            const topBtn = document.getElementById('topPinnedFavBtn');
+            const topCount = document.getElementById('topPinnedFavCount');
+            const listBtn = document.getElementById('listTopPinnedFavBtn');
+            const listCount = document.getElementById('listTopPinnedFavCount');
+
+            if (topBtn) topBtn.classList.toggle('active', !!showFavoritesOnly);
+            if (topCount) topCount.innerText = favCount;
+            if (listBtn) listBtn.classList.toggle('active', !!showFavoritesOnly);
+            if (listCount) listCount.innerText = favCount;
+        }
+
+        function toggleFavoritesFilter() {
+            showFavoritesOnly = !showFavoritesOnly;
+            if (showFavoritesOnly) {
+                // При включении избранного показываем все категории с избранными
+                ensureCategoryVisibilityInitialized();
+                getAllCategoryNames().forEach(k => categoryVisibility[k] = true);
+            }
+            updatePinnedFavButtons();
+            applyCombinedFilters();
+            renderBothCatFilterBars(getAllCategoryNames());
+        }
+
+        function getOrCreateDeviceId() {
+            let devId = safeStorage.getItem('dalazareva_device_id') || getCookie('dalazareva_device_id');
+            if (!devId) {
+                devId = 'dev_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+            }
+            safeStorage.setItem('dalazareva_device_id', devId);
+            setCookie('dalazareva_device_id', devId, 365);
+            return devId;
+        }
+
+        async function verifyAndRegisterDevice(userProfile) {
+            if (!userProfile) return true;
+            const currentDeviceId = getOrCreateDeviceId();
+            let devices = Array.isArray(userProfile.devices) ? [...userProfile.devices] : [];
+            const maxDevices = userProfile.max_devices || 3;
+
+            if (devices.includes(currentDeviceId)) return true;
+
+            const isStandalone = window.navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+            const isOwnerOrAdmin = userProfile.is_admin === true || 
+                                   userProfile.plan === 'lifetime' || 
+                                   userProfile.telegram_id === 160737288 || 
+                                   userProfile.telegram_id === 723659507;
+
+            // Если администратор, владелец или запуск с экрана "Домой"
+            if (isOwnerOrAdmin || isStandalone) {
+                if (!devices.includes(currentDeviceId)) {
+                    devices.push(currentDeviceId);
+                    while (devices.length > 10) devices.shift();
+                }
+            } else {
+                // Если достигнут лимит устройств, автоматически освобождаем самый старый слот
+                while (devices.length >= maxDevices) {
+                    devices.shift();
+                }
+                devices.push(currentDeviceId);
+            }
+
+            try {
+                const client = window.supabaseClient || (window.getSupabaseClient ? window.getSupabaseClient() : (typeof supabaseClient !== 'undefined' ? supabaseClient : null));
+                if (client) {
+                    const updatePromise = userProfile.telegram_id
+                        ? client.from('app_users').update({ devices: devices }).eq('telegram_id', userProfile.telegram_id)
+                        : client.from('app_users').update({ devices: devices }).eq('access_token', userProfile.access_token);
+                    const timeoutPromise = new Promise(resolve => setTimeout(resolve, 3000));
+                    await Promise.race([updatePromise, timeoutPromise]);
+                }
+                currentUser.devices = devices;
+                return true;
+            } catch (e) {
+                return true;
+            }
+        }
+
+        function showAuthAlert(msg, type = 'error') {
+            const alertBox = document.getElementById('authAlert');
+            if (!alertBox) return;
+            if (!msg) {
+                alertBox.style.display = 'none';
+                alertBox.innerHTML = '';
+                return;
+            }
+            alertBox.className = `auth-alert-box ${type}`;
+            alertBox.innerHTML = msg;
+            alertBox.style.display = 'block';
+        }
+
+        function checkUserSubscription(profile) {
+            if (!profile) {
+                return {
+                    allowed: false,
+                    reason: 'no_profile',
+                    alertHtml: `👋 <b>Добро пожаловать!</b><br>Вам доступно 7 дней бесплатного доступа! Активируйте пробный период по кнопке ниже.`
+                };
+            }
+
+            const rawPlan = (profile.plan || 'trial').toLowerCase();
+            const plan = rawPlan === 'free' ? 'trial' : (rawPlan === 'vip' ? 'premium' : rawPlan);
+
+            if (plan === 'banned' || profile.is_banned === true) {
+                return {
+                    allowed: false,
+                    reason: 'banned',
+                    alertHtml: `⛔️ <b>Ваш аккаунт заблокирован</b><br>Доступ к закрытой карте ограничен администратором.<br>Обратитесь в поддержку бота: @dalazareva_locations_bot`
+                };
+            }
+
+            if (plan === 'lifetime' || profile.is_lifetime === true || profile.telegram_id === 160737288 || profile.telegram_id === 723659507) {
+                return { allowed: true, plan: 'lifetime', isLifetime: true, tierLevel: 3 };
+            }
+
+            let expiresAt = profile.expires_at || profile.access_until || profile.expiration_date;
+            // Если дата истечения не установлена для trial (новый пользователь), активируем 7 дней
+            if (!expiresAt) {
+                if (plan === 'supporter') {
+                    return { allowed: true, plan: 'supporter', isLifetime: true, tierLevel: 3 };
+                }
+                // Автоматически даем 7 дней пробного периода новому пользователю
+                const autoExp = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+                profile.expires_at = autoExp.toISOString();
+                profile.plan = 'trial';
+                expiresAt = profile.expires_at;
+
+                // Асинхронно сохраняем в Supabase
+                try {
+                    const client = window.supabaseClient || (window.getSupabaseClient ? window.getSupabaseClient() : null);
+                    if (client) {
+                        const q = profile.telegram_id 
+                            ? client.from('app_users').update({ expires_at: profile.expires_at, plan: 'trial' }).eq('telegram_id', profile.telegram_id)
+                            : client.from('app_users').update({ expires_at: profile.expires_at, plan: 'trial' }).eq('access_token', profile.access_token);
+                        q.then(() => {}).catch(() => {});
+                    }
+                } catch (e) {}
+            }
+
+            const expDate = new Date(expiresAt);
+            if (expDate.getTime() < Date.now()) {
+                const dateStr = expDate.toLocaleDateString('ru-RU');
+                return {
+                    allowed: false,
+                    reason: 'expired',
+                    alertHtml: `⏳ <b>Срок действия пробного периода (или подписки) истёк ${dateStr}.</b><br>Продлите доступ через бота по кнопке ниже.`
+                };
+            }
+
+            const diffDays = Math.ceil((expDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+            // Тир 2 (Platinum), Тир 1 (Premium), Тир 0 (Trial)
+            const tier = plan === 'platinum' ? 2 : (plan === 'premium' ? 1 : 0);
+            return { allowed: true, plan: plan, isLifetime: false, tierLevel: tier, expDate: expDate, diffDays: diffDays };
+        }
+
+        function canUserAccessHiddenLocations(profile) {
+            if (!profile) return false;
+            if (profile.is_admin === true) return true;
+            const sub = checkUserSubscription(profile);
+            if (!sub.allowed) return false;
+            // Скрытые локации доступны высшему уровню — Тир 3 (только Lifetime)
+            return sub.tierLevel >= 3 || sub.isLifetime === true;
+        }
+
+        function isUserSubscriptionExpired(profile) {
+            return !checkUserSubscription(profile).allowed;
+        }
+
+        function getUserDaysLeftText(profile) {
+            if (!profile) return '—';
+            const rawPlan = (profile.plan || 'trial').toLowerCase();
+            const plan = rawPlan === 'free' ? 'trial' : (rawPlan === 'vip' ? 'premium' : rawPlan);
+            if (plan === 'lifetime' || profile.is_lifetime === true) return '♾️ Навсегда';
+            const expiresAt = profile.expires_at || profile.access_until || profile.expiration_date;
+            if (!expiresAt) {
+                if (plan === 'supporter') return 'Бессрочно';
+                return 'Не активирован';
+            }
+            const diffDays = Math.ceil((new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+            if (diffDays <= 0) return 'Истекла';
+            return `${diffDays} дн.`;
+        }
+
+        function openProfileModal() {
+            const modal = document.getElementById('profileModal');
+            if (!modal) return;
+            
+            const nameEl = document.getElementById('modalUserName');
+            const planEl = document.getElementById('modalUserPlan');
+            const tokenEl = document.getElementById('modalUserTokenText');
+            const daysEl = document.getElementById('modalUserDaysLeft');
+            const sessionsEl = document.getElementById('modalUserSessions');
+
+            let userTag = currentUser.username ? `@${currentUser.username}` : (currentUser.first_name || "Пользователь");
+            if (nameEl) nameEl.innerText = userTag;
+
+            let planText = "Trial (Пробный период 🎁)";
+            const rawPlan = (currentUser.plan || 'trial').toLowerCase();
+            const p = rawPlan === 'free' ? 'trial' : (rawPlan === 'vip' ? 'premium' : rawPlan);
+            if (p === 'lifetime' || currentUser.is_lifetime === true) planText = "LIFETIME (Тир 3 / Навсегда / Закрытые локации) ♾️";
+            else if (p === 'supporter') planText = "SUPPORTER (Тир 3 / Навсегда) 🌟";
+            else if (p === 'platinum') planText = "PLATINUM (Тир 2) 💎";
+            else if (p === 'premium') planText = "PREMIUM (Тир 1) ✨";
+            else if (p === 'trial') planText = "TRIAL (Тир 0 / 7 дней) 🎁";
+            if (planEl) planEl.innerText = planText;
+
+            if (tokenEl) tokenEl.innerText = currentUser.access_token || "—";
+            if (daysEl) daysEl.innerText = getUserDaysLeftText(currentUser);
+
+            const curSessions = Array.isArray(currentUser.devices) ? currentUser.devices.length : 0;
+            const maxSessions = currentUser.max_devices || 3;
+            if (sessionsEl) sessionsEl.innerText = `${curSessions} из ${maxSessions}`;
+
+            modal.classList.add('active');
+            updateTelegramBackButton();
+        }
+
+        function closeProfileModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const modal = document.getElementById('profileModal');
+            if (modal) modal.classList.remove('active');
+            updateTelegramBackButton();
+        }
+
+        function copyUserToken() {
+            if (!currentUser.access_token) {
+                alert("Ключ доступа отсутствует.");
+                return;
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(currentUser.access_token).then(() => {
+                    alert("Ключ доступа скопирован в буфер обмена!");
+                }).catch(() => {
+                    prompt("Ваш ключ доступа:", currentUser.access_token);
+                });
+            } else {
+                prompt("Ваш ключ доступа:", currentUser.access_token);
+            }
+        }
+
+        function logoutUser() {
+            if (confirm("Вы действительно хотите выйти из аккаунта?")) {
+                safeStorage.removeItem('dalazareva_access_token');
+                setCookie('dalazareva_access_token', '', -1);
+                currentUser = {
+                    telegram_id: null,
+                    first_name: "Пользователь",
+                    username: "",
+                    access_token: "",
+                    devices: [],
+                    max_devices: 5,
+                    plan: "free"
+                };
+                closeProfileModal();
+                const gateEl = document.getElementById('authGate');
+                const appWrap = document.getElementById('app-wrapper');
+                if (gateEl) gateEl.style.display = 'flex';
+                if (appWrap) appWrap.style.display = 'none';
+            }
+        }
+
+        async function checkAuthAndInit() {
+            try {
+                applyTheme(isDarkMode);
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const tgStartParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param;
+                const tokenFromUrl = urlParams.get('token') || urlParams.get('auth') || urlParams.get('key') || urlParams.get('code') || urlParams.get('t') || tgStartParam;
+                const tgIdFromUrl = urlParams.get('user_id') || urlParams.get('tg_id') || urlParams.get('id') || urlParams.get('uid');
+                const tokenFromCookie = getCookie('dalazareva_access_token');
+                const savedToken = safeStorage.getItem('dalazareva_access_token') || tokenFromCookie;
+
+                let isAuthenticated = false;
+                const tgUser = getTelegramUser();
+
+                const withTimeout = (promise, ms = 4500) => {
+                    return Promise.race([
+                        promise,
+                        new Promise(resolve => setTimeout(() => resolve(null), ms))
+                    ]);
+                };
+
+                if (tgUser && tgUser.id) {
+                    await withTimeout(syncUserTelegram(tgUser));
+                    const subCheck = checkUserSubscription(currentUser);
+                    if (!subCheck.allowed) {
+                        showAuthAlert(subCheck.alertHtml, "error");
+                    } else {
+                        const deviceAllowed = await withTimeout(verifyAndRegisterDevice(currentUser));
+                        if (deviceAllowed) {
+                            isAuthenticated = true;
+                        }
+                    }
+                } else if (tokenFromUrl || savedToken || tgIdFromUrl) {
+                    const tokenToVerify = tokenFromUrl || savedToken || tgIdFromUrl;
+                    const profile = await withTimeout(findUserByToken(tokenToVerify));
+                    if (profile) {
+                        const subCheck = checkUserSubscription(profile);
+                        if (!subCheck.allowed) {
+                            showAuthAlert(subCheck.alertHtml, "error");
+                        } else {
+                            currentUser = profile;
+                            syncUserFavorites(profile);
+                            if (profile.access_token) {
+                                safeStorage.setItem('dalazareva_access_token', profile.access_token);
+                                setCookie('dalazareva_access_token', profile.access_token, 365);
+                                updateDynamicManifest(profile.access_token);
+                            }
+                            const deviceAllowed = await withTimeout(verifyAndRegisterDevice(currentUser));
+                            if (deviceAllowed) {
+                                isAuthenticated = true;
+                            }
+                        }
+                    } else if (savedToken && !tokenFromUrl) {
+                        console.warn("Cached token could not be verified online right now");
+                    }
+                }
+
+                const gateEl = document.getElementById('authGate');
+                const appWrap = document.getElementById('app-wrapper');
+
+                if (isAuthenticated) {
+                    if (gateEl) gateEl.style.display = 'none';
+                    if (appWrap) appWrap.style.display = 'flex';
+                    renderUserPlanBadge();
+                    requestAnimationFrame(() => initMap());
+                } else {
+                    if (gateEl) gateEl.style.display = 'flex';
+                    if (appWrap) appWrap.style.display = 'none';
+                }
+            } catch (err) {
+                console.error("Critical error in checkAuthAndInit:", err);
+                const gateEl = document.getElementById('authGate');
+                const appWrap = document.getElementById('app-wrapper');
+                if (gateEl) gateEl.style.display = 'flex';
+                if (appWrap) appWrap.style.display = 'none';
+            }
+        }
+
+        async function fetchUserDirect(cleanToken) {
+            try {
+                const url = window.SUPABASE_URL || "https://cwkgylbtcjfmweoldhyb.supabase.co";
+                const key = window.SUPABASE_KEY || "sb_publishable_KnWO20wlfuWd0NYKMNKRvw_l1rttjaT";
+                const headers = { 'apikey': key, 'Authorization': 'Bearer ' + key };
+                
+                const fetchWithTimeout = async (url, options = {}, timeoutMs = 4000) => {
+                    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+                    const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+                    try {
+                        const res = await fetch(url, { ...options, signal: controller ? controller.signal : undefined });
+                        if (timeoutId) clearTimeout(timeoutId);
+                        return res;
+                    } catch (e) {
+                        if (timeoutId) clearTimeout(timeoutId);
+                        throw e;
+                    }
+                };
+
+                const res = await fetchWithTimeout(`${url}/rest/v1/app_users?access_token=eq.${encodeURIComponent(cleanToken)}&limit=1`, { headers });
+                if (res.ok) {
+                    const list = await res.json();
+                    if (list && list.length > 0) return list[0];
+                }
+                if (!isNaN(cleanToken)) {
+                    const resTg = await fetchWithTimeout(`${url}/rest/v1/app_users?telegram_id=eq.${encodeURIComponent(cleanToken)}&limit=1`, { headers });
+                    if (resTg.ok) {
+                        const listTg = await resTg.json();
+                        if (listTg && listTg.length > 0) return listTg[0];
+                    }
+                }
+                const cleanUser = cleanToken.replace('@', '');
+                const resU = await fetchWithTimeout(`${url}/rest/v1/app_users?username=eq.${encodeURIComponent(cleanUser)}&limit=1`, { headers });
+                if (resU.ok) {
+                    const listU = await resU.json();
+                    if (listU && listU.length > 0) return listU[0];
+                }
+            } catch (e) {
+                console.warn("Direct REST fetch user notice:", e);
+            }
+            return null;
+        }
+
+        async function findUserByToken(token) {
+            if (!token) return null;
+            const cleanToken = String(token).replace(/[\s\u200B-\u200D\uFEFF'"]/g, '').trim();
+            if (!cleanToken) return null;
+
+            const client = window.supabaseClient || (window.getSupabaseClient ? window.getSupabaseClient() : (typeof supabaseClient !== 'undefined' ? supabaseClient : null));
+            if (client) {
+                try {
+                    const raceTimeout = (promise, ms = 3500) => {
+                        return Promise.race([
+                            promise,
+                            new Promise((_, reject) => setTimeout(() => reject(new Error("Supabase query timeout")), ms))
+                        ]);
+                    };
+
+                    // 1. Поиск по access_token
+                    let { data: profile } = await raceTimeout(
+                        client.from('app_users').select('*').eq('access_token', cleanToken).maybeSingle(),
+                        3500
+                    );
+                    if (profile) return profile;
+
+                    // 2. Поиск по telegram_id (число)
+                    if (!isNaN(cleanToken)) {
+                        let { data: tgProfile } = await raceTimeout(
+                            client.from('app_users').select('*').eq('telegram_id', parseInt(cleanToken)).maybeSingle(),
+                            3500
+                        );
+                        if (tgProfile) return tgProfile;
+                    }
+
+                    // 3. Поиск по username
+                    let { data: userProfile } = await raceTimeout(
+                        client.from('app_users').select('*').eq('username', cleanToken.replace('@', '')).maybeSingle(),
+                        3500
+                    );
+                    if (userProfile) return userProfile;
+                } catch (e) {
+                    console.warn("Supabase findUser error, trying direct REST fallback:", e);
+                }
+            }
+            // Резервный поиск через прямой REST API
+            return await fetchUserDirect(cleanToken);
+        }
+
+        async function syncUserTelegram(tgUser) {
+            if (!tgUser) return;
+            currentUser.first_name = tgUser.first_name || "Пользователь";
+            currentUser.username = tgUser.username || "";
+            currentUser.telegram_id = tgUser.id;
+
+            const client = window.supabaseClient || (window.getSupabaseClient ? window.getSupabaseClient() : (typeof supabaseClient !== 'undefined' ? supabaseClient : null));
+            if (client) {
+                try {
+                    let { data: profile } = await client
+                        .from('app_users')
+                        .select('*')
+                        .eq('telegram_id', tgUser.id)
+                        .maybeSingle();
+
+                    if (profile) {
+                        currentUser = profile;
+                        syncUserFavorites(profile);
+                    }
+                } catch (e) {
+                    console.warn("Telegram sync notice:", e);
+                }
+            }
+        }
+
+        async function submitAccessCode() {
+            const input = document.getElementById('accessCodeInput');
+            const btn = document.getElementById('submitAccessBtn');
+            const rawCode = input ? input.value : "";
+            const code = rawCode.replace(/[\s\u200B-\u200D\uFEFF'"]/g, '').trim();
+            if (!code) {
+                showAuthAlert("Пожалуйста, введите ключ доступа (dl_...)", "error");
+                if (input) input.focus();
+                return;
+            }
+
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = "⏳ Проверка ключа...";
+            }
+            showAuthAlert("");
+
+            try {
+                const withTimeout = (promise, ms = 7000) => {
+                    return Promise.race([
+                        promise,
+                        new Promise(resolve => setTimeout(() => resolve(null), ms))
+                    ]);
+                };
+
+                let profile = await withTimeout(findUserByToken(code), 7000);
+                if (profile) {
+                    const subCheck = checkUserSubscription(profile);
+                    if (!subCheck.allowed) {
+                        showAuthAlert(subCheck.alertHtml, "error");
+                        return;
+                    }
+                    currentUser = profile;
+                    syncUserFavorites(profile);
+                    if (profile.access_token) {
+                        safeStorage.setItem('dalazareva_access_token', profile.access_token);
+                        setCookie('dalazareva_access_token', profile.access_token, 365);
+                        updateDynamicManifest(profile.access_token);
+
+                        // Сохраняем токен в URL строке браузера без перезагрузки, чтобы закладки и PWA открывались сразу
+                        try {
+                            const newUrl = new URL(window.location.href);
+                            newUrl.searchParams.set('token', profile.access_token);
+                            window.history.replaceState({}, '', newUrl.toString());
+                        } catch (e) {}
+                    }
+                    
+                    if (btn) btn.innerText = "✅ Вход на карту...";
+                    await withTimeout(verifyAndRegisterDevice(currentUser), 3500);
+                    
+                    const gateEl = document.getElementById('authGate');
+                    const appWrap = document.getElementById('app-wrapper');
+                    if (gateEl) gateEl.style.display = 'none';
+                    if (appWrap) appWrap.style.display = 'flex';
+                    renderUserPlanBadge();
+                    requestAnimationFrame(() => initMap());
+                } else {
+                    showAuthAlert("❌ Неверный ключ доступа.<br>Проверьте правильность ключа или активируйте доступ через бота.", "error");
+                }
+            } catch (err) {
+                console.error("submitAccessCode error:", err);
+                showAuthAlert("Ошибка авторизации: " + (err.message || err), "error");
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = "Войти по ключу";
+                }
+            }
+        }
+
+        function handleBadgeClick() {
+            openProfileModal();
+        }
+
+        function renderUserPlanBadge() {
+            const nameEl = document.getElementById('userDisplayName');
+            const planEl = document.getElementById('userPlanLabel');
+            if (!nameEl || !planEl) return;
+
+            let userTag = currentUser.username ? `@${currentUser.username}` : (currentUser.first_name || "Пользователь");
+            nameEl.innerText = `👤 ${userTag}`;
+
+            let planLabel = "Trial";
+            let planColor = "#fcd34d";
+
+            const rawPlan = (currentUser.plan || 'trial').toLowerCase();
+            const plan = rawPlan === 'free' ? 'trial' : (rawPlan === 'vip' ? 'premium' : rawPlan);
+            if (plan === 'lifetime' || currentUser.is_lifetime === true) {
+                planLabel = "LIFETIME ♾️";
+                planColor = "#34d399";
+            } else if (plan === 'platinum') {
+                const daysLeft = getUserDaysLeftText(currentUser);
+                planLabel = `Platinum 💎 (${daysLeft})`;
+                planColor = "#a78bfa";
+            } else if (plan === 'supporter') {
+                const daysLeft = getUserDaysLeftText(currentUser);
+                planLabel = `Supporter 🌟 (${daysLeft})`;
+                planColor = "#38bdf8";
+            } else if (plan === 'premium') {
+                const daysLeft = getUserDaysLeftText(currentUser);
+                planLabel = `Premium ✨ (${daysLeft})`;
+                planColor = "#fbbf24";
+            } else if (plan === 'trial') {
+                const daysLeft = getUserDaysLeftText(currentUser);
+                planLabel = `Trial 🎁 (${daysLeft})`;
+                planColor = "#fcd34d";
+            }
+
+            planEl.innerText = planLabel;
+            planEl.style.color = planColor;
+        }
+
+        let ymapsLoadAttempts = 0;
+        function initMap() {
+            if (myMap) {
+                myMap.container.fitToViewport();
+                return;
+            }
+
+            if (typeof ymaps === 'undefined') {
+                ymapsLoadAttempts++;
+                console.warn(`Yandex Maps API is loading (attempt ${ymapsLoadAttempts})...`);
+                if (ymapsLoadAttempts > 12) {
+                    console.warn('Yandex Maps loading timed out, switching to list catalog fallback...');
+                    loadLocations();
+                    if (typeof switchMobileView === 'function') switchMobileView('list');
+                    return;
+                }
+                setTimeout(initMap, 400);
+                return;
+            }
+
+            ymaps.ready(() => {
+                myMap = new ymaps.Map("map", {
+                    center: [55.751574, 37.573856],
+                    zoom: 12,
+                    controls: ['zoomControl']
+                }, {
+                    autoFitToViewport: 'always',
+                    suppressMapOpenBlock: true
+                });
+                window.myMap = myMap;
+
+                myMap.events.add('click', function () {
+                    if (activeBalloonPlacemark) {
+                        activeBalloonPlacemark.balloon.close();
+                        activeBalloonPlacemark = null;
+                    }
+                });
+
+                loadLocations();
+                
+                const refitMapViewport = () => {
+                    requestAnimationFrame(() => {
+                        if (myMap && myMap.container) {
+                            myMap.container.fitToViewport();
+                        }
+                    });
+                };
+                window.refitMapViewport = refitMapViewport;
+
+                // Периодическая адаптация при старте PWA (пока завершаются системные анимации и скрываются панели на iOS)
+                refitMapViewport();
+                [60, 150, 350, 700, 1200, 2200].forEach(delay => {
+                    setTimeout(refitMapViewport, delay);
+                });
+
+                window.addEventListener('resize', refitMapViewport, { passive: true });
+                window.addEventListener('orientationchange', () => {
+                    refitMapViewport();
+                    setTimeout(refitMapViewport, 150);
+                    setTimeout(refitMapViewport, 450);
+                }, { passive: true });
+                window.addEventListener('pageshow', refitMapViewport, { passive: true });
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'visible') {
+                        refitMapViewport();
+                        setTimeout(refitMapViewport, 150);
+                    }
+                });
+                if (window.ResizeObserver) {
+                    const mapEl = document.getElementById('map');
+                    if (mapEl) {
+                        const ro = new ResizeObserver(() => refitMapViewport());
+                        ro.observe(mapEl);
+                    }
+                }
+            });
+        }
+
+        function locateUserPosition() {
+            const btn = document.getElementById('customGeolocBtn');
+            if (!navigator.geolocation) {
+                alert("Геолокация не поддерживается вашим браузером.");
+                return;
+            }
+
+            btn.classList.add('locating');
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    btn.classList.remove('locating');
+                    btn.classList.add('active-loc');
+                    const userCoords = [pos.coords.latitude, pos.coords.longitude];
+
+                    if (!userLocationPlacemark) {
+                        const locLayout = ymaps.templateLayoutFactory.createClass(
+                            `<div class="user-loc-pin-wrap">
+                                <div class="user-loc-pulse"></div>
+                                <div class="user-loc-dot"></div>
+                            </div>`
+                        );
+
+                        userLocationPlacemark = new ymaps.Placemark(userCoords, {
+                            hintContent: "Вы находитесь здесь"
+                        }, {
+                            iconLayout: locLayout,
+                            iconOffset: [-12, -12]
+                        });
+                        myMap.geoObjects.add(userLocationPlacemark);
+                    } else {
+                        userLocationPlacemark.geometry.setCoordinates(userCoords);
+                    }
+
+                    myMap.setCenter(userCoords, 15, { duration: 500 });
+                },
+                (err) => {
+                    btn.classList.remove('locating');
+                    alert("Не удалось определить местоположение. Разрешите доступ к геопозиции в настройках браузера.");
+                },
+                { enableHighAccuracy: true, timeout: 8000 }
+            );
+        }
+
+        async function loadLocations() {
+            // Мгновенная отрисовка базового каталога
+            allLocations = (Array.isArray(CURATED_MOSCOW_LOCATIONS) ? CURATED_MOSCOW_LOCATIONS : []).map(loc => parseLocationData(loc));
+            ensureCategoryVisibilityInitialized();
+            initMetroDrawer();
+            renderInterface(allLocations);
+
+            const client = window.supabaseClient || (window.getSupabaseClient ? window.getSupabaseClient() : (typeof supabaseClient !== 'undefined' ? supabaseClient : null));
+            if (client) {
+                try {
+                    const { data, error } = await client.from('Location').select('*');
+                    if (!error && data && data.length > 0) {
+                        allLocations = data.map(loc => parseLocationData(loc));
+                        ensureCategoryVisibilityInitialized();
+                        initMetroDrawer();
+                        applyCombinedFilters();
+                    }
+                } catch (err) {
+                    console.warn("Ошибка подгрузки с Supabase, используются локальные точки:", err);
+                }
+            }
+        }
+
+        function openMetroDrawer() {
+            document.getElementById('metroSidebarOverlay').classList.add('active');
+            updateTelegramBackButton();
+        }
+
+        function closeMetroDrawer(e) {
+            if (e && e.target !== e.currentTarget && !e.target.classList.contains('metro-drawer-close')) return;
+            document.getElementById('metroSidebarOverlay').classList.remove('active');
+            updateTelegramBackButton();
+        }
+
+        function initMetroDrawer() {
+            const linesGrid = document.getElementById('metroLinesGrid');
+            if (!linesGrid) return;
+            linesGrid.innerHTML = `
+                <div class="metro-line-item ${!selectedLineName ? 'selected' : ''}" onclick="selectMetroLine('')">
+                    <span class="metro-line-color-dot" style="background:#0f172a;"></span>
+                    <span>Все ветки метро</span>
+                </div>
+            `;
+
+            MOSCOW_METRO_DATA.forEach(line => {
+                const item = document.createElement('div');
+                item.className = `metro-line-item ${selectedLineName === line.name ? 'selected' : ''}`;
+                const dotClass = line.isRing ? 'metro-line-color-dot mck-ring' : 'metro-line-color-dot';
+                item.innerHTML = `
+                    <span class="${dotClass}" style="${!line.isRing ? `background:${line.color};` : ''}"></span>
+                    <span>${line.name}</span>
+                `;
+                item.onclick = () => selectMetroLine(line.name);
+                linesGrid.appendChild(item);
+            });
+
+            renderMetroStationsList();
+        }
+
+        function handleMetroStationSearch(val) {
+            renderMetroStationsList();
+        }
+
+        function selectMetroLine(lineName) {
+            selectedLineName = lineName;
+            const searchInput = document.getElementById('metroStationSearchInput');
+            if (searchInput) searchInput.value = '';
+            initMetroDrawer();
+        }
+
+        function selectEntireMetroLine() {
+            if (!selectedLineName) return;
+            selectedLineFilter = selectedLineName;
+            selectedMetroFilter = "";
+            
+            // Сброс выключенных фильтров категорий, чтобы показать точки выбранной ветки
+            ensureCategoryVisibilityInitialized();
+            const allCats = getAllCategoryNames();
+            allCats.forEach(k => { categoryVisibility[k] = true; });
+            showFavoritesOnly = false;
+            
+            updateMetroButtonUI();
+            renderBothCatFilterBars(allCats);
+            applyCombinedFilters(true);
+            closeMetroDrawer();
+        }
+
+        function renderMetroStationsList() {
+            const listEl = document.getElementById('metroStationsList');
+            const wholeLineWrap = document.getElementById('metroLineWholeFilterWrap');
+            const wholeLineBtn = document.getElementById('metroLineWholeFilterBtn');
+            if (!listEl) return;
+            listEl.innerHTML = '';
+
+            if (wholeLineWrap && wholeLineBtn) {
+                if (selectedLineName) {
+                    wholeLineWrap.style.display = 'block';
+                    wholeLineBtn.innerHTML = `🚇 Показать всю ветку «${selectedLineName}»`;
+                } else {
+                    wholeLineWrap.style.display = 'none';
+                }
+            }
+
+            let stations = [];
+            if (selectedLineName) {
+                const found = MOSCOW_METRO_DATA.find(l => l.name === selectedLineName);
+                if (found && found.stations) {
+                    stations = found.stations.map(s => typeof s === 'string' ? s : s.name);
+                }
+            } else {
+                const set = new Set();
+                MOSCOW_METRO_DATA.forEach(l => {
+                    if (l.stations) {
+                        l.stations.forEach(s => {
+                            const name = typeof s === 'string' ? s : s.name;
+                            if (name) set.add(name);
+                        });
+                    }
+                });
+                stations = Array.from(set).sort((a, b) => a.localeCompare(b, 'ru'));
+            }
+
+            const searchQuery = (document.getElementById('metroStationSearchInput')?.value || '').toLowerCase().trim();
+            if (searchQuery) {
+                stations = stations.filter(s => s.toLowerCase().includes(searchQuery));
+            }
+
+            stations.forEach(stName => {
+                let count = 0;
+                allLocations.forEach(loc => {
+                    if (loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => (m.name || m.stationName) === stName)) count++;
+                });
+
+                const item = document.createElement('div');
+                const isActive = selectedMetroFilter === stName;
+                if (count === 0) {
+                    item.className = `metro-station-item station-empty ${isActive ? 'active' : ''}`;
+                    item.innerHTML = `
+                        <span>${stName}</span>
+                        <span class="metro-station-count zero">0</span>
+                    `;
+                } else {
+                    item.className = `metro-station-item has-spots ${isActive ? 'active' : ''}`;
+                    item.innerHTML = `
+                        <span>${stName}</span>
+                        <span class="metro-station-count">${count}</span>
+                    `;
+                }
+                item.onclick = () => selectMetroStation(stName);
+                listEl.appendChild(item);
+            });
+        }
+
+        function selectMetroStation(stationName) {
+            selectedMetroFilter = stationName;
+            selectedLineFilter = "";
+            
+            // Сброс выключенных фильтров категорий, чтобы не пропадали точки
+            ensureCategoryVisibilityInitialized();
+            const allCats = getAllCategoryNames();
+            allCats.forEach(k => { categoryVisibility[k] = true; });
+            showFavoritesOnly = false;
+            
+            updateMetroButtonUI();
+            renderBothCatFilterBars(allCats);
+            applyCombinedFilters(true);
+            renderMetroStationsList();
+            closeMetroDrawer();
+        }
+
+        function resetMetroFilter() {
+            selectedMetroFilter = "";
+            selectedLineFilter = "";
+            selectedLineName = "";
+            const searchInput = document.getElementById('metroStationSearchInput');
+            if (searchInput) searchInput.value = '';
+            initMetroDrawer();
+            updateMetroButtonUI();
+            applyCombinedFilters();
+            closeMetroDrawer();
+        }
+
+        function handleBottomMetroClick(e) {
+            // Если клик был по крестику сброса, не открываем дровер
+            if (e.target.id === 'bottomMetroReset' || e.target.classList.contains('bottom-metro-reset')) {
+                return;
+            }
+            openMetroDrawer();
+        }
+
+        function handleBottomMetroReset(e) {
+            e.stopPropagation();
+            resetMetroFilter();
+        }
+
+        function updateMetroButtonUI() {
+            const bottomMetroBtn = document.getElementById('btn-metro-toggle');
+            const bottomMetroText = document.getElementById('bottomMetroText');
+            const bottomMetroReset = document.getElementById('bottomMetroReset');
+            const desktopMetroBtn = document.getElementById('desktopMetroBtn');
+            const desktopMetroText = document.getElementById('desktopMetroText');
+            const chip = document.getElementById('metroActiveChip');
+            const chipLabel = document.getElementById('metroActiveChipLabel');
+
+            const activeText = selectedMetroFilter || (selectedLineFilter ? `Ветка ${selectedLineFilter}` : '');
+
+            if (activeText) {
+                if (bottomMetroBtn) bottomMetroBtn.classList.add('active');
+                if (bottomMetroText) bottomMetroText.innerText = "Метро";
+                if (bottomMetroReset) bottomMetroReset.style.display = 'inline-flex';
+                if (desktopMetroBtn) desktopMetroBtn.classList.add('active');
+                if (desktopMetroText) desktopMetroText.innerText = activeText.length > 12 ? activeText.slice(0, 11) + '…' : activeText;
+                
+                if (chip && chipLabel) {
+                    chipLabel.innerText = `🚇 ${activeText}`;
+                    chip.classList.add('active');
+                }
+            } else {
+                if (bottomMetroBtn) bottomMetroBtn.classList.remove('active');
+                if (bottomMetroText) bottomMetroText.innerText = "Метро";
+                if (bottomMetroReset) bottomMetroReset.style.display = 'none';
+                if (desktopMetroBtn) desktopMetroBtn.classList.remove('active');
+                if (desktopMetroText) desktopMetroText.innerText = 'Метро';
+                if (chip) chip.classList.remove('active');
+            }
+        }
+
+        function handleBottomSearchClick(e) {
+            if (e.target.id === 'bottomSearchReset' || e.target.classList.contains('bottom-search-reset')) {
+                return;
+            }
+            toggleMobileSearch();
+        }
+
+        function handleBottomSearchReset(e) {
+            e.stopPropagation();
+            const searchInput = document.getElementById('searchInput');
+            const mobileSearchInput = document.getElementById('mobileSearchInput');
+            if (searchInput) searchInput.value = '';
+            if (mobileSearchInput) mobileSearchInput.value = '';
+            applyCombinedFilters();
+            updateSearchButtonUI();
+            hideSearchSuggestionsWithDelay('searchSuggestionsDropdown');
+            hideSearchSuggestionsWithDelay('mobileSearchSuggestionsDropdown');
+        }
+
+        function updateSearchButtonUI() {
+            const q = (document.getElementById('mobileSearchInput')?.value || document.getElementById('searchInput')?.value || '').trim();
+            const searchBtn = document.getElementById('btn-search-toggle');
+            const resetBtn = document.getElementById('bottomSearchReset');
+            if (q) {
+                if (searchBtn) searchBtn.classList.add('has-search');
+                if (resetBtn) resetBtn.style.display = 'inline-flex';
+            } else {
+                if (searchBtn) searchBtn.classList.remove('has-search');
+                if (resetBtn) resetBtn.style.display = 'none';
+            }
+        }
+
+        function handleSearch() {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                applyCombinedFilters();
+                updateSearchButtonUI();
+                const q = document.getElementById('searchInput')?.value || '';
+                showSearchSuggestions(q, 'searchSuggestionsDropdown');
+            }, 120);
+        }
+
+        function handleMobileSearchFocus() {
+            showSearchSuggestions(document.getElementById('mobileSearchInput')?.value || '', 'mobileSearchSuggestionsDropdown');
+        }
+
+        function showSearchSuggestions(query, dropdownId) {
+            clearTimeout(hideSuggestionsTimer);
+            const dropdown = document.getElementById(dropdownId);
+            if (!dropdown) return;
+
+            const hasHiddenAccess = canUserAccessHiddenLocations(currentUser);
+            const q = (query || '').toLowerCase().trim();
+            const matchingLocs = allLocations.filter(loc => {
+                if (isLocationHidden(loc) && !hasHiddenAccess) return false;
+                if (!q) return true;
+                const titleMatch = (loc.title || '').toLowerCase().includes(q);
+                const addrMatch = (loc.address || '').toLowerCase().includes(q);
+                const metroMatch = loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => (m.name || m.stationName || '').toLowerCase().includes(q));
+                return titleMatch || addrMatch || metroMatch;
+            }).slice(0, 10);
+
+            const quickTags = [
+                { label: "☕ Кофейни", q: "кофе" },
+                { label: "📱 Фото-споты", q: "фото" },
+                { label: "🏛️ ГЭС-2", q: "ГЭС-2" },
+                { label: "🌸 Патриаршие", q: "Патриаршие" },
+                { label: "🚪 Дворики", q: "двор" }
+            ];
+
+            let html = `
+                <div class="search-tags-row">
+                    ${quickTags.map(t => `<div class="search-tag-chip" onmousedown="applyQuickSearchTag('${t.q}')">${t.label}</div>`).join('')}
+                </div>
+            `;
+
+            if (matchingLocs.length === 0) {
+                html += `<div style="padding:14px; font-size:0.82rem; color:var(--text-muted); text-align:center;">Локации не найдены 🔍</div>`;
+            } else {
+                matchingLocs.forEach(loc => {
+                    const icon = loc.category ? loc.category.split(' ')[0] : '📍';
+                    const metroStr = loc.metro && loc.metro.length > 0 ? `🚇 ${loc.metro[0].name || loc.metro[0].stationName}` : (loc.address || '');
+                    html += `
+                        <div class="search-suggestion-item" onmousedown="selectSuggestionLocation('${loc.id}')">
+                            <span class="search-sugg-icon">${icon}</span>
+                            <div class="search-sugg-info">
+                                <span class="search-sugg-title">${loc.title}</span>
+                                <span class="search-sugg-sub">${metroStr}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            dropdown.innerHTML = html;
+            dropdown.classList.add('active');
+
+            if (dropdownId === 'mobileSearchSuggestionsDropdown') {
+                const overlay = document.getElementById('mobileSearchOverlay');
+                if (overlay) {
+                    overlay.classList.add('has-suggestions');
+                }
+            }
+        }
+
+        function hideSearchSuggestionsWithDelay(dropdownId) {
+            hideSuggestionsTimer = setTimeout(() => {
+                const dropdown = document.getElementById(dropdownId);
+                if (dropdown) dropdown.classList.remove('active');
+            }, 250);
+        }
+
+        function applyQuickSearchTag(tagText) {
+            const input = document.getElementById('searchInput');
+            const mobileInput = document.getElementById('mobileSearchInput');
+            if (input) input.value = tagText;
+            if (mobileInput) mobileInput.value = tagText;
+            applyCombinedFilters();
+            updateSearchButtonUI();
+            hideSearchSuggestionsWithDelay('searchSuggestionsDropdown');
+            hideSearchSuggestionsWithDelay('mobileSearchSuggestionsDropdown');
+        }
+
+        function selectSuggestionLocation(locId) {
+            const loc = allLocations.find(l => String(l.id) === String(locId));
+            if (!loc) return;
+            if (isLocationHidden(loc) && !canUserAccessHiddenLocations(currentUser)) return;
+
+            // Включаем категорию этой точки если была выключена
+            if (loc.category && categoryVisibility[loc.category] === false) {
+                categoryVisibility[loc.category] = true;
+                applyCombinedFilters();
+            }
+
+            const targetPlacemark = locationPlacemarksMap[loc.id] || null;
+            selectLocationOnMap(loc, targetPlacemark);
+            hideSearchSuggestionsWithDelay('searchSuggestionsDropdown');
+            hideSearchSuggestionsWithDelay('mobileSearchSuggestionsDropdown');
+            toggleMobileSearch(false);
+        }
+
+        function applyCombinedFilters(autoPanMetro = false) {
+            ensureCategoryVisibilityInitialized();
+            const query = (document.getElementById('searchInput')?.value || document.getElementById('mobileSearchInput')?.value || '').toLowerCase().trim();
+            const favs = getFavorites().map(String);
+            const allCats = getAllCategoryNames();
+            
+            const activeCats = allCats.filter(k => categoryVisibility[k] === true);
+            const isAllCatsActive = activeCats.length === allCats.length;
+            const isNoneCatsActive = activeCats.length === 0;
+
+            const hasHiddenAccess = canUserAccessHiddenLocations(currentUser);
+
+            // Подготавливаем список станций выбранной ветки (если активна ветка целиком)
+            let lineStations = [];
+            if (selectedLineFilter) {
+                const lineObj = MOSCOW_METRO_DATA.find(l => l.name === selectedLineFilter);
+                if (lineObj && lineObj.stations) {
+                    lineStations = lineObj.stations.map(s => typeof s === 'string' ? s : s.name);
+                }
+            }
+
+            const filtered = allLocations.filter(loc => {
+                const isHidden = isLocationHidden(loc);
+                if (isHidden && !hasHiddenAccess) {
+                    return false;
+                }
+
+                const primaryCat = loc.category || '📍 Другое';
+                const extraCats = Array.isArray(loc.extra_categories) ? loc.extra_categories : [];
+                const allLocCats = [primaryCat, ...extraCats];
+
+                const titleMatch = (loc.title || '').toLowerCase().includes(query);
+                const addressMatch = (loc.address || '').toLowerCase().includes(query);
+                const descMatch = (loc.description || '').toLowerCase().includes(query);
+                const metroMatch = loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => (m.name || m.stationName || '').toLowerCase().includes(query));
+                const catMatch = allLocCats.some(c => c.toLowerCase().includes(query));
+                const textPass = !query || (titleMatch || addressMatch || descMatch || metroMatch || catMatch);
+
+                let metroPass = true;
+                if (selectedMetroFilter) {
+                    metroPass = loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => (m.name || m.stationName) === selectedMetroFilter);
+                } else if (selectedLineFilter && lineStations.length > 0) {
+                    metroPass = loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => lineStations.includes(m.name || m.stationName));
+                }
+
+                const favPass = !showFavoritesOnly || favs.includes(String(loc.id));
+
+                let catPass = true;
+                if (isNoneCatsActive) {
+                    catPass = false;
+                } else if (!isAllCatsActive) {
+                    catPass = allLocCats.some(c => categoryVisibility[c] === true);
+                }
+
+                return textPass && metroPass && favPass && catPass;
+            });
+
+            renderInterface(filtered);
+            updatePinnedFavButtons();
+
+            if ((selectedMetroFilter || selectedLineFilter || autoPanMetro) && filtered.length > 0 && myMap) {
+                const coordsList = filtered.map(l => [l.lat, l.lng]).filter(c => c[0] && c[1]);
+                if (coordsList.length === 1) {
+                    myMap.setCenter(coordsList[0], 15, { duration: 350 });
+                } else if (coordsList.length > 1) {
+                    let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+                    coordsList.forEach(c => {
+                        if (c[0] < minLat) minLat = c[0];
+                        if (c[0] > maxLat) maxLat = c[0];
+                        if (c[1] < minLng) minLng = c[1];
+                        if (c[1] > maxLng) maxLng = c[1];
+                    });
+                    myMap.setBounds([[minLat, minLng], [maxLat, maxLng]], {
+                        checkZoomRange: true,
+                        duration: 350,
+                        zoomMargin: [40, 40, 40, 40]
+                    });
+                }
+            }
+        }
+
+        function clearMobileSearchInput() {
+            const input = document.getElementById('mobileSearchInput');
+            const searchInput = document.getElementById('searchInput');
+            if (input) input.value = '';
+            if (searchInput) searchInput.value = '';
+            const clearBtn = document.getElementById('mobileSearchClearBtn');
+            if (clearBtn) clearBtn.style.display = 'none';
+            applyCombinedFilters();
+            updateSearchButtonUI();
+            showSearchSuggestions('', 'mobileSearchSuggestionsDropdown');
+            input?.focus();
+        }
+
+        function syncMobileSearch(val) {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) searchInput.value = val;
+            const clearBtn = document.getElementById('mobileSearchClearBtn');
+            if (clearBtn) clearBtn.style.display = val ? 'inline-flex' : 'none';
+            applyCombinedFilters();
+            updateSearchButtonUI();
+            showSearchSuggestions(val, 'mobileSearchSuggestionsDropdown');
+        }
+
+        function toggleMobileSearch(forceState) {
+            const overlay = document.getElementById('mobileSearchOverlay');
+            const backdrop = document.getElementById('mobileSearchBackdrop');
+            const input = document.getElementById('mobileSearchInput');
+            const clearBtn = document.getElementById('mobileSearchClearBtn');
+            if (!overlay || !input) return;
+            const isCurrentlyActive = overlay.classList.contains('active');
+            const newState = forceState !== undefined ? forceState : !isCurrentlyActive;
+
+            if (newState) {
+                document.body.classList.add('mobile-search-open');
+                overlay.classList.add('active');
+                if (backdrop) backdrop.classList.add('active');
+                if (clearBtn) clearBtn.style.display = input.value ? 'inline-flex' : 'none';
+                input.focus();
+                showSearchSuggestions(input.value, 'mobileSearchSuggestionsDropdown');
+            } else {
+                document.body.classList.remove('mobile-search-open');
+                overlay.classList.remove('active');
+                if (backdrop) backdrop.classList.remove('active');
+                input.blur();
+                hideSearchSuggestionsWithDelay('mobileSearchSuggestionsDropdown');
+                window.scrollTo(0, 0);
+            }
+            updateSearchButtonUI();
+        }
+
+        function copyAddress(text, event, btnEl) {
+            if (event) { event.stopPropagation(); event.preventDefault(); }
+            if (!text) return;
+
+            const executeCopy = () => {
+                if (btnEl) {
+                    const origHtml = btnEl.innerHTML;
+                    btnEl.innerHTML = '✓ Скопировано';
+                    btnEl.style.color = '#10b981';
+                    setTimeout(() => { btnEl.innerHTML = origHtml; btnEl.style.color = ''; }, 1500);
+                }
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(executeCopy).catch(() => fallbackCopy(text, executeCopy));
+            } else fallbackCopy(text, executeCopy);
+        }
+
+        function fallbackCopy(text, callback) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text; document.body.appendChild(textArea); textArea.select();
+            document.execCommand('copy'); document.body.removeChild(textArea);
+            if (callback) callback();
+        }
+
+        function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+
+        function renderMetroBadges(metroList) {
+            if (!metroList || !Array.isArray(metroList) || metroList.length === 0) return '';
+            return `<div class="card-metro-block">${metroList.map(m => {
+                const name = m.name || m.stationName || '';
+                const isMck = (name && name.includes('МЦК')) || m.color === '#DF4842';
+                return `
+                <span class="metro-badge">
+                    ${getMetroSvg(m.color || '#EF161E', isMck)}
+                    ${name} ${m.time ? `<span style="color:var(--text-muted); font-weight:400;">(${m.time} мин)</span>` : ''}
+                </span>
+            `}).join('')}</div>`;
+        }
+
+        function renderInterface(locationsToRender) {
+            const listEl = document.getElementById('locations-list');
+            if (!listEl) return;
+            listEl.innerHTML = '';
+            const grouped = {};
+            const favs = getFavorites().map(String);
+            
+            locationsToRender.forEach(loc => {
+                const cat = loc.category || '📍 Другое';
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push(loc);
+            });
+
+            // Инициализация или очистка кластеризатора меток
+            if (myMap) {
+                if (!clusterer) {
+                    const customClusterLayout = ymaps.templateLayoutFactory.createClass(`
+                        <div class="custom-cluster-pin">
+                            <div class="custom-cluster-core">
+                                <span class="custom-cluster-dot"></span>
+                            </div>
+                            <span class="custom-cluster-mini-badge">{{ properties.geoObjects.length }}</span>
+                        </div>
+                    `);
+
+                    clusterer = new ymaps.Clusterer({
+                        clusterIconLayout: customClusterLayout,
+                        clusterIconShape: {
+                            type: 'Circle',
+                            coordinates: [17, 17],
+                            radius: 17
+                        },
+                        groupByCoordinates: false,
+                        clusterDisableClickZoom: false,
+                        clusterHideIconOnBalloonOpen: false,
+                        geoObjectHideIconOnBalloonOpen: false,
+                        clusterOpenBalloonOnClick: false,
+                        maxZoom: 16,
+                        gridSize: 56,
+                        margin: 10
+                    });
+                    myMap.geoObjects.add(clusterer);
+                } else {
+                    clusterer.removeAll();
+                }
+            }
+            locationPlacemarksMap = {};
+
+            ensureCategoryVisibilityInitialized();
+            const allCatsToDisplay = getAllCategoryNames();
+            renderBothCatFilterBars(allCatsToDisplay);
+
+            if (locationsToRender.length === 0) {
+                const activeCount = allCatsToDisplay.filter(k => categoryVisibility[k] === true).length;
+                if (activeCount === 0) {
+                    listEl.innerHTML = '<div style="text-align:center; padding:32px 20px; color:var(--text-muted); font-size:0.9rem;">Все категории скрыты 🙈<br><span style="font-size:0.8rem; opacity:0.85; display:inline-block; margin-top:6px;">Нажмите «Все», чтобы показать точки</span></div>';
+                } else {
+                    listEl.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:0.9rem;">Ничего не найдено 🔍</div>';
+                }
+                return;
+            }
+
+            const placemarksToAdd = [];
+            const activeCategoriesList = Object.keys(grouped);
+
+            activeCategoriesList.forEach(catName => {
+                if (categoryVisibility[catName] === undefined) categoryVisibility[catName] = true;
+                const isVisible = categoryVisibility[catName];
+
+                const shouldAutoExpand = activeCategoriesList.length <= 2;
+                const groupEl = document.createElement('div');
+                groupEl.className = `category-group ${shouldAutoExpand ? '' : 'collapsed'}`;
+                groupEl.id = `cat-group-${encodeURIComponent(catName)}`;
+                groupEl.style.display = isVisible ? 'block' : 'none';
+                
+                groupEl.innerHTML = `
+                    <div class="category-header" onclick="toggleAccordion(this)">
+                        <div class="category-title-wrap">
+                            <span class="category-title">${catName}</span>
+                            <span class="category-count">${grouped[catName].length}</span>
+                        </div>
+                        <div class="category-controls">
+                            <span class="chevron">▼</span>
+                        </div>
+                    </div>
+                    <div class="category-content"></div>
+                `;
+
+                const contentEl = groupEl.querySelector('.category-content');
+
+                grouped[catName].forEach(loc => {
+                    if (!loc.lat || !loc.lng) return;
+                    const isHidden = isLocationHidden(loc);
+                    let categoryIcon = loc.category ? loc.category.split(' ')[0] : '📍';
+                    let pinColor = getCategoryPinColor(loc.category);
+                    if (isHidden) {
+                        categoryIcon = '🔒';
+                        pinColor = '#E11D48';
+                    }
+                    const isFav = favs.includes(String(loc.id));
+
+                    const layout = ymaps.templateLayoutFactory.createClass(
+                        `<div class="custom-map-pin" style="background: ${pinColor};"><span>${categoryIcon}</span></div>`
+                    );
+
+                    const placemark = new ymaps.Placemark([loc.lat, loc.lng], {
+                        hintContent: loc.title,
+                        balloonContent: createBalloonHTML(loc)
+                    }, {
+                        iconLayout: layout,
+                        iconOffset: [-19, -19],
+                        iconShape: { type: 'Circle', coordinates: [19, 19], radius: 19 },
+                        cursor: 'pointer',
+                        balloonOffset: [0, -30],
+                        balloonAutoPan: true,
+                        balloonAutoPanMargin: [80, 16, 90, 16],
+                        balloonCloseButton: true,
+                        hideIconOnBalloonOpen: false
+                    });
+
+                    placemark.events.add('click', () => {
+                        activeBalloonPlacemark = placemark;
+                        highlightLocationCard(loc.id);
+                        centerMapOnBalloon(loc);
+                    });
+
+                    locationPlacemarksMap[loc.id] = placemark;
+                    placemarksToAdd.push(placemark);
+
+                    const cardEl = document.createElement('div');
+                    cardEl.className = 'location-card'; cardEl.id = `card-${loc.id}`;
+                    cardEl.onclick = (e) => {
+                        if (!e.target.classList.contains('card-photo-thumb') && 
+                            !e.target.classList.contains('copy-btn') && 
+                            !e.target.classList.contains('details-btn') && 
+                            !e.target.classList.contains('route-btn') && 
+                            !e.target.classList.contains('fav-btn') && 
+                            !e.target.closest('.fav-btn')) {
+                            selectLocationOnMap(loc, placemark);
+                        }
+                    };
+
+                    let photosHtml = '';
+                    if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {
+                        photosHtml = `<div class="card-photos">
+                            ${loc.images.map((imgUrl, index) => `<img src="${getDisplayImageUrl(imgUrl)}" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='${imgUrl}';}" referrerpolicy="no-referrer" loading="lazy" class="card-photo-thumb" onclick="openLightboxByUrl('${loc.id}', ${index}, event)">`).join('')}
+                        </div>`;
+                    }
+
+                    const routeUrl = `https://yandex.ru/maps/?rtext=~${loc.lat},${loc.lng}`;
+                    const detailsUrl = getLocationDetailsUrl(loc);
+                    const safeAddr = escapeQuotes(loc.address);
+
+                    const extraCats = Array.isArray(loc.extra_categories) ? loc.extra_categories : [];
+                    const extraCatsHtml = extraCats.length > 0 ? extraCats.map(ec => `<span class="cat-pill-secondary" title="${ec}">${ec}</span>`).join('') : '';
+                    const hiddenBadgeHtml = isHidden ? `<span class="badge-lifetime-exclusive" title="Закрытая локация только для Lifetime (Тир 3)">🔒 Эксклюзив Lifetime</span>` : '';
+
+                    cardEl.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px;">
+                            <div class="card-title">${loc.title}</div>
+                            <button class="fav-btn fav-btn-loc-${loc.id} ${isFav ? 'is-active' : ''}" onclick="toggleFavorite('${loc.id}', event)" title="В избранное">
+                                ${isFav ? '❤️ <span style="font-size:0.75rem;">В избранном</span>' : '🤍 <span style="font-size:0.75rem;">В избранное</span>'}
+                            </button>
+                        </div>
+                        <div class="card-cat-badges">
+                            ${hiddenBadgeHtml}
+                            <span class="cat-pill-primary">${loc.category || '📍 Другое'}</span>
+                            ${extraCatsHtml}
+                        </div>
+                        <div class="card-address-block">
+                            ${loc.address ? `<div class="card-address" onclick="copyAddress('${safeAddr}', event, this)" title="Нажмите, чтобы скопировать адрес">📍 ${loc.address}</div>` : ''}
+                            <div class="card-actions-row">
+                                <a href="${detailsUrl}" target="_blank" rel="noopener" class="details-btn" onclick="event.stopPropagation();" title="Открыть карточку места">Подробнее ↗</a>
+                                <a href="${routeUrl}" target="_blank" rel="noopener" class="route-btn" onclick="event.stopPropagation();" title="Построить маршрут">🧭 Маршрут</a>
+                            </div>
+                        </div>
+                        ${renderMetroBadges(loc.metro)}
+                        ${loc.description ? `<div class="card-desc">${loc.description}</div>` : ''}
+                        ${photosHtml}
+                    `;
+                    contentEl.appendChild(cardEl);
+                });
+                listEl.appendChild(groupEl);
+            });
+
+            if (clusterer && placemarksToAdd.length > 0) {
+                clusterer.add(placemarksToAdd);
+            }
+        }
+
+        function createBalloonHTML(loc) {
+            let photosHtml = '';
+            if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {
+                photosHtml = `<div class="balloon-photos">
+                    ${loc.images.map((img, idx) => `<img src="${getDisplayImageUrl(img)}" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='${img}';}" referrerpolicy="no-referrer" loading="lazy" class="balloon-photo-img" onclick="openLightboxByUrl('${loc.id}', ${idx}, event)">`).join('')}
+                </div>`;
+            }
+            const routeUrl = `https://yandex.ru/maps/?rtext=~${loc.lat},${loc.lng}`;
+            const detailsUrl = getLocationDetailsUrl(loc);
+            const safeAddr = escapeQuotes(loc.address);
+            const isFav = getFavorites().includes(String(loc.id));
+
+            let metroHtml = '';
+            if (loc.metro && Array.isArray(loc.metro) && loc.metro.length > 0) {
+                metroHtml = `<div class="balloon-metro-block">${loc.metro.map(m => {
+                    const name = m.name || m.stationName || '';
+                    const isMck = (name && name.includes('МЦК')) || m.color === '#DF4842';
+                    return `
+                    <span class="metro-badge">
+                        ${getMetroSvg(m.color || '#EF161E', isMck)}
+                        ${name} ${m.time ? `<span style="color:var(--text-muted); font-weight:400;">(${m.time} мин)</span>` : ''}
+                    </span>
+                `}).join('')}</div>`;
+            }
+
+            const extraCats = Array.isArray(loc.extra_categories) ? loc.extra_categories : [];
+            const extraCatsHtml = extraCats.length > 0 ? extraCats.map(ec => `<span class="cat-pill-secondary" title="${ec}">${ec}</span>`).join('') : '';
+            const isHidden = isLocationHidden(loc);
+            const hiddenBadgeHtml = isHidden ? `<span class="badge-lifetime-exclusive" title="Закрытая локация только для Lifetime (Тир 3)">🔒 Эксклюзив Lifetime</span>` : '';
+
+            return `
+                <div class="balloon-wrapper">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 4px;">
+                        <div class="balloon-title">${loc.title}</div>
+                        <button class="fav-btn fav-btn-loc-${loc.id} ${isFav ? 'is-active' : ''}" onclick="toggleFavorite('${loc.id}', event)">
+                            ${isFav ? '❤️ <span style="font-size:0.75rem;">В избранном</span>' : '🤍 <span style="font-size:0.75rem;">В избранное</span>'}
+                        </button>
+                    </div>
+                    <div class="card-cat-badges" style="margin-bottom: 6px;">
+                        ${hiddenBadgeHtml}
+                        <span class="cat-pill-primary">${loc.category || '📍 Другое'}</span>
+                        ${extraCatsHtml}
+                    </div>
+                    <div class="balloon-address-block">
+                        ${loc.address ? `<div class="balloon-address" onclick="copyAddress('${safeAddr}', event, this)" title="Нажмите, чтобы скопировать адрес">📍 ${loc.address}</div>` : ''}
+                        <div class="balloon-actions-row">
+                            <a href="${detailsUrl}" target="_blank" rel="noopener" class="balloon-btn balloon-details-btn" title="Открыть карточку места">Подробнее ↗</a>
+                            <a href="${routeUrl}" target="_blank" rel="noopener" class="balloon-btn balloon-route-btn" title="Построить маршрут">🧭 Маршрут</a>
+                        </div>
+                    </div>
+                    ${metroHtml}
+                    ${loc.description ? `<div class="balloon-desc">${loc.description}</div>` : ''}
+                    ${photosHtml}
+                </div>
+            `;
+        }
+
+        function renderBothCatFilterBars(categories) {
+            ensureCategoryVisibilityInitialized();
+            const mapContainer = document.getElementById('catChipsScroll');
+            const listContainer = document.getElementById('listCatChipsScroll');
+            const verticalContainer = document.getElementById('verticalCatChipsScroll');
+
+            if (mapContainer) mapContainer.innerHTML = '';
+            if (listContainer) listContainer.innerHTML = '';
+            if (verticalContainer) verticalContainer.innerHTML = '';
+
+            const uniqueCats = Array.from(new Set(categories || getAllCategoryNames())).filter(Boolean);
+            const favCount = getFavorites().length;
+
+            // Мобильные чипы над картой
+            if (mapContainer) {
+                uniqueCats.forEach(catName => {
+                    const isVis = categoryVisibility[catName] === true;
+                    mapContainer.appendChild(createChipElement(catName, isVis));
+                });
+            }
+
+            // Чипы в режиме списка
+            if (listContainer) {
+                uniqueCats.forEach(catName => {
+                    const isVis = categoryVisibility[catName] === true;
+                    listContainer.appendChild(createChipElement(catName, isVis));
+                });
+            }
+
+            // Десктопное вертикальное меню иконок
+            if (verticalContainer) {
+                verticalContainer.appendChild(createVerticalFavItem(favCount));
+                uniqueCats.forEach(catName => {
+                    const isVis = categoryVisibility[catName] === true;
+                    verticalContainer.appendChild(createVerticalCatItem(catName, isVis));
+                });
+            }
+
+            updateToggleAllBtnState();
+            updatePinnedFavButtons();
+        }
+
+        function createFavChip(count) {
+            const chip = document.createElement('div');
+            chip.className = `cat-chip fav-chip ${showFavoritesOnly ? 'active' : ''}`;
+            chip.innerHTML = `<span>❤️</span>${count > 0 ? `<span style="font-weight:700; margin-left:3px;">${count}</span>` : ''}`;
+            chip.onclick = () => toggleFavoritesFilter();
+            return chip;
+        }
+
+        function createChipElement(catName, isVis) {
+            const chip = document.createElement('div');
+            chip.className = `cat-chip ${isVis ? 'active' : 'disabled'}`;
+            chip.innerHTML = `<span>${catName}</span>`;
+            chip.onclick = () => toggleCategoryMap(catName);
+            return chip;
+        }
+
+        function toggleDesktopCatBarExpand() {
+            const bar = document.getElementById('desktopVerticalCatBar');
+            const expandBtn = document.getElementById('verticalCatExpandBtn');
+            if (bar) {
+                bar.classList.toggle('is-expanded');
+                const isExpanded = bar.classList.contains('is-expanded');
+                if (expandBtn) {
+                    expandBtn.title = isExpanded ? 'Свернуть категории' : 'Развернуть категории';
+                    const icon = expandBtn.querySelector('.expand-icon');
+                    if (icon) icon.innerText = isExpanded ? '▶' : '◀';
+                }
+            }
+        }
+
+        function createVerticalFavItem(count) {
+            const item = document.createElement('button');
+            item.className = `vertical-cat-item fav-item ${showFavoritesOnly ? 'active' : ''}`;
+            item.title = `Избранное (${count})`;
+            item.onclick = () => toggleFavoritesFilter();
+            item.innerHTML = `
+                <span class="v-cat-icon">❤️</span>
+                <span class="v-cat-name">Избранное ${count > 0 ? `(${count})` : ''}</span>
+                <div class="v-cat-tooltip">Избранное (${count})</div>
+            `;
+            return item;
+        }
+
+        function createVerticalCatItem(catName, isVis) {
+            const item = document.createElement('button');
+            item.className = `vertical-cat-item ${isVis ? 'active' : 'disabled'}`;
+            item.title = catName;
+            item.onclick = () => toggleCategoryMap(catName);
+            
+            const parts = (catName || '').trim().split(' ');
+            const icon = parts[0] || '📍';
+            const cleanName = parts.slice(1).join(' ') || catName;
+
+            item.innerHTML = `
+                <span class="v-cat-icon">${icon}</span>
+                <span class="v-cat-name">${cleanName}</span>
+                <div class="v-cat-tooltip">${catName}</div>
+            `;
+            return item;
+        }
+
+        /* При нажатии на кнопку "Все" - если все включены, то скрываются все точки; если не все включены - включаются все */
+        function toggleAllCategories() {
+            ensureCategoryVisibilityInitialized();
+            const allCats = getAllCategoryNames();
+            const activeCount = allCats.filter(k => categoryVisibility[k] === true).length;
+            const isAllCurrentlyActive = activeCount === allCats.length && !showFavoritesOnly;
+
+            showFavoritesOnly = false;
+            
+            if (isAllCurrentlyActive) {
+                // Если все активны — выключаем все
+                allCats.forEach(catName => {
+                    categoryVisibility[catName] = false;
+                });
+                allVisibleState = false;
+            } else {
+                // Если часть выключена или было только избранное — включаем абсолютно все
+                allCats.forEach(catName => {
+                    categoryVisibility[catName] = true;
+                });
+                allVisibleState = true;
+            }
+
+            applyCombinedFilters();
+        }
+
+        function updateToggleAllBtnState() {
+            ensureCategoryVisibilityInitialized();
+            const allCats = getAllCategoryNames();
+            const activeCount = allCats.filter(k => categoryVisibility[k] === true).length;
+            const totalCount = allCats.length;
+            const isAllActive = totalCount > 0 && activeCount === totalCount && !showFavoritesOnly;
+
+            const mapToggleBtn = document.getElementById('toggleAllBtn');
+            const listToggleBtn = document.getElementById('listToggleAllBtn');
+            const vertToggleBtn = document.getElementById('verticalToggleAllBtn');
+
+            [mapToggleBtn, listToggleBtn].forEach(btn => {
+                if (btn) {
+                    if (isAllActive) {
+                        btn.classList.remove('off');
+                        btn.innerText = '👁️ Все';
+                        btn.title = 'Скрыть все точки';
+                    } else {
+                        btn.classList.add('off');
+                        btn.innerText = '🙈 Все';
+                        btn.title = 'Показать все точки';
+                    }
+                }
+            });
+
+            if (vertToggleBtn) {
+                if (isAllActive) {
+                    vertToggleBtn.classList.remove('off');
+                    vertToggleBtn.innerText = '👁️';
+                    vertToggleBtn.title = 'Скрыть все точки';
+                } else {
+                    vertToggleBtn.classList.add('off');
+                    vertToggleBtn.innerText = '🙈';
+                    vertToggleBtn.title = 'Показать все точки';
+                }
+            }
+            allVisibleState = isAllActive;
+        }
+
+        /* При нажатии на категорию - если было выбрано избранное, оно отключается; включается выбранная категория */
+        function toggleCategoryMap(catName, btnEl, event) {
+            if (event) { event.stopPropagation(); event.preventDefault(); }
+            ensureCategoryVisibilityInitialized();
+            
+            const wasFavoritesOnly = showFavoritesOnly;
+            showFavoritesOnly = false;
+            
+            const allCats = getAllCategoryNames();
+            const currentlyActive = allCats.filter(k => categoryVisibility[k] === true);
+            const isOnlyCurrentActive = !wasFavoritesOnly && currentlyActive.length === 1 && currentlyActive[0] === catName;
+
+            if (isOnlyCurrentActive) {
+                // Если кликнули по уже единственной активной — включаем все
+                allCats.forEach(k => { categoryVisibility[k] = true; });
+            } else {
+                // Отключаем все остальные, включаем только выбранную
+                allCats.forEach(k => {
+                    categoryVisibility[k] = (k === catName);
+                });
+            }
+
+            applyCombinedFilters();
+
+            // Если только эта категория активна, разворачиваем ее аккордеон в списке
+            const targetGroup = document.getElementById(`cat-group-${encodeURIComponent(catName)}`);
+            if (targetGroup) {
+                targetGroup.classList.remove('collapsed');
+            }
+        }
+
+        function toggleAccordion(element) { 
+            element.closest('.category-group').classList.toggle('collapsed'); 
+        }
+
+        /* Вычисление центра экрана, чтобы балун и маркер были комфортно видны по центру */
+        function centerMapOnBalloon(loc) {
+            if (!myMap || !loc.lat || !loc.lng) return;
+            const isMobile = window.innerWidth <= 768;
+            const latOffset = isMobile ? 0.0016 : 0.0009;
+            const currentZoom = myMap.getZoom() || 15;
+            const targetZoom = Math.max(currentZoom, 16);
+            myMap.setCenter([loc.lat + latOffset, loc.lng], targetZoom, { duration: 300, checkZoomRange: true });
+        }
+
+        function selectLocationOnMap(loc, placemark) {
+            if (!placemark && loc.id) {
+                placemark = locationPlacemarksMap[loc.id];
+            }
+            activeBalloonPlacemark = placemark;
+            
+            if (myMap && loc.lat && loc.lng) {
+                const isMobile = window.innerWidth <= 768;
+                const latOffset = isMobile ? 0.0016 : 0.0009;
+                const targetZoom = Math.max(myMap.getZoom() || 15, 16);
+                
+                myMap.setCenter([loc.lat + latOffset, loc.lng], targetZoom, { duration: 300, checkZoomRange: true }).then(() => {
+                    if (placemark && placemark.balloon) {
+                        placemark.balloon.open();
+                    }
+                });
+            }
+            
+            document.querySelectorAll('.location-card').forEach(c => c.classList.remove('active'));
+            const card = document.getElementById(`card-${loc.id}`);
+            if (card) {
+                card.classList.add('active');
+                const group = card.closest('.category-group');
+                if (group) group.classList.remove('collapsed');
+            }
+            if (window.innerWidth <= 768) switchMobileView('map');
+        }
+
+        function highlightLocationCard(locId) {
+            document.querySelectorAll('.location-card').forEach(c => c.classList.remove('active'));
+            const card = document.getElementById(`card-${locId}`);
+            if (card) {
+                card.classList.add('active');
+                const group = card.closest('.category-group');
+                if (group) group.classList.remove('collapsed');
+                card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function openLightboxByUrl(locId, index, event) {
+            if (event) event.stopPropagation();
+            const loc = allLocations.find(l => l.id === locId);
+            if (!loc || !loc.images) return;
+            currentGallery = loc.images; currentImageIdx = index;
+            updateLightboxImage();
+            const lb = document.getElementById('lightbox');
+            if (lb) lb.classList.add('active');
+            document.getElementById('themeColorMeta')?.setAttribute('content', '#000000');
+            if (window.Telegram?.WebApp) {
+                try {
+                    window.Telegram.WebApp.setHeaderColor?.('#000000');
+                    window.Telegram.WebApp.setBackgroundColor?.('#000000');
+                } catch(e) {}
+            }
+        }
+
+        function updateLightboxImage() {
+            const rawUrl = currentGallery[currentImageIdx];
+            const imgEl = document.getElementById('lightbox-img');
+            imgEl.onerror = function() {
+                if (this.src !== rawUrl) {
+                    this.src = rawUrl;
+                }
+            };
+            imgEl.src = getDisplayImageUrl(rawUrl);
+            document.getElementById('lightbox-counter').innerText = `${currentImageIdx + 1} из ${currentGallery.length}`;
+        }
+
+        function closeLightbox() { 
+            const lb = document.getElementById('lightbox');
+            if (lb) lb.classList.remove('active');
+            const bgThemeColor = isDarkMode ? '#090d16' : '#f4f3f0';
+            document.getElementById('themeColorMeta')?.setAttribute('content', '#000000');
+            if (window.Telegram?.WebApp) {
+                try {
+                    window.Telegram.WebApp.setHeaderColor?.('#000000');
+                    window.Telegram.WebApp.setBackgroundColor?.(bgThemeColor);
+                } catch(e) {}
+            }
+        }
+        function nextImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx + 1) % currentGallery.length; updateLightboxImage(); }
+        function prevImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx - 1 + currentGallery.length) % currentGallery.length; updateLightboxImage(); }
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+        const lightboxEl = document.getElementById('lightbox');
+        
+        // Закрытие фото не только по крестику, но и по клику вокруг (по затемненному фону)
+        if (lightboxEl) {
+            lightboxEl.addEventListener('click', e => {
+                if (e.target.id === 'lightbox' || e.target.classList.contains('lightbox-modal')) {
+                    closeLightbox();
+                }
+            });
+
+            lightboxEl.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            lightboxEl.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                if (touchEndX < touchStartX - 45) nextImage();
+                if (touchEndX > touchStartX + 45) prevImage();
+            }, { passive: true });
+        }
+
+        function openCategorySettingsModal() {
+            const overlay = document.getElementById('categorySettingsOverlay');
+            if (!overlay) return;
+            renderCategorySettingsList(document.getElementById('catFilterSearchInput')?.value || '');
+            overlay.classList.add('active');
+            updateTelegramBackButton();
+        }
+
+        function closeCategorySettingsModal(e) {
+            if (e && e.target !== e.currentTarget && !e.target.classList.contains('cat-settings-close-btn') && !e.target.classList.contains('cat-settings-apply-btn')) return;
+            const overlay = document.getElementById('categorySettingsOverlay');
+            if (overlay) overlay.classList.remove('active');
+            updateTelegramBackButton();
+        }
+
+        function renderCategorySettingsList(searchQuery = '') {
+            ensureCategoryVisibilityInitialized();
+            const listEl = document.getElementById('catSettingsList');
+            const summaryText = document.getElementById('catSettingsSummaryText');
+            const activeCountSpan = document.getElementById('catSettingsActiveCount');
+            if (!listEl) return;
+
+            listEl.innerHTML = '';
+            const allCats = getAllCategoryNames();
+            const q = searchQuery.toLowerCase().trim();
+
+            const catCounts = {};
+            allLocations.forEach(loc => {
+                const isHidden = isLocationHidden(loc);
+                if (isHidden && !canUserAccessHiddenLocations(currentUser)) return;
+                const cat = loc.category || '📍 Другое';
+                catCounts[cat] = (catCounts[cat] || 0) + 1;
+                if (Array.isArray(loc.extra_categories)) {
+                    loc.extra_categories.forEach(ec => {
+                        catCounts[ec] = (catCounts[ec] || 0) + 1;
+                    });
+                }
+            });
+
+            let activeCatsCount = 0;
+            let totalVisLocs = 0;
+
+            allCats.forEach(catName => {
+                const isVis = categoryVisibility[catName] === true;
+                if (isVis) {
+                    activeCatsCount++;
+                    totalVisLocs += (catCounts[catName] || 0);
+                }
+
+                if (q && !catName.toLowerCase().includes(q)) return;
+
+                const count = catCounts[catName] || 0;
+                const parts = catName.trim().split(' ');
+                const emoji = parts[0] || '📍';
+                const cleanName = parts.slice(1).join(' ') || catName;
+
+                const row = document.createElement('label');
+                row.className = `cat-settings-item ${isVis ? 'is-checked' : ''}`;
+                row.innerHTML = `
+                    <div class="cat-item-left">
+                        <span class="cat-item-emoji">${emoji}</span>
+                        <span class="cat-item-name">${cleanName}</span>
+                        <span class="cat-item-badge">${count}</span>
+                    </div>
+                    <div class="cat-switch">
+                        <input type="checkbox" ${isVis ? 'checked' : ''} onchange="toggleCategoryCheckbox('${escapeQuotes(catName)}', this.checked)">
+                        <span class="cat-switch-slider"></span>
+                    </div>
+                `;
+                listEl.appendChild(row);
+            });
+
+            if (summaryText) {
+                summaryText.innerText = `Включено категорий: ${activeCatsCount} из ${allCats.length}`;
+            }
+            if (activeCountSpan) {
+                activeCountSpan.innerText = totalVisLocs;
+            }
+        }
+
+        function toggleCategoryCheckbox(catName, checked) {
+            ensureCategoryVisibilityInitialized();
+            categoryVisibility[catName] = checked;
+            showFavoritesOnly = false;
+            applyCombinedFilters();
+            renderBothCatFilterBars(getAllCategoryNames());
+            renderCategorySettingsList(document.getElementById('catFilterSearchInput')?.value || '');
+        }
+
+        function selectAllCategoriesMulti(enableAll) {
+            ensureCategoryVisibilityInitialized();
+            const allCats = getAllCategoryNames();
+            allCats.forEach(k => { categoryVisibility[k] = enableAll; });
+            showFavoritesOnly = false;
+            applyCombinedFilters();
+            renderBothCatFilterBars(allCats);
+            renderCategorySettingsList(document.getElementById('catFilterSearchInput')?.value || '');
+        }
+
+        function filterCategoryDrawerList(val) {
+            renderCategorySettingsList(val);
+        }
+
+        function toggleFavsFromDrawer() {
+            toggleFavoritesFilter();
+            closeCategorySettingsModal();
+        }
+
+        function openSupportLink() {
+            openTelegramBotOrLink('https://t.me/dalazareva');
+        }
+
+        function suggestLocationFromApp() {
+            openTelegramBotOrLink('https://t.me/dalazareva_locations_bot?start=suggest');
+        }
+
+        function openChannelLink() {
+            openTelegramBotOrLink('https://t.me/dalazareva');
+        }
+
+        function switchMobileView(view) {
+            const btnMap = document.getElementById('btn-map-view');
+            const btnList = document.getElementById('btn-list-view');
+            if (view === 'map') {
+                document.body.classList.remove('show-list');
+                btnMap.classList.add('active'); btnList.classList.remove('active');
+            } else {
+                document.body.classList.add('show-list');
+                btnList.classList.add('active'); btnMap.classList.remove('active');
+                toggleMobileSearch(false);
+            }
+            updateTelegramBackButton();
+        }
+        window.switchMobileView = switchMobileView;
+
+        checkAuthAndInit();
+    </script>
+</body>
+</html>

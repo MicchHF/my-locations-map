@@ -1,0 +1,2518 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#f4f3f0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="referrer" content="no-referrer">
+    <title>Панель управления | @dalazareva локации</title>
+    
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=7370bad5-a627-4414-a1e8-b2023bda7a61&lang=ru_RU"></script>
+    <script src="js/supabase.js"></script>
+    <script>
+        if (!window.supabase) {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>');
+        }
+    </script>
+    <script src="js/shared.js"></script>
+
+    <style>
+        .auth-overlay {
+            position: fixed; inset: 0; width: 100vw; height: 100%;
+            background: #09090b; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .auth-box {
+            background: #ffffff; width: 100%; max-width: 360px; padding: 28px; border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 14px;
+        }
+        .auth-title { font-size: 1.15rem; font-weight: 700; color: #0f172a; text-align: center; }
+        .auth-desc { font-size: 0.8rem; color: #64748b; text-align: center; margin-top: -6px; margin-bottom: 4px; }
+        .auth-error { font-size: 0.78rem; color: #ef4444; background: #fee2e2; padding: 8px 10px; border-radius: 8px; display: none; }
+
+        .admin-badge { display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; padding: 10px 14px; border-radius: 12px; margin-bottom: 8px; font-size: 0.88rem; font-weight: 600; }
+        .logout-btn { background: rgba(255,255,255,0.15); border: none; color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; }
+        .client-link-btn { background: #0284c7; border: none; color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 0.72rem; text-decoration: none; cursor: pointer; }
+        
+        #sidebar { width: 440px; }
+        .admin-form-container { 
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; 
+            margin-bottom: 8px; overflow: hidden; 
+        }
+        .admin-form-header {
+            display: flex; align-items: center; justify-content: space-between; padding: 10px 12px;
+            cursor: pointer; user-select: none; background: #f1f5f9;
+        }
+        .admin-form-title { font-size: 0.88rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 6px; }
+        .form-chevron { font-size: 0.75rem; transition: transform 0.2s; color: #64748b; }
+        .admin-form-container.collapsed .form-chevron { transform: rotate(-90deg); }
+        .admin-form-container.collapsed .admin-form-body { display: none; }
+        .admin-form-body { 
+            padding: 12px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+            max-height: calc(100vh - 240px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+        }
+
+        .admin-import-panel {
+            background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px;
+            margin-bottom: 8px; overflow: hidden;
+        }
+        .admin-import-header {
+            display: flex; align-items: center; justify-content: space-between; padding: 10px 12px;
+            cursor: pointer; user-select: none; background: #dcfce7;
+        }
+        .admin-import-title { font-size: 0.88rem; font-weight: 700; color: #166534; display: flex; align-items: center; gap: 6px; }
+        .import-badge { font-size: 0.72rem; background: #16a34a; color: #fff; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+        .admin-import-panel.collapsed .form-chevron { transform: rotate(-90deg); }
+        .admin-import-panel.collapsed .admin-import-body { display: none; }
+        .admin-import-body { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .import-info-box { background: #ffffff; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 12px; font-size: 0.82rem; color: #1e293b; line-height: 1.45; }
+        .import-opt-row { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #334155; cursor: pointer; user-select: none; }
+
+        /* Переключатель видимости (Hidden / Lifetime) */
+        .visibility-toggle-container {
+            background: #fff1f2;
+            border: 1px solid #fecdd3;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin: 4px 0 6px 0;
+            transition: all 0.2s ease;
+        }
+        .visibility-toggle-container.is-public {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+        .toggle-switch-label {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .switch-wrap {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .custom-switch-input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+        .custom-switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e1;
+            transition: .25s;
+            border-radius: 24px;
+        }
+        .custom-switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .25s;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+        }
+        .custom-switch-input:checked + .custom-switch-slider {
+            background-color: #e11d48;
+        }
+        .custom-switch-input:checked + .custom-switch-slider:before {
+            transform: translateX(20px);
+        }
+        .switch-text-block {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .switch-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #9f1239;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .switch-title.is-public {
+            color: #166534;
+        }
+        .switch-desc {
+            font-size: 0.74rem;
+            color: #475569;
+            line-height: 1.35;
+        }
+
+        /* Табы фильтрации по видимости */
+        .visibility-filter-tabs {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            margin-bottom: 4px;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+        .vis-filter-tab {
+            flex: 1;
+            padding: 6px 8px;
+            font-size: 0.76rem;
+            font-weight: 600;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .vis-filter-tab:hover {
+            color: #0f172a;
+        }
+        .vis-filter-tab.active {
+            background: #ffffff;
+            color: #0f172a;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            font-weight: 700;
+        }
+
+        /* Бейджи видимости в карточке админки */
+        .badge-loc-vis {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            white-space: nowrap;
+        }
+        .badge-loc-vis.hidden {
+            background: #ffe4e6;
+            color: #be123c;
+            border: 1px solid #fecdd3;
+        }
+        .badge-loc-vis.public {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Кнопка быстрого переключения видимости */
+        .vis-toggle-btn {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .vis-toggle-btn.make-public {
+            background: #ecfdf5;
+            color: #047857;
+            border-color: #a7f3d0;
+        }
+        .vis-toggle-btn.make-public:hover {
+            background: #d1fae5;
+        }
+        .vis-toggle-btn.make-hidden {
+            background: #fff1f2;
+            color: #be123c;
+            border-color: #fecdd3;
+        }
+        .vis-toggle-btn.make-hidden:hover {
+            background: #ffe4e6;
+        }
+
+        @media (max-width: 768px) {
+            #sidebar {
+                width: 100% !important;
+                height: 100% !important;
+                max-height: 100dvh !important;
+                display: none;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                overscroll-behavior-y: contain;
+            }
+            .show-list #sidebar {
+                display: flex !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+            .sidebar-header {
+                flex-shrink: 0 !important;
+                overflow: visible !important;
+            }
+            .admin-form-container {
+                overflow: visible !important;
+            }
+            .admin-form-body {
+                max-height: none !important;
+                overflow: visible !important;
+            }
+            #locations-list {
+                flex: none !important;
+                height: auto !important;
+                overflow: visible !important;
+                padding-bottom: calc(env(safe-area-inset-bottom) + 120px) !important;
+            }
+            .modal-content {
+                max-height: 85dvh !important;
+                width: 95% !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+        }
+        
+        .form-input, .form-select, .form-textarea { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.82rem; outline: none; background: #fff; }
+        .form-textarea { resize: vertical; min-height: 50px; }
+
+        .btn-mini { padding: 6px 10px; background: #0f172a; color: #fff; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+
+        .file-upload-label { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border: 1px dashed #0f172a; border-radius: 8px; background: #fff; color: #0f172a; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+        .file-upload-input { display: none; }
+        .upload-status { font-size: 0.75rem; color: #64748b; }
+
+        .metro-field-group { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 8px; margin-bottom: 4px; display: flex; flex-direction: column; gap: 4px; }
+        .metro-field-row { display: flex; gap: 6px; align-items: center; }
+
+        .submit-btn { background: #0f172a; color: #fff; border: none; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+        .submit-btn:hover { background: #1e293b; }
+
+        .modal-overlay { position: fixed; inset: 0; width: 100vw; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: #fff; width: 92%; max-width: 520px; max-height: 90vh; border-radius: 16px; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+        .modal-title { font-weight: 700; font-size: 1.1rem; color: #0f172a; }
+        .modal-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #64748b; }
+
+        .edit-photos-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+        .edit-photo-item { position: relative; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #cbd5e1; background: #f8fafc; flex-shrink: 0; }
+        .edit-photo-item img { height: 100%; width: auto; object-fit: cover; cursor: pointer; }
+        .photo-controls { position: absolute; top: 3px; right: 3px; left: 3px; display: flex; justify-content: space-between; gap: 4px; pointer-events: none; }
+        .photo-btn { background: rgba(0,0,0,0.75); color: #fff; border: none; border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; cursor: pointer; pointer-events: auto; }
+        .photo-btn-delete { background: rgba(239,68,68,0.9); }
+    </style>
+</head>
+<body>
+
+    <div id="authOverlay" class="auth-overlay">
+        <div class="auth-box">
+            <div class="auth-title">🔐 Вход в Админ-панель</div>
+            <div class="auth-desc">Доступ только для владельца</div>
+            <div id="authError" class="auth-error"></div>
+            <input type="email" id="authEmail" class="form-input" placeholder="Email">
+            <input type="password" id="authPassword" class="form-input" placeholder="Пароль">
+            <button id="authBtn" class="submit-btn" onclick="handleLogin()">Войти</button>
+            <div style="text-align: center; margin-top: 6px;">
+                <a href="index.html" style="font-size: 0.8rem; color: #0284c7; text-decoration: none;">← Перейти к клиентской карте</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-wrapper">
+        <div id="sidebar">
+            <div class="sidebar-header">
+                <div class="admin-badge">
+                    <span>⚡ Панель Администратора</span>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end;">
+                        <button id="btnToggleImportBlock" class="client-link-btn" style="background:#f1f5f9; color:#475569;" onclick="toggleHideImportBlock(event)" title="Включить / отключить модуль импорта">📥 Импорт: Выкл</button>
+                        <a href="users-admin.html" class="client-link-btn" style="background:#8b5cf6;">👥 Аккаунты</a>
+                        <a href="index.html" class="client-link-btn">🗺️ Карта</a>
+                        <button class="logout-btn" onclick="handleLogout()">Выйти</button>
+                    </div>
+                </div>
+
+                <!-- Панель статистики / счетчика локаций для администратора -->
+                <div id="adminStatsPanel" class="admin-stats-panel">
+                    <div class="admin-stats-header" onclick="toggleStatsPanel()">
+                        <div class="admin-stats-title">
+                            <span>📊 Сводка локаций</span>
+                            <span id="statsTotalBadge" class="stats-total-pill">0 локаций</span>
+                        </div>
+                        <span id="statsChevron" class="form-chevron">▼</span>
+                    </div>
+                    <div id="adminStatsBody" class="admin-stats-body">
+                        <div id="adminStatsGrid" class="admin-stats-grid"></div>
+                    </div>
+                </div>
+
+                <!-- Панель импорта из сторонних карт (Google My Maps, KML/KMZ, GeoJSON) -->
+                <div id="adminImportPanel" class="admin-import-panel collapsed" style="display: none;">
+                    <div class="admin-import-header" onclick="toggleImportPanel()">
+                        <div class="admin-import-title">
+                            <span>📥 Универсальный импорт меток</span>
+                            <span class="import-badge" style="background:#e0f2fe; color:#0369a1;">KML / GeoJSON / Ссылки</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button type="button" class="action-btn" style="font-size:0.7rem; padding: 2px 7px; background:#f1f5f9; color:#475569;" onclick="toggleHideImportBlock(event)" title="Отключить и скрыть модуль">Отключить</button>
+                            <span id="importChevron" class="form-chevron">▼</span>
+                        </div>
+                    </div>
+                    <div id="adminImportBody" class="admin-import-body">
+                        <div class="import-info-box">
+                            <div>📍 <b>Универсальный импорт:</b> загружайте любые карты по ссылке (Google My Maps, прямые ссылки на KML/KMZ, GeoJSON или ссылки с точками Яндекс/Google) либо файлы с устройства.</div>
+                            <div style="font-size: 0.74rem; color: #64748b; margin-top: 4px;">
+                                Модуль можно отключить в любой момент кнопкой «Импорт: Выкл» сверху.
+                            </div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 9px; margin: 8px 0;">
+                            <div>
+                                <label style="display: block; font-size: 0.78rem; font-weight: 600; color: #334155; margin-bottom: 4px;">Куда импортировать (категория):</label>
+                                <select id="importCategorySelect" class="form-input" style="font-size: 0.82rem; padding: 7px 10px;">
+                                    <option value="📍 Другое">📍 Другое (рекомендуется, затем распределить)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label style="display: block; font-size: 0.78rem; font-weight: 600; color: #334155; margin-bottom: 4px;">Вариант 1: Ссылка (Google My Maps, .kml/.kmz, GeoJSON или точка карты)</label>
+                                <div style="display: flex; gap: 6px;">
+                                    <input type="text" id="customMapUrlInput" class="form-input" placeholder="https://... (Google Maps, ссылка на .kml или .json)" style="flex: 1; font-size: 0.8rem;">
+                                    <button type="button" id="importUrlBtn" class="submit-btn" style="background: #0284c7; padding: 7px 12px; font-size: 0.8rem; width: auto; white-space: nowrap;" onclick="handleImportFromUrl()">Импорт</button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label style="display: block; font-size: 0.78rem; font-weight: 600; color: #334155; margin-bottom: 4px;">Вариант 2: Файл с устройства (.kml, .kmz, .json, .geojson)</label>
+                                <label class="file-upload-label" style="font-size: 0.78rem; padding: 8px; border-color: #0284c7; color: #0369a1;">
+                                    <span>📎 Выбрать файл (.kml / .kmz / .geojson / .json)</span>
+                                    <input type="file" id="customKmlFileInput" class="file-upload-input" accept=".kml,.kmz,.xml,.json,.geojson" onchange="handleCustomKmlUpload(this)">
+                                </label>
+                            </div>
+                        </div>
+
+                        <label class="import-opt-row">
+                            <input type="checkbox" id="importSkipDuplicates" checked>
+                            <span>Пропускать дубликаты (по названию или координатам)</span>
+                        </label>
+
+                        <label class="import-opt-row">
+                            <input type="checkbox" id="importAsHidden" checked>
+                            <span>🔒 Сразу делать импортируемые точки Скрытыми (доступны только клиентам Lifetime / Тир 3)</span>
+                        </label>
+
+                        <div id="importProgressContainer" style="display: none; margin: 6px 0;">
+                            <div style="width: 100%; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden;">
+                                <div id="importProgressBar" style="width: 0%; height: 100%; background: #16a34a; transition: width 0.2s;"></div>
+                            </div>
+                            <div id="importProgressStatus" style="font-size: 0.78rem; color: #334155; margin-top: 5px; font-weight: 600;">Подготовка...</div>
+                        </div>
+
+                        <div id="importResultMsg" style="display: none; padding: 8px 10px; border-radius: 8px; font-size: 0.82rem; font-weight: 500;"></div>
+                    </div>
+                </div>
+
+                <div id="adminFormContainer" class="admin-form-container collapsed">
+                    <div class="admin-form-header" onclick="toggleAddForm()">
+                        <div class="admin-form-title">
+                            <span>➕ Добавить новую точку</span>
+                        </div>
+                        <span class="form-chevron">▼</span>
+                    </div>
+
+                    <div class="admin-form-body">
+                        <input type="text" id="addTitle" class="form-input" placeholder="Название точки *">
+                        
+                        <div>
+                            <label class="upload-status">🔗 Ссылка на место (Яндекс Карты / сайт):</label>
+                            <input type="url" id="addUrl" class="form-input" placeholder="https://yandex.ru/maps/org/... (или любая ссылка)">
+                        </div>
+
+                        <!-- Список категорий наполняется динамически из shared.js -->
+                        <div>
+                            <label class="upload-status">Основная категория:</label>
+                            <select id="addCategorySelect" class="form-select" onchange="handleCategorySelectChange(this)"></select>
+                            <input type="text" id="addCustomCategory" class="form-input" placeholder="Введите название категории" style="display: none; margin-top: 4px;">
+                        </div>
+
+                        <div>
+                            <label class="upload-status">✨ Дополнительные категории (выберите при необходимости):</label>
+                            <div id="addExtraCategoriesChips" class="extra-cats-selector"></div>
+                        </div>
+
+                        <div style="display: flex; gap: 6px;">
+                            <input type="text" id="addCoords" class="form-input" placeholder="Координаты (клик или ввод)" oninput="onCoordsInput('add')">
+                            <button type="button" class="btn-mini" onclick="manualResolveAddress('add')">📍 Найти адрес</button>
+                        </div>
+                        <input type="text" id="addAddress" class="form-input" placeholder="Адрес (автоматически)">
+                        
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label class="upload-status">🚇 Метро (автоматически при вводе координат):</label>
+                            
+                            <div class="metro-field-group">
+                                <select id="addMetro1_line" class="form-select" onchange="onLineChange('add', 1)"></select>
+                                <div class="metro-field-row">
+                                    <select id="addMetro1_station" class="form-select" style="flex:2;"></select>
+                                    <input type="number" id="addMetro1_time" class="form-input" placeholder="Мин" style="flex:1;">
+                                </div>
+                            </div>
+
+                            <div class="metro-field-group">
+                                <select id="addMetro2_line" class="form-select" onchange="onLineChange('add', 2)"></select>
+                                <div class="metro-field-row">
+                                    <select id="addMetro2_station" class="form-select" style="flex:2;"></select>
+                                    <input type="number" id="addMetro2_time" class="form-input" placeholder="Мин" style="flex:1;">
+                                </div>
+                            </div>
+
+                            <div class="metro-field-group">
+                                <select id="addMetro3_line" class="form-select" onchange="onLineChange('add', 3)"></select>
+                                <div class="metro-field-row">
+                                    <select id="addMetro3_station" class="form-select" style="flex:2;"></select>
+                                    <input type="number" id="addMetro3_time" class="form-input" placeholder="Мин" style="flex:1;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <textarea id="addDesc" class="form-textarea" placeholder="Описание"></textarea>
+                        
+                        <label class="file-upload-label">
+                            <span>📷 Выбрать фото...</span>
+                            <input type="file" id="addPhotosInput" class="file-upload-input" accept="image/*" multiple onchange="handleFileSelection(this)">
+                        </label>
+                        <div id="uploadStatus" class="upload-status"></div>
+
+                        <!-- Тумблер скрытия локации: ВКЛЮЧЕН ПО УМОЛЧАНИЮ -->
+                        <div class="visibility-toggle-container" id="addVisibilityContainer">
+                            <label class="toggle-switch-label" title="По умолчанию локация добавляется в Скрытые (доступна только клиентам с подпиской Lifetime / Тир 3). Выключите, если хотите сразу сделать её открытой для всех.">
+                                <div class="switch-wrap">
+                                    <input type="checkbox" id="addIsHidden" class="custom-switch-input" checked onchange="updateAddVisibilityHelpText()">
+                                    <span class="custom-switch-slider"></span>
+                                </div>
+                                <div class="switch-text-block">
+                                    <span class="switch-title" id="addIsHiddenTitle">🔒 Скрытая локация (Тир 3 / Lifetime)</span>
+                                    <span class="switch-desc" id="addIsHiddenDesc">Точка будет скрыта от обычных клиентов и видна только пользователям с тарифом Lifetime.</span>
+                                </div>
+                            </label>
+                        </div>
+
+                        <button id="saveBtn" class="submit-btn" onclick="saveNewLocation()">＋ Сохранить локацию</button>
+                    </div>
+                </div>
+
+                <div class="search-container">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, адресу, метро, категории..." oninput="handleSearch()">
+                </div>
+
+                <!-- Фильтр видимости: Все / Скрытые / Открытые -->
+                <div class="visibility-filter-tabs">
+                    <button id="btnVisFilterAll" class="vis-filter-tab active" onclick="setAdminVisibilityFilter('all')">
+                        Все (<span id="countVisAll">0</span>)
+                    </button>
+                    <button id="btnVisFilterHidden" class="vis-filter-tab" onclick="setAdminVisibilityFilter('hidden')">
+                        🔒 Скрытые (<span id="countVisHidden">0</span>)
+                    </button>
+                    <button id="btnVisFilterPublic" class="vis-filter-tab" onclick="setAdminVisibilityFilter('public')">
+                        🌐 Открытые (<span id="countVisPublic">0</span>)
+                    </button>
+                </div>
+            </div>
+            
+            <div id="locations-list"></div>
+        </div>
+
+        <div id="map-container" style="inset: 0 0 0 440px; width: calc(100vw - 440px);">
+            <div id="map"></div>
+            <div id="topCatFilterBar" class="top-cat-filter-bar">
+                <button id="toggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()">👁️ Все</button>
+                <div id="catChipsScroll" class="cat-chips-scroll"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования -->
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Редактирование локации</div>
+                <button class="modal-close" onclick="closeEditModal()">✕</button>
+            </div>
+            <input type="hidden" id="editLocationId">
+            <div>
+                <label class="upload-status">Название *</label>
+                <input type="text" id="editTitle" class="form-input">
+            </div>
+            <div>
+                <label class="upload-status">🔗 Ссылка на место (Яндекс Карты / сайт)</label>
+                <input type="url" id="editUrl" class="form-input" placeholder="https://yandex.ru/maps/org/... (или любая ссылка)">
+            </div>
+            <div>
+                <label class="upload-status">Основная категория</label>
+                <select id="editCategorySelect" class="form-select" onchange="renderEditExtraCategoryChips()"></select>
+            </div>
+            <div>
+                <label class="upload-status">✨ Дополнительные категории</label>
+                <div id="editExtraCategoriesChips" class="extra-cats-selector"></div>
+            </div>
+            <div>
+                <label class="upload-status">Координаты</label>
+                <div style="display: flex; gap: 6px;">
+                    <input type="text" id="editCoords" class="form-input" oninput="onCoordsInput('edit')">
+                    <button type="button" class="btn-mini" onclick="manualResolveAddress('edit')">📍 Найти адрес</button>
+                </div>
+            </div>
+            <div>
+                <label class="upload-status">Адрес</label>
+                <input type="text" id="editAddress" class="form-input">
+            </div>
+            <div>
+                <label class="upload-status">🚇 Станции метро рядом</label>
+                <div class="metro-field-group">
+                    <select id="editMetro1_line" class="form-select" onchange="onLineChange('edit', 1)"></select>
+                    <div class="metro-field-row">
+                        <select id="editMetro1_station" class="form-select" style="flex:2;"></select>
+                        <input type="number" id="editMetro1_time" class="form-input" placeholder="Мин" style="flex:1;">
+                    </div>
+                </div>
+                <div class="metro-field-group">
+                    <select id="editMetro2_line" class="form-select" onchange="onLineChange('edit', 2)"></select>
+                    <div class="metro-field-row">
+                        <select id="editMetro2_station" class="form-select" style="flex:2;"></select>
+                        <input type="number" id="editMetro2_time" class="form-input" placeholder="Мин" style="flex:1;">
+                    </div>
+                </div>
+                <div class="metro-field-group">
+                    <select id="editMetro3_line" class="form-select" onchange="onLineChange('edit', 3)"></select>
+                    <div class="metro-field-row">
+                        <select id="editMetro3_station" class="form-select" style="flex:2;"></select>
+                        <input type="number" id="editMetro3_time" class="form-input" placeholder="Мин" style="flex:1;">
+                    </div>
+                </div>
+            </div>
+            <div>
+                <label class="upload-status">Описание</label>
+                <textarea id="editDesc" class="form-textarea"></textarea>
+            </div>
+            <div>
+                <label class="upload-status">Управление фотографиями (клик для просмотра)</label>
+                <div id="editPhotosGrid" class="edit-photos-grid"></div>
+            </div>
+            <div>
+                <label class="file-upload-label" style="margin-top: 8px;">
+                    <span>＋ Добавить новые фото</span>
+                    <input type="file" id="editNewPhotosInput" class="file-upload-input" accept="image/*" multiple onchange="handleEditNewFiles(this)">
+                </label>
+                <div id="editUploadStatus" class="upload-status"></div>
+            </div>
+
+            <!-- Тумблер скрытия локации в модалке редактирования -->
+            <div class="visibility-toggle-container" id="editVisibilityContainer">
+                <label class="toggle-switch-label" title="Включите, чтобы скрыть локацию от обычных клиентов (будет доступна только пользователям с подпиской Lifetime / Тир 3)">
+                    <div class="switch-wrap">
+                        <input type="checkbox" id="editIsHidden" class="custom-switch-input" onchange="updateEditVisibilityHelpText()">
+                        <span class="custom-switch-slider"></span>
+                    </div>
+                    <div class="switch-text-block">
+                        <span class="switch-title" id="editIsHiddenTitle">🔒 Скрытая локация (Тир 3 / Lifetime)</span>
+                        <span class="switch-desc" id="editIsHiddenDesc">Точка скрыта от обычных пользователей и видна только в тарифе Lifetime.</span>
+                    </div>
+                </label>
+            </div>
+
+            <button id="editSaveBtn" class="submit-btn" style="margin-top: 10px;" onclick="saveEditedLocation()">💾 Сохранить изменения</button>
+        </div>
+    </div>
+
+    <!-- Lightbox -->
+    <div id="lightbox" class="lightbox-modal">
+        <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+        <span class="lightbox-nav lightbox-prev" onclick="prevImage()">&#10094;</span>
+        <img id="lightbox-img" class="lightbox-img" src="" alt="Фото">
+        <span class="lightbox-nav lightbox-next" onclick="nextImage()">&#10095;</span>
+        <div id="lightbox-counter" class="lightbox-counter"></div>
+    </div>
+
+    <div class="mobile-toggle-bar">
+        <button id="btn-map-view" class="toggle-btn active" onclick="switchMobileView('map')">🗺️ Карта</button>
+        <button id="btn-list-view" class="toggle-btn" onclick="switchMobileView('list')">📋 Список</button>
+    </div>
+
+    <script>
+        let myMap;
+        let clusterer = null;
+        let locationPlacemarksMap = {};
+        let tempPlacemark = null;
+        let allLocations = [];
+        let categoryVisibility = {};
+        let allVisibleState = true;
+        let selectedFiles = [];
+        let editingImagesList = [];
+        let editNewFiles = [];
+        let currentGallery = [];
+        let currentImageIdx = 0;
+        let selectedAddExtraCategories = [];
+        let selectedEditExtraCategories = [];
+        let adminVisibilityFilter = 'all'; // 'all', 'hidden', 'public'
+
+        function updateAddVisibilityHelpText() {
+            const isChecked = document.getElementById('addIsHidden')?.checked !== false;
+            const container = document.getElementById('addVisibilityContainer');
+            const titleEl = document.getElementById('addIsHiddenTitle');
+            const descEl = document.getElementById('addIsHiddenDesc');
+            if (!container || !titleEl || !descEl) return;
+            if (isChecked) {
+                container.classList.remove('is-public');
+                titleEl.className = 'switch-title';
+                titleEl.innerHTML = '🔒 Скрытая локация (Тир 3 / Lifetime)';
+                descEl.innerText = 'Точка будет скрыта от обычных клиентов и видна только пользователям с тарифом Lifetime.';
+            } else {
+                container.classList.add('is-public');
+                titleEl.className = 'switch-title is-public';
+                titleEl.innerHTML = '🌐 Открытая локация (Видна всем)';
+                descEl.innerText = 'Точка будет сразу открыта на карте для всех клиентов (включая Trial и базовый Premium).';
+            }
+        }
+
+        function updateEditVisibilityHelpText() {
+            const isChecked = document.getElementById('editIsHidden')?.checked === true;
+            const container = document.getElementById('editVisibilityContainer');
+            const titleEl = document.getElementById('editIsHiddenTitle');
+            const descEl = document.getElementById('editIsHiddenDesc');
+            if (!container || !titleEl || !descEl) return;
+            if (isChecked) {
+                container.classList.remove('is-public');
+                titleEl.className = 'switch-title';
+                titleEl.innerHTML = '🔒 Скрытая локация (Тир 3 / Lifetime)';
+                descEl.innerText = 'Точка скрыта от обычных пользователей и доступна исключительно в тарифе Lifetime.';
+            } else {
+                container.classList.add('is-public');
+                titleEl.className = 'switch-title is-public';
+                titleEl.innerHTML = '🌐 Открытая локация (Видна всем)';
+                descEl.innerText = 'Точка открыта на карте для всех клиентов со стандартными тарифами.';
+            }
+        }
+
+        function setAdminVisibilityFilter(filter) {
+            adminVisibilityFilter = filter;
+            document.getElementById('btnVisFilterAll')?.classList.toggle('active', filter === 'all');
+            document.getElementById('btnVisFilterHidden')?.classList.toggle('active', filter === 'hidden');
+            document.getElementById('btnVisFilterPublic')?.classList.toggle('active', filter === 'public');
+            handleSearch();
+        }
+
+        function updateAdminVisibilityCounts() {
+            const total = allLocations.length;
+            const hiddenCount = allLocations.filter(l => isLocationHidden(l)).length;
+            const publicCount = total - hiddenCount;
+            const elAll = document.getElementById('countVisAll');
+            const elHidden = document.getElementById('countVisHidden');
+            const elPublic = document.getElementById('countVisPublic');
+            if (elAll) elAll.innerText = total;
+            if (elHidden) elHidden.innerText = hiddenCount;
+            if (elPublic) elPublic.innerText = publicCount;
+        }
+
+        async function toggleLocationVisibility(id, shouldHide, event) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            const loc = allLocations.find(l => String(l.id) === String(id));
+            if (!loc) return;
+
+            const confirmMsg = shouldHide 
+                ? `Скрыть локацию «${loc.title}»?\nОна станет закрытой и будет видна исключительно пользователям с подпиской Lifetime (Тир 3).`
+                : `Сделать локацию «${loc.title}» открытой?\nОна станет общедоступной на карте для всех активных тарифов.`;
+            
+            if (!confirm(confirmMsg)) return;
+
+            let extraCats = Array.isArray(loc.extra_categories) ? [...loc.extra_categories] : [];
+            if (shouldHide) {
+                if (!extraCats.includes("🔒 Скрытые")) {
+                    extraCats.push("🔒 Скрытые");
+                }
+            } else {
+                extraCats = extraCats.filter(c => c !== "🔒 Скрытые" && c !== "🔒 Скрытые (Lifetime)" && !c.includes("Скрытые"));
+            }
+
+            let desc = loc.description || '';
+            desc = desc.replace(/<!--(?:is_hidden|hidden):.*?-->\r?\n?/g, '').trim();
+            if (shouldHide) {
+                desc = `<!--is_hidden:true-->\n${desc}`.trim();
+            }
+
+            let cat = loc.category;
+            if (!shouldHide && (cat === "🔒 Скрытые" || cat.includes("Скрытые"))) {
+                cat = "📍 Другое";
+            }
+
+            let { error } = await supabaseClient.from('Location').update({
+                extra_categories: extraCats,
+                description: desc,
+                category: cat
+            }).eq('id', id);
+
+            if (error && error.message && error.message.includes('extra_categories')) {
+                const res = await supabaseClient.from('Location').update({
+                    description: desc,
+                    category: cat
+                }).eq('id', id);
+                error = res.error;
+            }
+
+            if (error) {
+                alert("Ошибка изменения статуса видимости: " + error.message);
+                return;
+            }
+
+            loc.extra_categories = extraCats;
+            loc.description = desc;
+            loc.category = cat;
+            loc.is_hidden = shouldHide;
+
+            renderAdminStats();
+            updateAdminVisibilityCounts();
+            handleSearch();
+        }
+
+        function getAllAdminCategoryNames() {
+            return Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')])).filter(Boolean);
+        }
+
+        function ensureAdminCategoryVisibilityInitialized() {
+            const allCats = getAllAdminCategoryNames();
+            allCats.forEach(cat => {
+                if (categoryVisibility[cat] === undefined) {
+                    categoryVisibility[cat] = true;
+                }
+            });
+        }
+
+        function toggleAddForm() {
+            const formContainer = document.getElementById('adminFormContainer');
+            const isNowExpanded = formContainer.classList.toggle('collapsed') === false;
+            if (isNowExpanded && window.innerWidth <= 768) {
+                setTimeout(() => {
+                    formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
+        }
+
+        function toggleStatsPanel() {
+            document.getElementById('adminStatsPanel').classList.toggle('collapsed');
+        }
+
+        function toggleImportPanel() {
+            document.getElementById('adminImportPanel').classList.toggle('collapsed');
+        }
+
+        function toggleHideImportBlock(e) {
+            if (e) e.stopPropagation();
+            const panel = document.getElementById('adminImportPanel');
+            const btn = document.getElementById('btnToggleImportBlock');
+            const isCurrentlyHidden = panel.style.display === 'none';
+            const willShow = isCurrentlyHidden;
+            panel.style.display = willShow ? 'block' : 'none';
+            if (willShow) {
+                panel.classList.remove('collapsed');
+            }
+            if (btn) {
+                btn.innerText = willShow ? '📥 Импорт: Вкл' : '📥 Импорт: Выкл';
+                btn.style.background = willShow ? '#e0f2fe' : '#f1f5f9';
+                btn.style.color = willShow ? '#0369a1' : '#475569';
+            }
+            try {
+                localStorage.setItem('admin_show_import_block', willShow ? '1' : '0');
+            } catch(e) {}
+        }
+
+        function initImportBlockState() {
+            try {
+                const showPref = localStorage.getItem('admin_show_import_block') === '1';
+                const panel = document.getElementById('adminImportPanel');
+                const btn = document.getElementById('btnToggleImportBlock');
+                if (panel) {
+                    panel.style.display = showPref ? 'block' : 'none';
+                }
+                if (btn) {
+                    btn.innerText = showPref ? '📥 Импорт: Вкл' : '📥 Импорт: Выкл';
+                    btn.style.background = showPref ? '#e0f2fe' : '#f1f5f9';
+                    btn.style.color = showPref ? '#0369a1' : '#475569';
+                }
+            } catch(e) {}
+        }
+
+        function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
+            const R = 6371e3;
+            const p1 = lat1 * Math.PI / 180;
+            const p2 = lat2 * Math.PI / 180;
+            const dp = (lat2 - lat1) * Math.PI / 180;
+            const dl = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        function parseGeoJsonContent(jsonText) {
+            let data;
+            try {
+                data = typeof jsonText === 'object' ? jsonText : JSON.parse(jsonText);
+            } catch (e) {
+                return [];
+            }
+            const items = [];
+            const features = Array.isArray(data) ? data : (data.features || data.items || [data]);
+            for (const f of features) {
+                if (!f) continue;
+                if (f.geometry && f.geometry.coordinates) {
+                    const [lng, lat] = f.geometry.coordinates;
+                    const props = f.properties || {};
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        items.push({
+                            title: props.title || props.name || "Без названия",
+                            lat: parseFloat(lat),
+                            lng: parseFloat(lng),
+                            description: props.description || props.desc || "",
+                            category: props.category || null,
+                            metro: props.metro || null,
+                            images: props.images || (props.photo_url ? [props.photo_url] : [])
+                        });
+                    }
+                } else if (f.lat && f.lng) {
+                    items.push({
+                        title: f.title || f.name || "Без названия",
+                        lat: parseFloat(f.lat),
+                        lng: parseFloat(f.lng),
+                        description: f.description || f.desc || "",
+                        category: f.category || null,
+                        metro: f.metro || null,
+                        images: f.images || (f.photo_url ? [f.photo_url] : [])
+                    });
+                }
+            }
+            return items;
+        }
+
+        async function handleImportFromUrl() {
+            const input = document.getElementById('customMapUrlInput');
+            const url = input?.value?.trim();
+            if (!url) {
+                alert("Пожалуйста, вставьте ссылку на карту (Google My Maps, прямую ссылку на .kml/.kmz, GeoJSON или координаты)!");
+                return;
+            }
+
+            const progressContainer = document.getElementById('importProgressContainer');
+            const progressStatus = document.getElementById('importProgressStatus');
+            const resultMsg = document.getElementById('importResultMsg');
+            progressContainer.style.display = 'block';
+            resultMsg.style.display = 'none';
+            progressStatus.innerText = 'Анализ и загрузка ссылки...';
+
+            try {
+                let downloadUrl = url;
+                let isGoogleMyMaps = false;
+
+                // 1. Проверка на Google My Maps
+                const midMatch = url.match(/[?&]mid=([a-zA-Z0-9_-]+)/);
+                if (midMatch) {
+                    isGoogleMyMaps = true;
+                    downloadUrl = `https://www.google.com/maps/d/kml?mid=${midMatch[1]}&forcekml=1`;
+                }
+
+                // 2. Проверка на ссылку с одиночными координатами (Яндекс или Google)
+                const yandexCoordsMatch = url.match(/ll=([\d.]+)[,%2C]+([\d.]+)/) || url.match(/point=([\d.]+)[,%2C]+([\d.]+)/);
+                const googleCoordsMatch = url.match(/@([\d.]+),([\d.]+)/) || url.match(/[?&]q=([\d.]+),([\d.]+)/);
+                if (!isGoogleMyMaps && (yandexCoordsMatch || googleCoordsMatch)) {
+                    let lat, lng;
+                    if (yandexCoordsMatch) {
+                        lng = parseFloat(yandexCoordsMatch[1]);
+                        lat = parseFloat(yandexCoordsMatch[2]);
+                    } else {
+                        lat = parseFloat(googleCoordsMatch[1]);
+                        lng = parseFloat(googleCoordsMatch[2]);
+                    }
+                    const titlePrompt = prompt("Найдена точка на карте!\nКоординаты: " + lat + ", " + lng + "\n\nВведите название для новой точки:", "Новая локация");
+                    if (!titlePrompt) {
+                        progressContainer.style.display = 'none';
+                        return;
+                    }
+                    const targetCat = document.getElementById('importCategorySelect')?.value || "📍 Другое";
+                    const asHidden = document.getElementById('importAsHidden')?.checked ?? true;
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    if (!session) { alert("Сначала выполните вход!"); return; }
+                    const { error } = await supabaseClient.from('Location').insert([{
+                        title: titlePrompt.trim(),
+                        lat: lat,
+                        lng: lng,
+                        category: targetCat,
+                        is_hidden: asHidden,
+                        images: []
+                    }]);
+                    progressContainer.style.display = 'none';
+                    if (error) {
+                        alert("Ошибка сохранения: " + error.message);
+                    } else {
+                        alert("✅ Точка «" + titlePrompt + "» успешно добавлена!");
+                        await loadLocations();
+                    }
+                    return;
+                }
+
+                // 3. Загрузка файла/ресурса по URL
+                let respText = "";
+                try {
+                    const directResp = await fetch(downloadUrl);
+                    if (directResp.ok) respText = await directResp.text();
+                } catch (e) {}
+
+                if (!respText) {
+                    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(downloadUrl)}`;
+                    const proxyResp = await fetch(proxyUrl);
+                    if (!proxyResp.ok) throw new Error(`HTTP ${proxyResp.status}`);
+                    respText = await proxyResp.text();
+                }
+
+                let parsedPlaces = [];
+                if (respText.trim().startsWith('{') || respText.trim().startsWith('[')) {
+                    parsedPlaces = parseGeoJsonContent(respText);
+                } else if (respText.includes('<kml') || respText.includes('<KML') || respText.includes('<Placemark')) {
+                    parsedPlaces = parseKmlContent(respText);
+                } else {
+                    throw new Error("Не удалось распознать формат данных (поддерживаются KML, KMZ, GeoJSON).");
+                }
+
+                if (!parsedPlaces || parsedPlaces.length === 0) {
+                    throw new Error("В карте/файле не обнаружено точек для импорта.");
+                }
+
+                const targetCat = document.getElementById('importCategorySelect')?.value || "📍 Другое";
+                if (confirm(`Найдено ${parsedPlaces.length} меток! Начать импорт в категорию «${targetCat}»?`)) {
+                    const skipDuplicates = document.getElementById('importSkipDuplicates')?.checked ?? true;
+                    await processImportLocations(parsedPlaces, skipDuplicates, targetCat);
+                } else {
+                    progressContainer.style.display = 'none';
+                }
+            } catch (err) {
+                progressContainer.style.display = 'none';
+                alert(`Не удалось выполнить импорт по ссылке: ${err.message}\n\nСовет: вы можете сохранить файл .kml / .geojson на устройство и загрузить его через кнопку «Выбрать файл».`);
+            }
+        }
+
+        async function processImportLocations(locationsList, skipDuplicates = true, targetCategory = '📍 Другое') {
+            const progressContainer = document.getElementById('importProgressContainer');
+            const progressBar = document.getElementById('importProgressBar');
+            const progressStatus = document.getElementById('importProgressStatus');
+            const resultMsg = document.getElementById('importResultMsg');
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                alert("Пожалуйста, сначала выполните вход в аккаунт администратора!");
+                return;
+            }
+
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            resultMsg.style.display = 'none';
+
+            let toImport = [];
+            let skippedDuplicates = 0;
+
+            for (const loc of locationsList) {
+                if (skipDuplicates) {
+                    const isDup = allLocations.some(ex => {
+                        const dist = calculateDistanceMeters(loc.lat, loc.lng, ex.lat, ex.lng);
+                        return dist < 15 || (loc.title && ex.title && loc.title.trim().toLowerCase() === ex.title.trim().toLowerCase() && dist < 200);
+                    });
+                    if (isDup) {
+                        skippedDuplicates++;
+                        continue;
+                    }
+                }
+                toImport.push(loc);
+            }
+
+            if (toImport.length === 0) {
+                progressContainer.style.display = 'none';
+                resultMsg.style.display = 'block';
+                resultMsg.style.background = '#fef3c7';
+                resultMsg.style.color = '#92400e';
+                resultMsg.innerText = `Все ${locationsList.length} меток уже присутствуют в вашей базе (пропущены как дубликаты).`;
+                return;
+            }
+
+            progressStatus.innerText = `Подготовка к сохранению ${toImport.length} меток в «${targetCategory}»...`;
+            let insertedCount = 0;
+            let errorCount = 0;
+            const batchSize = 15;
+            const importAsHidden = document.getElementById('importAsHidden')?.checked ?? true;
+
+            for (let i = 0; i < toImport.length; i += batchSize) {
+                const chunk = toImport.slice(i, i + batchSize);
+                const batchPayload = chunk.map(item => {
+                    let extraCats = Array.isArray(item.extra_categories) ? [...item.extra_categories] : [];
+                    if (importAsHidden && !extraCats.includes("🔒 Скрытые")) {
+                        extraCats.push("🔒 Скрытые");
+                    }
+                    let desc = item.description || "";
+                    if (importAsHidden) {
+                        desc = `<!--is_hidden:true-->\n${desc}`.trim();
+                    }
+                    return {
+                        title: item.title || "Без названия",
+                        category: targetCategory || "📍 Другое",
+                        extra_categories: extraCats,
+                        address: item.address || "Москва",
+                        lat: item.lat,
+                        lng: item.lng,
+                        description: desc,
+                        images: item.images || [],
+                        metro: item.metro || []
+                    };
+                });
+
+                const { error } = await supabaseClient.from('Location').insert(batchPayload);
+                if (error) {
+                    console.warn("Batch insert error, retrying individual items:", error);
+                    for (const singleItem of batchPayload) {
+                        const singleRes = await supabaseClient.from('Location').insert([singleItem]);
+                        if (!singleRes.error) {
+                            insertedCount++;
+                        } else {
+                            errorCount++;
+                            console.error("Failed to insert item:", singleItem.title, singleRes.error);
+                        }
+                    }
+                } else {
+                    insertedCount += batchPayload.length;
+                }
+
+                const progressPercent = Math.min(100, Math.round((insertedCount + errorCount) / toImport.length * 100));
+                progressBar.style.width = `${progressPercent}%`;
+                progressStatus.innerText = `Импортировано ${insertedCount} из ${toImport.length}...`;
+            }
+
+            progressBar.style.width = '100%';
+            progressStatus.innerText = 'Обновление данных на карте и в списке...';
+
+            await loadLocations();
+
+            progressContainer.style.display = 'none';
+
+            resultMsg.style.display = 'block';
+            resultMsg.style.background = '#dcfce7';
+            resultMsg.style.color = '#15803d';
+            resultMsg.innerHTML = `✅ <b>Успешно импортировано:</b> ${insertedCount} меток в категорию «${targetCategory}»!<br>` +
+                (skippedDuplicates > 0 ? `<span style="font-size:0.75rem; color:#64748b;">Пропущено существующих дубликатов: ${skippedDuplicates}.</span>` : '') +
+                (errorCount > 0 ? `<br><span style="font-size:0.75rem; color:#ef4444;">Ошибок при добавлении: ${errorCount}.</span>` : '');
+
+            setTimeout(() => {
+                const catHeader = Array.from(document.querySelectorAll('.category-title')).find(el => el.innerText.includes(targetCategory.replace(/^[^\wа-яА-ЯёЁ]+/, '').trim()));
+                if (catHeader) {
+                    catHeader.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 300);
+        }
+
+        async function handleCustomKmlUpload(input) {
+            const file = input.files && input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const content = e.target.result;
+                try {
+                    let parsedPlaces = [];
+                    if (file.name.endsWith('.json') || file.name.endsWith('.geojson') || content.trim().startsWith('{') || content.trim().startsWith('[')) {
+                        parsedPlaces = parseGeoJsonContent(content);
+                    } else {
+                        parsedPlaces = parseKmlContent(content);
+                    }
+
+                    if (!parsedPlaces || parsedPlaces.length === 0) {
+                        alert("В файле не найдено точек для импорта!");
+                        return;
+                    }
+                    const targetCat = document.getElementById('importCategorySelect')?.value || "📍 Другое";
+                    if (confirm(`Найдено ${parsedPlaces.length} меток в файле ${file.name}. Начать импорт в категорию «${targetCat}»?`)) {
+                        const skipDuplicates = document.getElementById('importSkipDuplicates')?.checked ?? true;
+                        await processImportLocations(parsedPlaces, skipDuplicates, targetCat);
+                    }
+                } catch (err) {
+                    alert("Ошибка при разборе файла: " + err.message);
+                }
+            };
+            reader.readAsText(file);
+            input.value = '';
+        }
+
+        function parseKmlContent(kmlText) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(kmlText, "text/xml");
+            const placemarks = xmlDoc.getElementsByTagName("Placemark");
+            const places = [];
+
+            for (let i = 0; i < placemarks.length; i++) {
+                const pm = placemarks[i];
+                const name = pm.getElementsByTagName("name")[0]?.textContent?.trim() || "Без названия";
+                const coordsEl = pm.getElementsByTagName("coordinates")[0];
+                if (!coordsEl) continue;
+                const coordsParts = coordsEl.textContent.trim().split(',');
+                if (coordsParts.length < 2) continue;
+                const lng = parseFloat(coordsParts[0]);
+                const lat = parseFloat(coordsParts[1]);
+                if (isNaN(lat) || isNaN(lng)) continue;
+
+                let rawDesc = pm.getElementsByTagName("description")[0]?.textContent?.trim() || "";
+                
+                const images = [];
+                const extData = pm.getElementsByTagName("ExtendedData")[0];
+                if (extData) {
+                    const dataNodes = extData.getElementsByTagName("Data");
+                    for (let d = 0; d < dataNodes.length; d++) {
+                        if (dataNodes[d].getAttribute("name") === "gx_media_links") {
+                            const val = dataNodes[d].getElementsByTagName("value")[0]?.textContent?.trim() || "";
+                            val.split(/\s+/).forEach(link => {
+                                if (link.startsWith("http")) {
+                                    const opt = link.replace(/([?&])fife=s\d+/, '$1fife=s1200');
+                                    images.push(opt.includes('fife=') ? opt : (opt.includes('?') ? opt + '&fife=s1200' : opt + '?fife=s1200'));
+                                }
+                            });
+                        }
+                    }
+                }
+
+                const imgMatches = rawDesc.match(/<img[^>]+src=["']([^"']+)["']/g);
+                if (imgMatches) {
+                    imgMatches.forEach(m => {
+                        const srcMatch = m.match(/src=["']([^"']+)["']/);
+                        if (srcMatch && srcMatch[1]) {
+                            const opt = srcMatch[1].replace(/([?&])fife=s\d+/, '$1fife=s1200');
+                            const finalUrl = opt.includes('fife=') ? opt : (opt.includes('?') ? opt + '&fife=s1200' : opt + '?fife=s1200');
+                            if (!images.includes(finalUrl)) images.push(finalUrl);
+                        }
+                    });
+                }
+
+                let cleanDesc = rawDesc.replace(/<img[^>]*>/g, '').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim();
+                const nearestMetro = (lat > 55.4 && lat < 56.1 && lng > 37.1 && lng < 38.0 && typeof findNearestMetroStations === 'function') 
+                    ? findNearestMetroStations(lat, lng) 
+                    : [];
+
+                places.push({
+                    title: name,
+                    category: "📍 Другое",
+                    extra_categories: [],
+                    address: "Москва",
+                    lat,
+                    lng,
+                    description: cleanDesc,
+                    images,
+                    metro: nearestMetro
+                });
+            }
+            return places;
+        }
+
+        async function migrateGooglePhotosToSupabaseStorage() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                alert("Пожалуйста, сначала войдите в аккаунт администратора!");
+                return;
+            }
+
+            const btn = document.getElementById('migratePhotosBtn');
+            const progressContainer = document.getElementById('importProgressContainer');
+            const progressBar = document.getElementById('importProgressBar');
+            const progressStatus = document.getElementById('importProgressStatus');
+            const resultMsg = document.getElementById('importResultMsg');
+
+            const targetLocs = allLocations.filter(loc => 
+                loc.images && Array.isArray(loc.images) && loc.images.some(img => img.includes('mymaps.usercontent.google.com'))
+            );
+
+            if (targetLocs.length === 0) {
+                alert("Все фото уже перенесены в Supabase Storage (или нет меток с фото Google)!");
+                return;
+            }
+
+            if (!confirm(`Найдено ${targetLocs.length} точек с фото Google. Запустить сохранение их фото в хранилище Supabase? Это сделает фото постоянными и не зависящими от Google.`)) {
+                return;
+            }
+
+            btn.disabled = true;
+            progressContainer.style.display = 'block';
+            resultMsg.style.display = 'none';
+
+            let totalMigrated = 0;
+            let errorsCount = 0;
+
+            for (let i = 0; i < targetLocs.length; i++) {
+                const loc = targetLocs[i];
+                const progressPct = Math.round((i / targetLocs.length) * 100);
+                progressBar.style.width = `${progressPct}%`;
+                progressStatus.innerText = `Перенос: точка ${i + 1} из ${targetLocs.length} (${loc.title})...`;
+
+                let updatedImages = [];
+                let changed = false;
+
+                for (let j = 0; j < loc.images.length; j++) {
+                    const imgUrl = loc.images[j];
+                    if (!imgUrl.includes('mymaps.usercontent.google.com')) {
+                        updatedImages.push(imgUrl);
+                        continue;
+                    }
+
+                    try {
+                        const fetchUrl = `https://wsrv.nl/?url=${encodeURIComponent(imgUrl)}&output=webp`;
+                        const resp = await fetch(fetchUrl);
+                        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                        const blob = await resp.blob();
+
+                        const safeFolder = loc.id ? loc.id.toString().replace(/[^a-zA-Z0-9_-]/g, '') : `loc_${Date.now()}`;
+                        const fileName = `g_${j}_${Date.now()}.webp`;
+                        const filePath = `${safeFolder}/${fileName}`;
+
+                        const { data: uploadData, error: uploadErr } = await supabaseClient.storage.from('location-photos').upload(filePath, blob, {
+                            contentType: 'image/webp'
+                        });
+
+                        if (!uploadErr && uploadData) {
+                            const { data: publicUrlData } = supabaseClient.storage.from('location-photos').getPublicUrl(filePath);
+                            if (publicUrlData && publicUrlData.publicUrl) {
+                                updatedImages.push(publicUrlData.publicUrl);
+                                changed = true;
+                                totalMigrated++;
+                            } else {
+                                updatedImages.push(imgUrl);
+                            }
+                        } else {
+                            console.error("Storage upload error:", uploadErr);
+                            errorsCount++;
+                            updatedImages.push(imgUrl);
+                        }
+                    } catch (err) {
+                        console.error("Image transfer error for", loc.title, err);
+                        errorsCount++;
+                        updatedImages.push(imgUrl);
+                    }
+                }
+
+                if (changed) {
+                    await supabaseClient.from('Location').update({ images: updatedImages }).eq('id', loc.id);
+                    loc.images = updatedImages;
+                }
+            }
+
+            progressBar.style.width = '100%';
+            progressStatus.innerText = 'Обновление списка и карты...';
+            await loadLocations();
+
+            progressContainer.style.display = 'none';
+            btn.disabled = false;
+
+            resultMsg.style.display = 'block';
+            resultMsg.style.background = '#dcfce7';
+            resultMsg.style.color = '#15803d';
+            resultMsg.innerHTML = `✅ <b>Успешно перенесено:</b> ${totalMigrated} фото в постоянное хранилище Supabase!` +
+                (errorsCount > 0 ? `<br><span style="color:#ef4444; font-size:0.75rem;">Не удалось загрузить: ${errorsCount} фото.</span>` : '');
+        }
+
+        function populateMetroLineSelects() {
+            ['add', 'edit'].forEach(prefix => {
+                for (let i = 1; i <= 3; i++) {
+                    const lineSelect = document.getElementById(`${prefix}Metro${i}_line`);
+                    if (!lineSelect) continue;
+                    lineSelect.innerHTML = '<option value="">-- Выберите линию метро --</option>';
+                    MOSCOW_METRO_DATA.forEach(line => {
+                        const opt = document.createElement('option');
+                        opt.value = line.id;
+                        opt.innerText = `● ${line.name}`;
+                        opt.style.color = line.color;
+                        lineSelect.appendChild(opt);
+                    });
+                    onLineChange(prefix, i);
+                }
+            });
+        }
+
+        function onLineChange(prefix, idx, preselectedStation = "") {
+            const lineSelect = document.getElementById(`${prefix}Metro${idx}_line`);
+            const stationSelect = document.getElementById(`${prefix}Metro${idx}_station`);
+            if (!lineSelect || !stationSelect) return;
+            const selectedLineId = lineSelect.value;
+
+            stationSelect.innerHTML = '<option value="">-- Станция --</option>';
+            if (!selectedLineId) return;
+
+            const lineData = MOSCOW_METRO_DATA.find(l => l.id === selectedLineId);
+            if (lineData && lineData.stations) {
+                lineData.stations.forEach(st => {
+                    const stName = typeof st === 'string' ? st : st.name;
+                    const opt = document.createElement('option');
+                    opt.value = stName;
+                    opt.innerText = stName;
+                    if (stName === preselectedStation) opt.selected = true;
+                    stationSelect.appendChild(opt);
+                });
+            }
+        }
+
+        function getMetroFromInputs(prefix) {
+            const metro = [];
+            for (let i = 1; i <= 3; i++) {
+                const lineId = document.getElementById(`${prefix}Metro${i}_line`)?.value;
+                const station = document.getElementById(`${prefix}Metro${i}_station`)?.value;
+                const time = parseInt(document.getElementById(`${prefix}Metro${i}_time`)?.value);
+                if (station) {
+                    const lineData = MOSCOW_METRO_DATA.find(l => l.id === lineId);
+                    const color = lineData ? lineData.color : "#EF161E";
+                    metro.push({ name: station, line: lineData ? lineData.name : "", color, time: isNaN(time) ? null : time });
+                }
+            }
+            return metro;
+        }
+
+        function setMetroToInputs(prefix, metroList) {
+            for (let i = 1; i <= 3; i++) {
+                const item = metroList && metroList[i - 1] ? metroList[i - 1] : null;
+                const lineSelect = document.getElementById(`${prefix}Metro${i}_line`);
+                const timeInput = document.getElementById(`${prefix}Metro${i}_time`);
+                
+                if (item) {
+                    const stName = item.name || item.stationName;
+                    let matchedLine = MOSCOW_METRO_DATA.find(l => l.id === item.lineId || (l.stations && l.stations.some(s => (typeof s === 'string' ? s : s.name) === stName)));
+                    if (matchedLine && lineSelect) {
+                        lineSelect.value = matchedLine.id;
+                        onLineChange(prefix, i, stName);
+                    } else if (lineSelect) {
+                        lineSelect.value = "";
+                        onLineChange(prefix, i);
+                    }
+                    if (timeInput) timeInput.value = item.time || '';
+                } else {
+                    if (lineSelect) {
+                        lineSelect.value = "";
+                        onLineChange(prefix, i);
+                    }
+                    if (timeInput) timeInput.value = '';
+                }
+            }
+        }
+
+        function safeYmapsInit() {
+            if (typeof ymaps !== 'undefined' && ymaps.ready) {
+                ymaps.ready(() => {
+                    initMap();
+                    populateMetroLineSelects();
+                });
+            } else {
+                let attempts = 0;
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    if (typeof ymaps !== 'undefined' && ymaps.ready) {
+                        clearInterval(checkInterval);
+                        ymaps.ready(() => {
+                            initMap();
+                            populateMetroLineSelects();
+                        });
+                    } else if (attempts > 25) {
+                        clearInterval(checkInterval);
+                    }
+                }, 300);
+            }
+        }
+
+        async function checkAuth() {
+            try {
+                const client = window.supabaseClient || (window.getSupabaseClient ? window.getSupabaseClient() : (typeof supabaseClient !== 'undefined' ? supabaseClient : null));
+                if (!client) return;
+                const { data: { session } } = await client.auth.getSession();
+                const overlay = document.getElementById('authOverlay');
+                const wrapper = document.getElementById('app-wrapper');
+                if (session) {
+                    overlay.style.display = 'none';
+                    wrapper.style.display = 'flex';
+                    updateCategorySelectOptions();
+                    initImportBlockState();
+                    loadLocations();
+                    safeYmapsInit();
+                } else {
+                    overlay.style.display = 'flex';
+                    wrapper.style.display = 'none';
+                }
+            } catch (e) {
+                document.getElementById('authOverlay').style.display = 'flex';
+            }
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value.trim();
+            const errDiv = document.getElementById('authError');
+            const btn = document.getElementById('authBtn');
+
+            if (!email || !password) {
+                errDiv.innerText = "Введите Email и Пароль!";
+                errDiv.style.display = 'block';
+                return;
+            }
+
+            const client = window.supabaseClient || (window.getSupabaseClient ? window.getSupabaseClient() : (typeof supabaseClient !== 'undefined' ? supabaseClient : null)) || (window.supabase && window.supabase.createClient ? window.supabase.createClient(window.SUPABASE_URL || "https://cwkgylbtcjfmweoldhyb.supabase.co", window.SUPABASE_KEY || "sb_publishable_KnWO20wlfuWd0NYKMNKRvw_l1rttjaT") : null);
+            if (!client) {
+                errDiv.innerText = "Ошибка загрузки библиотеки Supabase. Пожалуйста, обновите страницу.";
+                errDiv.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Проверка...";
+            errDiv.style.display = 'none';
+
+            try {
+                const loginPromise = client.auth.signInWithPassword({ email, password });
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Таймаут подключения (10с). Повторите попытку.")), 10000));
+                const { data, error } = await Promise.race([loginPromise, timeoutPromise]);
+                if (error) {
+                    errDiv.innerText = error.message === "Invalid login credentials" ? "Неверный email или пароль" : error.message;
+                    errDiv.style.display = 'block';
+                } else {
+                    document.getElementById('authOverlay').style.display = 'none';
+                    document.getElementById('app-wrapper').style.display = 'flex';
+                    updateCategorySelectOptions();
+                    initImportBlockState();
+                    loadLocations();
+                    safeYmapsInit();
+                }
+            } catch (e) {
+                console.error("Login exception:", e);
+                errDiv.innerText = "Ошибка авторизации: " + (e.message || e);
+                errDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Войти";
+            }
+        }
+
+        async function handleLogout() {
+            await supabaseClient.auth.signOut();
+            window.location.reload();
+        }
+
+        async function fetchAddressFromCoords(lat, lng) {
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=ru`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.display_name) {
+                        const parts = [];
+                        const a = data.address || {};
+                        if (a.city || a.town || a.village) parts.push(a.city || a.town || a.village);
+                        if (a.road) parts.push(a.road);
+                        if (a.house_number) parts.push(a.house_number);
+                        return parts.length > 0 ? parts.join(', ') : data.display_name.split(',').slice(0, 3).join(',');
+                    }
+                }
+            } catch (e) {}
+
+            try {
+                const res = await ymaps.geocode([lat, lng], { results: 1 });
+                const firstGeoObject = res.geoObjects.get(0);
+                if (firstGeoObject) return firstGeoObject.getAddressLine() || '';
+            } catch (err) {}
+
+            return '';
+        }
+
+        function onCoordsInput(prefix) {
+            const coordsStr = document.getElementById(`${prefix}Coords`).value.trim();
+            const parts = coordsStr.split(',').map(s => parseFloat(s.trim()));
+            if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1]) && parts[0] > 0 && parts[1] > 0) {
+                const lat = parts[0];
+                const lng = parts[1];
+                
+                if (tempPlacemark) {
+                    tempPlacemark.geometry.setCoordinates([lat, lng]);
+                } else if (myMap) {
+                    tempPlacemark = new ymaps.Placemark([lat, lng], {}, { preset: 'islands#darkOrangeDotIcon' });
+                    myMap.geoObjects.add(tempPlacemark);
+                }
+
+                if (myMap) myMap.panTo([lat, lng], { duration: 300 });
+
+                const nearest = findNearestMetroStations(lat, lng);
+                setMetroToInputs(prefix, nearest);
+            }
+        }
+
+        async function manualResolveAddress(prefix) {
+            const coordsStr = document.getElementById(`${prefix}Coords`).value.trim();
+            if (!coordsStr) { alert("Сначала укажите координаты (кликните по карте или введите)!"); return; }
+            
+            const parts = coordsStr.split(',').map(s => parseFloat(s.trim()));
+            if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) {
+                alert("Неверный формат координат!"); return;
+            }
+
+            const lat = parts[0];
+            const lng = parts[1];
+
+            if (tempPlacemark) {
+                tempPlacemark.geometry.setCoordinates([lat, lng]);
+            } else if (myMap) {
+                tempPlacemark = new ymaps.Placemark([lat, lng], {}, { preset: 'islands#darkOrangeDotIcon' });
+                myMap.geoObjects.add(tempPlacemark);
+            }
+            if (myMap) myMap.panTo([lat, lng], { duration: 300 });
+
+            const nearest = findNearestMetroStations(lat, lng);
+            setMetroToInputs(prefix, nearest);
+
+            const addrInput = document.getElementById(`${prefix}Address`);
+            addrInput.value = "Поиск адреса...";
+
+            const resolvedAddr = await fetchAddressFromCoords(lat, lng);
+            if (resolvedAddr) {
+                addrInput.value = resolvedAddr;
+            } else {
+                addrInput.value = '';
+                alert("Не удалось определить адрес по координатам.");
+            }
+        }
+
+        function initMap() {
+            if (myMap) return;
+
+            myMap = new ymaps.Map("map", {
+                center: [55.751574, 37.573856],
+                zoom: 12,
+                controls: ['zoomControl', 'geolocationControl']
+            }, {
+                autoFitToViewport: 'always'
+            });
+
+            myMap.events.add('click', async function (e) {
+                const coords = e.get('coords');
+                document.getElementById('addCoords').value = `${coords[0].toFixed(6)}, ${coords[1].toFixed(6)}`;
+                
+                if (tempPlacemark) {
+                    tempPlacemark.geometry.setCoordinates(coords);
+                } else {
+                    tempPlacemark = new ymaps.Placemark(coords, {}, { preset: 'islands#darkOrangeDotIcon' });
+                    myMap.geoObjects.add(tempPlacemark);
+                }
+
+                const autoAddress = await fetchAddressFromCoords(coords[0], coords[1]);
+                if (autoAddress) document.getElementById('addAddress').value = autoAddress;
+
+                const nearestStations = findNearestMetroStations(coords[0], coords[1]);
+                setMetroToInputs('add', nearestStations);
+
+                const formContainer = document.getElementById('adminFormContainer');
+                formContainer.classList.remove('collapsed');
+                if (window.innerWidth <= 768) {
+                    switchMobileView('list');
+                    setTimeout(() => {
+                        formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 200);
+                }
+            });
+
+            loadLocations();
+            window.addEventListener('resize', () => { if (myMap) myMap.container.fitToViewport(); });
+        }
+
+        async function compressImage(file, maxWidth = 1400, quality = 0.82) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > height && width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        } else if (height > maxWidth) {
+                            width = Math.round((width * maxWidth) / height);
+                            height = maxWidth;
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        canvas.toBlob(blob => resolve(blob || file), 'image/webp', quality);
+                    };
+                    img.onerror = () => resolve(file);
+                };
+                reader.onerror = () => resolve(file);
+            });
+        }
+
+        async function uploadImagesToSupabase(files, folderId) {
+            const uploadedUrls = [];
+            const safeFolder = folderId ? folderId.toString().replace(/[^a-zA-Z0-9_-]/g, '') : 'general';
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const compressedBlob = await compressImage(file);
+                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.webp`;
+                const filePath = `${safeFolder}/${fileName}`;
+
+                const { data, error } = await supabaseClient.storage.from('location-photos').upload(filePath, compressedBlob, {
+                    contentType: 'image/webp'
+                });
+
+                if (!error && data) {
+                    const { data: publicUrlData } = supabaseClient.storage.from('location-photos').getPublicUrl(filePath);
+                    if (publicUrlData) uploadedUrls.push(publicUrlData.publicUrl);
+                }
+            }
+            return uploadedUrls;
+        }
+
+        async function loadLocations() {
+            const client = window.supabaseClient || (window.getSupabaseClient ? window.getSupabaseClient() : (typeof supabaseClient !== 'undefined' ? supabaseClient : null));
+            if (!client) {
+                console.warn("Supabase client not ready in loadLocations");
+                return;
+            }
+            const { data, error } = await client.from('Location').select('*');
+            if (error) { console.error("Ошибка загрузки:", error); return; }
+            
+            allLocations = (data || []).map(loc => parseLocationData(loc));
+
+            updateCategorySelectOptions();
+            renderAddExtraCategoryChips();
+            renderAdminStats();
+            updateAdminVisibilityCounts();
+            handleSearch();
+        }
+
+        /* Отрисовка сводки / счетчика локаций для администратора */
+        function renderAdminStats() {
+            updateAdminVisibilityCounts();
+            const totalBadge = document.getElementById('statsTotalBadge');
+            const grid = document.getElementById('adminStatsGrid');
+            if (!grid) return;
+
+            const total = allLocations.length;
+            if (totalBadge) totalBadge.innerText = `${total} ${total === 1 ? 'локация' : (total >= 2 && total <= 4 ? 'локации' : 'локаций')}`;
+
+            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
+            
+            const counts = {};
+            allCats.forEach(c => { counts[c] = { primary: 0, extra: 0, total: 0 }; });
+
+            allLocations.forEach(loc => {
+                const cat = loc.category || '📍 Другое';
+                if (!counts[cat]) counts[cat] = { primary: 0, extra: 0, total: 0 };
+                counts[cat].primary += 1;
+                counts[cat].total += 1;
+
+                if (Array.isArray(loc.extra_categories)) {
+                    loc.extra_categories.forEach(ec => {
+                        if (!counts[ec]) counts[ec] = { primary: 0, extra: 0, total: 0 };
+                        counts[ec].extra += 1;
+                        counts[ec].total += 1;
+                    });
+                }
+            });
+
+            grid.innerHTML = '';
+            allCats.forEach(catName => {
+                const c = counts[catName] || { primary: 0, extra: 0, total: 0 };
+                const card = document.createElement('div');
+                card.className = 'admin-stat-card';
+                card.onclick = () => {
+                    toggleCategoryMap(catName);
+                };
+                card.innerHTML = `
+                    <div class="admin-stat-name" title="${catName}">${catName}</div>
+                    <div class="admin-stat-count">${c.primary} ${c.extra > 0 ? `<span style="font-size:0.75rem; color:var(--text-muted); font-weight:400;">(+${c.extra})</span>` : ''}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function updateCategorySelectOptions() {
+            const select = document.getElementById('addCategorySelect');
+            if (!select) return;
+            const customCategoriesFromDb = allLocations.map(l => l.category).filter(Boolean);
+            const mergedCategories = Array.from(new Set([...DEFAULT_CATEGORIES, ...customCategoriesFromDb]));
+            
+            select.innerHTML = '';
+            mergedCategories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat; opt.innerText = cat;
+                if (cat === "📸 Локации для фото" || cat === "📍 Другое") opt.selected = true;
+                select.appendChild(opt);
+            });
+
+            const optNew = document.createElement('option');
+            optNew.value = '__NEW__'; optNew.innerText = '＋ Создать новую категорию...';
+            select.appendChild(optNew);
+
+            const importSelect = document.getElementById('importCategorySelect');
+            if (importSelect) {
+                const prevVal = importSelect.value;
+                importSelect.innerHTML = '';
+                mergedCategories.forEach(cat => {
+                    const opt = document.createElement('option');
+                    opt.value = cat; opt.innerText = cat;
+                    if (cat === "📍 Другое") opt.selected = true;
+                    importSelect.appendChild(opt);
+                });
+                if (prevVal && mergedCategories.includes(prevVal)) {
+                    importSelect.value = prevVal;
+                }
+            }
+        }
+
+        function renderAddExtraCategoryChips() {
+            const container = document.getElementById('addExtraCategoriesChips');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const currentPrimary = document.getElementById('addCategorySelect')?.value;
+            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category).filter(Boolean)]));
+
+            allCats.forEach(cat => {
+                if (cat === currentPrimary) return;
+                const isSelected = selectedAddExtraCategories.includes(cat);
+                const chip = document.createElement('div');
+                chip.className = `extra-cat-chip ${isSelected ? 'selected' : ''}`;
+                chip.innerHTML = `<span>${cat}</span>`;
+                chip.onclick = () => {
+                    if (selectedAddExtraCategories.includes(cat)) {
+                        selectedAddExtraCategories = selectedAddExtraCategories.filter(c => c !== cat);
+                    } else {
+                        selectedAddExtraCategories.push(cat);
+                    }
+                    renderAddExtraCategoryChips();
+                };
+                container.appendChild(chip);
+            });
+        }
+
+        function renderEditExtraCategoryChips() {
+            const container = document.getElementById('editExtraCategoriesChips');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const currentPrimary = document.getElementById('editCategorySelect')?.value;
+            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category).filter(Boolean)]));
+
+            allCats.forEach(cat => {
+                if (cat === currentPrimary) return;
+                const isSelected = selectedEditExtraCategories.includes(cat);
+                const chip = document.createElement('div');
+                chip.className = `extra-cat-chip ${isSelected ? 'selected' : ''}`;
+                chip.innerHTML = `<span>${cat}</span>`;
+                chip.onclick = () => {
+                    if (selectedEditExtraCategories.includes(cat)) {
+                        selectedEditExtraCategories = selectedEditExtraCategories.filter(c => c !== cat);
+                    } else {
+                        selectedEditExtraCategories.push(cat);
+                    }
+                    renderEditExtraCategoryChips();
+                };
+                container.appendChild(chip);
+            });
+        }
+
+        function handleCategorySelectChange(selectEl) {
+            const customInput = document.getElementById('addCustomCategory');
+            customInput.style.display = selectEl.value === '__NEW__' ? 'block' : 'none';
+            renderAddExtraCategoryChips();
+        }
+
+        function handleFileSelection(inputEl) {
+            selectedFiles = Array.from(inputEl.files);
+            document.getElementById('uploadStatus').innerText = selectedFiles.length > 0 ? `Выбрано файлов: ${selectedFiles.length}` : '';
+        }
+
+        async function saveNewLocation() {
+            const saveBtn = document.getElementById('saveBtn');
+            const title = document.getElementById('addTitle').value.trim();
+            const rawUrl = document.getElementById('addUrl').value.trim();
+            const selectCat = document.getElementById('addCategorySelect').value;
+            const customCat = document.getElementById('addCustomCategory').value.trim();
+            const rawCategory = selectCat === '__NEW__' ? customCat : selectCat;
+            const category = normalizeCategoryName(rawCategory) || "📍 Другое";
+            const address = document.getElementById('addAddress').value.trim();
+            const coordsStr = document.getElementById('addCoords').value.trim();
+            const description = document.getElementById('addDesc').value.trim();
+            const metro = getMetroFromInputs('add');
+            const extra_categories = selectedAddExtraCategories.filter(c => c !== category);
+
+            if (!title || !coordsStr) { alert("Укажите Название и Координаты!"); return; }
+
+            const coordsParts = coordsStr.split(',').map(s => parseFloat(s.trim()));
+            if (coordsParts.length < 2 || isNaN(coordsParts[0]) || isNaN(coordsParts[1])) {
+                alert("Неверные координаты!"); return;
+            }
+
+            saveBtn.disabled = true;
+            document.getElementById('uploadStatus').innerText = "Оптимизация и сохранение...";
+
+            const locationFolderId = `loc_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+            let images = selectedFiles.length > 0 ? await uploadImagesToSupabase(selectedFiles, locationFolderId) : [];
+
+            const isHidden = document.getElementById('addIsHidden')?.checked !== false;
+            let finalExtraCats = [...extra_categories];
+            if (isHidden && !finalExtraCats.includes("🔒 Скрытые")) {
+                finalExtraCats.push("🔒 Скрытые");
+            }
+
+            let finalDescription = description;
+            if (rawUrl) {
+                finalDescription = `<!--url:${rawUrl}-->\n${finalDescription}`.trim();
+            }
+            if (isHidden) {
+                finalDescription = `<!--is_hidden:true-->\n${finalDescription}`.trim();
+            }
+            if (Array.isArray(finalExtraCats) && finalExtraCats.length > 0) {
+                finalDescription = `<!--extra_categories:${JSON.stringify(finalExtraCats)}-->\n${finalDescription}`.trim();
+            }
+
+            let { error } = await supabaseClient.from('Location').insert([{
+                title, category, extra_categories: finalExtraCats, address, lat: coordsParts[0], lng: coordsParts[1], description: finalDescription, images, metro, url: rawUrl || null
+            }]);
+
+            if (error && error.message && (error.message.includes('url') || error.message.includes('extra_categories'))) {
+                const res = await supabaseClient.from('Location').insert([{
+                    title, category, address, lat: coordsParts[0], lng: coordsParts[1], description: finalDescription, images, metro
+                }]);
+                error = res.error;
+            }
+
+            saveBtn.disabled = false;
+
+            if (error) alert("Ошибка: " + error.message);
+            else {
+                document.getElementById('addTitle').value = '';
+                document.getElementById('addUrl').value = '';
+                document.getElementById('addAddress').value = '';
+                document.getElementById('addCoords').value = '';
+                document.getElementById('addDesc').value = '';
+                document.getElementById('addPhotosInput').value = '';
+                document.getElementById('uploadStatus').innerText = '';
+                selectedAddExtraCategories = [];
+                renderAddExtraCategoryChips();
+                setMetroToInputs('add', []);
+                if (tempPlacemark) { myMap.geoObjects.remove(tempPlacemark); tempPlacemark = null; }
+                selectedFiles = [];
+
+                // Тумблер скрытия по умолчанию включен для новых точек
+                const addIsHiddenEl = document.getElementById('addIsHidden');
+                if (addIsHiddenEl) {
+                    addIsHiddenEl.checked = true;
+                    updateAddVisibilityHelpText();
+                }
+
+                loadLocations();
+            }
+        }
+
+        function handleSearch() {
+            ensureAdminCategoryVisibilityInitialized();
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const allCats = getAllAdminCategoryNames();
+            const activeCats = allCats.filter(k => categoryVisibility[k] === true);
+            const isAllCatsActive = activeCats.length === allCats.length;
+            const isNoneCatsActive = activeCats.length === 0;
+
+            const filtered = allLocations.filter(loc => {
+                const isHidden = isLocationHidden(loc);
+                if (adminVisibilityFilter === 'hidden' && !isHidden) return false;
+                if (adminVisibilityFilter === 'public' && isHidden) return false;
+
+                const primaryCat = loc.category || '📍 Другое';
+                const extraCats = Array.isArray(loc.extra_categories) ? loc.extra_categories : [];
+                const allLocCats = [primaryCat, ...extraCats];
+
+                const titleMatch = (loc.title || '').toLowerCase().includes(query);
+                const addressMatch = (loc.address || '').toLowerCase().includes(query);
+                const descMatch = (loc.description || '').toLowerCase().includes(query);
+                const metroMatch = loc.metro && Array.isArray(loc.metro) && loc.metro.some(m => (m.name || m.stationName || '').toLowerCase().includes(query));
+                const catMatch = allLocCats.some(c => c.toLowerCase().includes(query));
+                const textPass = !query || (titleMatch || addressMatch || descMatch || metroMatch || catMatch);
+
+                let catPass = true;
+                if (isNoneCatsActive) {
+                    catPass = false;
+                } else if (!isAllCatsActive) {
+                    catPass = allLocCats.some(c => categoryVisibility[c] === true);
+                }
+
+                return textPass && catPass;
+            });
+            renderInterface(filtered);
+        }
+
+        function renderMetroBadges(metroList) {
+            if (!metroList || !Array.isArray(metroList) || metroList.length === 0) return '';
+            return `<div class="card-metro-block">${metroList.map(m => {
+                const name = m.name || m.stationName || '';
+                const isMck = (name && name.includes('МЦК')) || m.color === '#DF4842';
+                return `
+                <span class="metro-badge">
+                    ${getMetroSvg(m.color || '#EF161E', isMck)}
+                    ${name} ${m.time ? `<span style="color:#64748b; font-weight:400;">(${m.time} мин)</span>` : ''}
+                </span>
+            `}).join('')}</div>`;
+        }
+
+        function renderInterface(locationsToRender) {
+            const listEl = document.getElementById('locations-list');
+            listEl.innerHTML = '';
+            const grouped = {};
+            
+            locationsToRender.forEach(loc => {
+                const cat = loc.category || '📍 Другое';
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push(loc);
+            });
+
+            if (myMap) {
+                if (!clusterer) {
+                    const customClusterLayout = ymaps.templateLayoutFactory.createClass(`
+                        <div class="custom-cluster-pin">
+                            <div class="custom-cluster-core">
+                                <span class="custom-cluster-dot"></span>
+                            </div>
+                            <span class="custom-cluster-mini-badge">{{ properties.geoObjects.length }}</span>
+                        </div>
+                    `);
+
+                    clusterer = new ymaps.Clusterer({
+                        clusterIconLayout: customClusterLayout,
+                        clusterIconShape: {
+                            type: 'Circle',
+                            coordinates: [17, 17],
+                            radius: 17
+                        },
+                        groupByCoordinates: false,
+                        clusterDisableClickZoom: false,
+                        clusterHideIconOnBalloonOpen: false,
+                        geoObjectHideIconOnBalloonOpen: false,
+                        clusterOpenBalloonOnClick: false,
+                        maxZoom: 16,
+                        gridSize: 56,
+                        margin: 10
+                    });
+                    myMap.geoObjects.add(clusterer);
+                } else {
+                    clusterer.removeAll();
+                }
+            }
+            locationPlacemarksMap = {};
+
+            const allCatsToDisplay = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
+            renderTopCatFilter(allCatsToDisplay);
+
+            if (locationsToRender.length === 0) {
+                listEl.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:0.9rem;">Ничего не найдено 🔍</div>';
+                return;
+            }
+
+            const placemarksToAdd = [];
+            const activeCategoriesList = Object.keys(grouped);
+
+            activeCategoriesList.forEach(catName => {
+                if (categoryVisibility[catName] === undefined) categoryVisibility[catName] = true;
+                const isVisible = categoryVisibility[catName];
+
+                const groupEl = document.createElement('div');
+                groupEl.className = 'category-group';
+                
+                const hiddenInGroupCount = grouped[catName].filter(l => isLocationHidden(l)).length;
+                const hiddenBadgeHtml = hiddenInGroupCount > 0 ? `<span style="font-size:0.75rem; background:#fee2e2; color:#b91c1c; padding:2px 7px; border-radius:10px; font-weight:700; margin-left:6px;">🔒 ${hiddenInGroupCount}</span>` : '';
+
+                groupEl.innerHTML = `
+                    <div class="category-header">
+                        <div class="category-title-wrap" onclick="toggleAccordion(this)">
+                            <span class="category-title">${catName}</span>
+                            <span class="category-count">${grouped[catName].length}</span>
+                            ${hiddenBadgeHtml}
+                        </div>
+                        <div class="category-controls">
+                            <button class="toggle-visibility-btn" id="icon-cat-${encodeURIComponent(catName)}" onclick="toggleCategoryMap('${catName}', event)">
+                                ${isVisible ? '👁️' : '🙈'}
+                            </button>
+                            <span class="chevron" onclick="toggleAccordion(this)">▼</span>
+                        </div>
+                    </div>
+                    <div class="category-content"></div>
+                `;
+
+                const contentEl = groupEl.querySelector('.category-content');
+
+                grouped[catName].forEach(loc => {
+                    const isHidden = isLocationHidden(loc);
+                    const categoryIcon = isHidden ? '🔒' : (loc.category ? loc.category.split(' ')[0] : '📍');
+                    const pinColor = isHidden ? '#E11D48' : getCategoryPinColor(loc.category);
+                    
+                    const layout = ymaps.templateLayoutFactory.createClass(
+                        `<div class="custom-map-pin" style="background: ${pinColor}; ${isHidden ? 'box-shadow: 0 0 0 3px #ffe4e6, 0 4px 10px rgba(225,29,72,0.4);' : ''}"><span>${categoryIcon}</span></div>`
+                    );
+
+                    const placemark = new ymaps.Placemark([loc.lat, loc.lng], {
+                        hintContent: (isHidden ? '🔒 [Скрытая] ' : '') + loc.title,
+                        balloonContent: createBalloonHTML(loc)
+                    }, {
+                        iconLayout: layout, 
+                        iconOffset: [-19, -19],
+                        iconShape: { type: 'Circle', coordinates: [19, 19], radius: 19 },
+                        cursor: 'pointer',
+                        balloonOffset: [0, -30],
+                        balloonAutoPan: true,
+                        balloonAutoPanMargin: [80, 16, 90, 16],
+                        balloonCloseButton: true,
+                        hideIconOnBalloonOpen: false
+                    });
+
+                    locationPlacemarksMap[loc.id] = placemark;
+                    placemarksToAdd.push(placemark);
+
+                    const cardEl = document.createElement('div');
+                    cardEl.className = `location-card ${isHidden ? 'is-hidden-card' : ''}`;
+                    cardEl.onclick = (e) => {
+                        if (!e.target.closest('button') && !e.target.classList.contains('card-photo-thumb')) {
+                            selectLocationOnMap(loc, placemark);
+                        }
+                    };
+
+                    let photosHtml = '';
+                    if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {
+                        photosHtml = `<div class="card-photos">
+                            ${loc.images.map((imgUrl, index) => `<img src="${getDisplayImageUrl(imgUrl)}" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='${imgUrl}';}" referrerpolicy="no-referrer" loading="lazy" class="card-photo-thumb" onclick="openLightboxFromLoc('${loc.id}', ${index}, event)">`).join('')}
+                        </div>`;
+                    }
+
+                    const visBadgeHtml = isHidden 
+                        ? `<span class="badge-loc-vis hidden" title="Скрытая точка (видна только клиентам Lifetime / Тир 3)">🔒 Скрытая (Lifetime)</span>`
+                        : `<span class="badge-loc-vis public" title="Открытая точка (видна всем клиентам)">🌐 Открытая</span>`;
+
+                    const quickToggleBtnHtml = isHidden
+                        ? `<button class="vis-toggle-btn make-public" onclick="toggleLocationVisibility('${loc.id}', false, event)" title="Сделать открытой для всех">🌐 Сделать открытой</button>`
+                        : `<button class="vis-toggle-btn make-hidden" onclick="toggleLocationVisibility('${loc.id}', true, event)" title="Скрыть для Lifetime (Тир 3)">🔒 Скрыть (Тир 3)</button>`;
+
+                    const extraCats = Array.isArray(loc.extra_categories) ? loc.extra_categories : [];
+                    const extraCatsHtml = extraCats.length > 0 ? extraCats.map(ec => `<span class="cat-pill-secondary">${ec}</span>`).join('') : '';
+
+                    cardEl.innerHTML = `
+                        <div class="card-title">${loc.title}</div>
+                        <div class="card-cat-badges">
+                            ${visBadgeHtml}
+                            <span class="cat-pill-primary">${loc.category || '📍 Другое'}</span>
+                            ${extraCatsHtml}
+                        </div>
+                        ${loc.address ? `<div class="card-address">📍 ${loc.address}</div>` : ''}
+                        ${renderMetroBadges(loc.metro)}
+                        ${photosHtml}
+                        <div class="card-actions-row">
+                            ${quickToggleBtnHtml}
+                            <button class="edit-btn" onclick="openEditModal('${loc.id}', event)">✏️ Редактировать</button>
+                            <button class="delete-btn" onclick="deleteLocation('${loc.id}', event)">🗑️ Удалить</button>
+                        </div>
+                    `;
+                    contentEl.appendChild(cardEl);
+                });
+                listEl.appendChild(groupEl);
+            });
+
+            if (clusterer && placemarksToAdd.length > 0) {
+                clusterer.add(placemarksToAdd);
+            }
+        }
+
+        function createBalloonHTML(loc) {
+            let photosHtml = '';
+            if (loc.images && Array.isArray(loc.images) && loc.images.length > 0) {
+                photosHtml = `<div class="balloon-photos">
+                    ${loc.images.map((img, index) => `<img src="${getDisplayImageUrl(img)}" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='${img}';}" referrerpolicy="no-referrer" loading="lazy" class="balloon-photo-img" onclick="openLightboxFromLoc('${loc.id}', ${index}, event)">`).join('')}
+                </div>`;
+            }
+
+            let metroHtml = '';
+            if (loc.metro && Array.isArray(loc.metro) && loc.metro.length > 0) {
+                metroHtml = `<div class="balloon-metro-block">${loc.metro.map(m => {
+                    const name = m.name || m.stationName || '';
+                    const isMck = (name && name.includes('МЦК')) || m.color === '#DF4842';
+                    return `
+                    <span class="metro-badge">
+                        ${getMetroSvg(m.color || '#EF161E', isMck)}
+                        ${name} ${m.time ? `<span style="color:#64748b; font-weight:400;">(${m.time} мин)</span>` : ''}
+                    </span>
+                `}).join('')}</div>`;
+            }
+
+            const isHidden = isLocationHidden(loc);
+            const visBadgeHtml = isHidden 
+                ? `<span class="badge-loc-vis hidden" title="Скрытая точка (видна только клиентам Lifetime / Тир 3)">🔒 Скрытая (Lifetime)</span>`
+                : `<span class="badge-loc-vis public" title="Открытая точка (видна всем клиентам)">🌐 Открытая</span>`;
+
+            const quickToggleBtnHtml = isHidden
+                ? `<button class="vis-toggle-btn make-public" style="width:100%;margin-top:6px;justify-content:center;" onclick="toggleLocationVisibility('${loc.id}', false, event)">🌐 Сделать открытой для всех</button>`
+                : `<button class="vis-toggle-btn make-hidden" style="width:100%;margin-top:6px;justify-content:center;" onclick="toggleLocationVisibility('${loc.id}', true, event)">🔒 Скрыть для Lifetime (Тир 3)</button>`;
+
+            const extraCats = Array.isArray(loc.extra_categories) ? loc.extra_categories : [];
+            const extraCatsHtml = extraCats.length > 0 ? extraCats.map(ec => `<span class="cat-pill-secondary">${ec}</span>`).join('') : '';
+
+            return `
+                <div class="balloon-wrapper">
+                    <div class="balloon-title">${loc.title}</div>
+                    <div class="card-cat-badges" style="margin-bottom: 6px;">
+                        ${visBadgeHtml}
+                        <span class="cat-pill-primary">${loc.category || '📍 Другое'}</span>
+                        ${extraCatsHtml}
+                    </div>
+                    ${loc.address ? `<div class="balloon-address">📍 ${loc.address}</div>` : ''}
+                    ${metroHtml}
+                    <div style="display: flex; gap: 6px; margin: 6px 0;">
+                        <button class="balloon-btn" style="flex:1;" onclick="openEditModal('${loc.id}')">✏️ Редактировать</button>
+                    </div>
+                    ${quickToggleBtnHtml}
+                    ${loc.description ? `<div class="balloon-desc">${loc.description}</div>` : ''}
+                    ${photosHtml}
+                </div>
+            `;
+        }
+
+        function renderTopCatFilter(categories) {
+            ensureAdminCategoryVisibilityInitialized();
+            const container = document.getElementById('catChipsScroll');
+            container.innerHTML = '';
+            const allCats = getAllAdminCategoryNames();
+            const activeCount = allCats.filter(k => categoryVisibility[k] === true).length;
+            const isAllActive = allCats.length > 0 && activeCount === allCats.length;
+
+            (categories || allCats).forEach(catName => {
+                const isVis = categoryVisibility[catName] === true;
+                const chip = document.createElement('div');
+                chip.className = `cat-chip ${isVis ? 'active' : 'disabled'}`;
+                chip.innerHTML = `<span>${catName}</span>`;
+                chip.onclick = () => toggleCategoryMap(catName);
+                container.appendChild(chip);
+            });
+
+            const toggleAllBtn = document.getElementById('toggleAllBtn');
+            if (toggleAllBtn) {
+                toggleAllBtn.className = `toggle-all-btn ${isAllActive ? '' : 'off'}`;
+                toggleAllBtn.innerText = isAllActive ? '👁️ Все' : '🙈 Все';
+            }
+            allVisibleState = isAllActive;
+        }
+
+        function toggleCategoryMap(catName, event) {
+            if (event) { event.stopPropagation(); event.preventDefault(); }
+            ensureAdminCategoryVisibilityInitialized();
+            
+            const allCats = getAllAdminCategoryNames();
+            const currentlyActive = allCats.filter(k => categoryVisibility[k] === true);
+            const isOnlyCurrentActive = currentlyActive.length === 1 && currentlyActive[0] === catName;
+
+            if (isOnlyCurrentActive) {
+                allCats.forEach(k => { categoryVisibility[k] = true; });
+                allVisibleState = true;
+            } else {
+                allCats.forEach(k => {
+                    categoryVisibility[k] = (k === catName);
+                });
+                allVisibleState = false;
+            }
+
+            handleSearch();
+        }
+
+        function toggleAllCategories() {
+            ensureAdminCategoryVisibilityInitialized();
+            const allCats = getAllAdminCategoryNames();
+            const activeCount = allCats.filter(k => categoryVisibility[k] === true).length;
+            const isAllCurrentlyActive = activeCount === allCats.length;
+            
+            if (isAllCurrentlyActive) {
+                allCats.forEach(catName => {
+                    categoryVisibility[catName] = false;
+                });
+                allVisibleState = false;
+            } else {
+                allCats.forEach(catName => {
+                    categoryVisibility[catName] = true;
+                });
+                allVisibleState = true;
+            }
+            handleSearch();
+        }
+
+        function openEditModal(id, event) {
+            if (event) event.stopPropagation();
+            const loc = allLocations.find(l => String(l.id) === String(id));
+            if (!loc) return;
+
+            document.getElementById('editLocationId').value = loc.id;
+            document.getElementById('editTitle').value = loc.title || '';
+            document.getElementById('editUrl').value = loc.url || '';
+            document.getElementById('editAddress').value = loc.address || '';
+            document.getElementById('editCoords').value = `${loc.lat}, ${loc.lng}`;
+            document.getElementById('editDesc').value = loc.description || '';
+
+            setMetroToInputs('edit', loc.metro || []);
+
+            const select = document.getElementById('editCategorySelect');
+            select.innerHTML = '';
+            const customCategoriesFromDb = allLocations.map(l => l.category).filter(Boolean);
+            const mergedCategories = Array.from(new Set([...DEFAULT_CATEGORIES, ...customCategoriesFromDb]));
+            mergedCategories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat; opt.innerText = cat;
+                if (cat === loc.category) opt.selected = true;
+                select.appendChild(opt);
+            });
+
+            selectedEditExtraCategories = Array.isArray(loc.extra_categories) ? [...loc.extra_categories] : [];
+            renderEditExtraCategoryChips();
+
+            const isHidden = isLocationHidden(loc);
+            const editSwitch = document.getElementById('editIsHidden');
+            if (editSwitch) {
+                editSwitch.checked = isHidden;
+                updateEditVisibilityHelpText();
+            }
+
+            editingImagesList = loc.images ? [...loc.images] : [];
+            editNewFiles = [];
+            document.getElementById('editUploadStatus').innerText = '';
+            renderEditPhotosGrid();
+
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        function renderEditPhotosGrid() {
+            const grid = document.getElementById('editPhotosGrid');
+            grid.innerHTML = '';
+            editingImagesList.forEach((url, idx) => {
+                const item = document.createElement('div');
+                item.className = 'edit-photo-item';
+                item.innerHTML = `
+                    <img src="${getDisplayImageUrl(url)}" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='${url}';}" referrerpolicy="no-referrer" loading="lazy" onclick="openLightboxDirect(editingImagesList, ${idx}, event)">
+                    <div class="photo-controls">
+                        <div>
+                            ${idx > 0 ? `<button class="photo-btn" onclick="movePhoto(${idx}, -1)">◀</button>` : ''}
+                            ${idx < editingImagesList.length - 1 ? `<button class="photo-btn" onclick="movePhoto(${idx}, 1)">▶</button>` : ''}
+                        </div>
+                        <button class="photo-btn photo-btn-delete" onclick="removePhoto(${idx})">✕</button>
+                    </div>
+                `;
+                grid.appendChild(item);
+            });
+        }
+
+        function movePhoto(idx, direction) {
+            const newIdx = idx + direction;
+            if (newIdx < 0 || newIdx >= editingImagesList.length) return;
+            const temp = editingImagesList[idx];
+            editingImagesList[idx] = editingImagesList[newIdx];
+            editingImagesList[newIdx] = temp;
+            renderEditPhotosGrid();
+        }
+
+        function removePhoto(idx) {
+            editingImagesList.splice(idx, 1);
+            renderEditPhotosGrid();
+        }
+
+        function handleEditNewFiles(inputEl) {
+            editNewFiles = Array.from(inputEl.files);
+            document.getElementById('editUploadStatus').innerText = editNewFiles.length > 0 ? `Выбрано новых файлов: ${editNewFiles.length}` : '';
+        }
+
+        async function saveEditedLocation() {
+            const editBtn = document.getElementById('editSaveBtn');
+            const id = document.getElementById('editLocationId').value;
+            const title = document.getElementById('editTitle').value.trim();
+            const rawUrl = document.getElementById('editUrl').value.trim();
+            const category = normalizeCategoryName(document.getElementById('editCategorySelect').value);
+            const extra_categories = selectedEditExtraCategories.filter(c => c !== category);
+            const address = document.getElementById('editAddress').value.trim();
+            const coordsStr = document.getElementById('editCoords').value.trim();
+            const description = document.getElementById('editDesc').value.trim();
+            const metro = getMetroFromInputs('edit');
+
+            if (!title || !coordsStr) { alert("Заполните обязательно: Название и Координаты!"); return; }
+
+            const coordsParts = coordsStr.split(',').map(s => parseFloat(s.trim()));
+            if (coordsParts.length < 2 || isNaN(coordsParts[0]) || isNaN(coordsParts[1])) {
+                alert("Неверный формат координат!"); return;
+            }
+
+            editBtn.disabled = true;
+
+            if (editNewFiles.length > 0) {
+                document.getElementById('editUploadStatus').innerText = "Оптимизация и загрузка новых фото...";
+                const uploadedUrls = await uploadImagesToSupabase(editNewFiles, id);
+                editingImagesList = [...editingImagesList, ...uploadedUrls];
+            }
+
+            const isHidden = document.getElementById('editIsHidden')?.checked === true;
+            let finalExtraCats = [...extra_categories];
+            if (isHidden) {
+                if (!finalExtraCats.includes("🔒 Скрытые")) {
+                    finalExtraCats.push("🔒 Скрытые");
+                }
+            } else {
+                finalExtraCats = finalExtraCats.filter(c => c !== "🔒 Скрытые" && c !== "🔒 Скрытые (Lifetime)" && !c.includes("Скрытые"));
+            }
+
+            let cleanDesc = (description || '').replace(/<!--(?:is_hidden|hidden):.*?-->\r?\n?/g, '').trim();
+            let finalDescription = cleanDesc;
+            if (rawUrl) {
+                finalDescription = `<!--url:${rawUrl}-->\n${finalDescription}`.trim();
+            }
+            if (isHidden) {
+                finalDescription = `<!--is_hidden:true-->\n${finalDescription}`.trim();
+            }
+            if (Array.isArray(finalExtraCats) && finalExtraCats.length > 0) {
+                finalDescription = `<!--extra_categories:${JSON.stringify(finalExtraCats)}-->\n${finalDescription}`.trim();
+            }
+
+            let finalCategory = category;
+            if (!isHidden && (finalCategory === "🔒 Скрытые" || finalCategory.includes("Скрытые"))) {
+                finalCategory = "📍 Другое";
+            }
+
+            let { error } = await supabaseClient.from('Location').update({
+                title, category: finalCategory, extra_categories: finalExtraCats, address, lat: coordsParts[0], lng: coordsParts[1], description: finalDescription, images: editingImagesList, metro, url: rawUrl || null
+            }).eq('id', id);
+
+            if (error && error.message && (error.message.includes('url') || error.message.includes('extra_categories'))) {
+                const res = await supabaseClient.from('Location').update({
+                    title, category: finalCategory, address, lat: coordsParts[0], lng: coordsParts[1], description: finalDescription, images: editingImagesList, metro
+                }).eq('id', id);
+                error = res.error;
+            }
+
+            editBtn.disabled = false;
+
+            if (error) {
+                alert("Ошибка обновления: " + error.message);
+            } else {
+                closeEditModal();
+                loadLocations();
+            }
+        }
+
+        function toggleAccordion(element) { element.closest('.category-group').classList.toggle('collapsed'); }
+
+        function selectLocationOnMap(loc, placemark) {
+            if (!placemark && loc.id) {
+                placemark = locationPlacemarksMap[loc.id];
+            }
+            if (myMap && loc.lat && loc.lng) {
+                const isMobile = window.innerWidth <= 768;
+                const latOffset = isMobile ? 0.0016 : 0.0009;
+                const targetZoom = Math.max(myMap.getZoom() || 15, 16);
+                myMap.setCenter([loc.lat + latOffset, loc.lng], targetZoom, { duration: 300, checkZoomRange: true }).then(() => {
+                    if (placemark && placemark.balloon) {
+                        placemark.balloon.open();
+                    }
+                });
+            }
+            if (window.innerWidth <= 768) switchMobileView('map');
+        }
+
+        function openLightboxFromLoc(locId, index, event) {
+            if (event) event.stopPropagation();
+            const loc = allLocations.find(l => l.id === locId);
+            if (!loc || !loc.images) return;
+            currentGallery = loc.images;
+            currentImageIdx = index;
+            updateLightboxImage();
+            document.getElementById('lightbox').classList.add('active');
+        }
+
+        function openLightboxDirect(gallery, index, event) {
+            if (event) event.stopPropagation();
+            if (!gallery || !gallery.length) return;
+            currentGallery = gallery;
+            currentImageIdx = index;
+            updateLightboxImage();
+            document.getElementById('lightbox').classList.add('active');
+        }
+
+        function updateLightboxImage() {
+            const rawUrl = currentGallery[currentImageIdx];
+            const imgEl = document.getElementById('lightbox-img');
+            imgEl.onerror = function() {
+                if (this.src !== rawUrl) {
+                    this.src = rawUrl;
+                }
+            };
+            imgEl.src = getDisplayImageUrl(rawUrl);
+            document.getElementById('lightbox-counter').innerText = `${currentImageIdx + 1} из ${currentGallery.length}`;
+        }
+
+        function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
+        function nextImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx + 1) % currentGallery.length; updateLightboxImage(); }
+        function prevImage() { if (!currentGallery.length) return; currentImageIdx = (currentImageIdx - 1 + currentGallery.length) % currentGallery.length; updateLightboxImage(); }
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+        const lightboxEl = document.getElementById('lightbox');
+        
+        lightboxEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        lightboxEl.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            if (touchEndX < touchStartX - 45) nextImage();
+            if (touchEndX > touchStartX + 45) prevImage();
+        }, { passive: true });
+
+        function switchMobileView(view) {
+            const btnMap = document.getElementById('btn-map-view');
+            const btnList = document.getElementById('btn-list-view');
+            if (view === 'map') {
+                document.body.classList.remove('show-list');
+                btnMap.classList.add('active'); btnList.classList.remove('active');
+                if (myMap) myMap.container.fitToViewport();
+            } else {
+                document.body.classList.add('show-list');
+                btnList.classList.add('active'); btnMap.classList.remove('active');
+            }
+        }
+
+        async function deleteLocation(id, event) {
+            if (event) event.stopPropagation();
+            if (confirm("Удалить эту локацию?")) {
+                await supabaseClient.from('Location').delete().eq('id', id);
+                loadLocations();
+            }
+        }
+
+        checkAuth();
+    </script>
+</body>
+</html>
