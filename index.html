@@ -74,16 +74,16 @@
             top: calc(env(safe-area-inset-top, 0px) + 10px);
             left: 50%;
             transform: translateX(-50%);
-            width: calc(100% - 24px);
-            max-width: 640px;
-            height: 44px;
+            width: calc(100% - 16px);
+            max-width: 680px;
+            height: 48px;
             box-sizing: border-box;
             display: flex !important;
             flex-direction: row !important;
             flex-wrap: nowrap !important;
             align-items: center !important;
             gap: 6px !important;
-            padding: 4px 6px !important;
+            padding: 5px 8px !important;
             background: var(--glass-bg);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
@@ -104,14 +104,14 @@
             max-width: 100% !important;
             margin-top: 8px !important;
             margin-bottom: 2px !important;
-            height: 44px !important;
+            height: 48px !important;
             box-sizing: border-box !important;
             display: flex !important;
             flex-direction: row !important;
             flex-wrap: nowrap !important;
             align-items: center !important;
             gap: 6px !important;
-            padding: 4px 6px !important;
+            padding: 5px 8px !important;
             background: var(--glass-bg) !important;
             backdrop-filter: blur(20px) !important;
             -webkit-backdrop-filter: blur(20px) !important;
@@ -127,7 +127,7 @@
             flex-direction: row !important;
             flex-wrap: nowrap !important;
             align-items: center !important;
-            gap: 5px !important;
+            gap: 6px !important;
             flex-shrink: 0 !important;
             z-index: 2 !important;
         }
@@ -136,16 +136,14 @@
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            width: 32px !important;
-            height: 32px !important;
-            min-width: 32px !important;
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
             border-radius: 50% !important;
             background: var(--card-sub-bg) !important;
             color: var(--text-main) !important;
             border: 1px solid var(--border-color) !important;
             cursor: pointer !important;
-            font-size: 0.95rem !important;
-            line-height: 1 !important;
             flex-shrink: 0 !important;
             padding: 0 !important;
             box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
@@ -159,19 +157,24 @@
         .top-hamburger-btn:active {
             transform: scale(0.92) !important;
         }
+        .top-hamburger-btn svg {
+            display: block !important;
+            margin: auto !important;
+        }
 
         .toggle-all-btn {
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            gap: 4px !important;
-            height: 32px !important;
-            padding: 0 9px !important;
-            border-radius: 9999px !important;
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
+            padding: 0 !important;
+            border-radius: 50% !important;
             background: #0f172a !important;
             color: #ffffff !important;
-            font-size: 0.74rem !important;
-            font-weight: 700 !important;
+            font-size: 1.05rem !important;
+            line-height: 1 !important;
             border: 1px solid rgba(255, 255, 255, 0.15) !important;
             cursor: pointer !important;
             white-space: nowrap !important;
@@ -200,13 +203,13 @@
             align-items: center !important;
             justify-content: center !important;
             gap: 4px !important;
-            height: 32px !important;
-            padding: 0 9px !important;
+            height: 36px !important;
+            padding: 0 11px !important;
             border-radius: 9999px !important;
             background: rgba(244, 63, 94, 0.09) !important;
             border: 1px solid rgba(244, 63, 94, 0.25) !important;
             color: #f43f5e !important;
-            font-size: 0.74rem !important;
+            font-size: 0.8rem !important;
             font-weight: 700 !important;
             cursor: pointer !important;
             white-space: nowrap !important;
@@ -236,6 +239,12 @@
         }
         .cat-chips-scroll::-webkit-scrollbar {
             display: none !important;
+        }
+        .cat-chips-scroll .cat-chip {
+            height: 36px !important;
+            line-height: 34px !important;
+            padding: 0 12px !important;
+            font-size: 0.8rem !important;
         }
 
         .cat-chip {
@@ -472,10 +481,12 @@
                 <!-- Полоса сортировки и фильтрации по категориям в режиме списка -->
                 <div id="listCatFilterBar" class="top-cat-filter-bar list-mode-cat-bar">
                     <div class="cat-bar-pinned-group">
-                        <button id="listMenuHamburgerBtn" class="top-hamburger-btn" onclick="openCategorySettingsModal()" title="Настройки категорий (☰)">
-                            ☰
+                        <button id="listMenuHamburgerBtn" class="top-hamburger-btn" onclick="openCategorySettingsModal()" title="Настройки категорий">
+                            <svg width="17" height="13" viewBox="0 0 17 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="display:block; pointer-events:none;">
+                                <path d="M1.5 1.5H15.5M1.5 6.5H15.5M1.5 11.5H15.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                            </svg>
                         </button>
-                        <button id="listToggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()" title="Показать все / Скрыть все точки">👁️ Все</button>
+                        <button id="listToggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()" title="Показать все / Скрыть все точки">👁️</button>
                         <button id="listTopPinnedFavBtn" class="top-pinned-fav-btn" onclick="toggleFavoritesFilter()" title="Только избранное">
                             ❤️ <span id="listTopPinnedFavCount">0</span>
                         </button>
@@ -493,10 +504,12 @@
             <!-- Верхняя капсула категорий для карты (с закрепленным меню ☰, глазом 👁️ и сердечком ❤️) -->
             <div id="topCatFilterBar" class="top-cat-filter-bar">
                 <div class="cat-bar-pinned-group">
-                    <button id="topMenuHamburgerBtn" class="top-hamburger-btn" onclick="openCategorySettingsModal()" title="Настройки категорий (☰)">
-                        ☰
+                    <button id="topMenuHamburgerBtn" class="top-hamburger-btn" onclick="openCategorySettingsModal()" title="Настройки категорий">
+                        <svg width="17" height="13" viewBox="0 0 17 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="display:block; pointer-events:none;">
+                            <path d="M1.5 1.5H15.5M1.5 6.5H15.5M1.5 11.5H15.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                        </svg>
                     </button>
-                    <button id="toggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()" title="Показать все / Скрыть все точки">👁️ Все</button>
+                    <button id="toggleAllBtn" class="toggle-all-btn" onclick="toggleAllCategories()" title="Показать все / Скрыть все точки">👁️</button>
                     <button id="topPinnedFavBtn" class="top-pinned-fav-btn" onclick="toggleFavoritesFilter()" title="Только избранное">
                         ❤️ <span id="topPinnedFavCount">0</span>
                     </button>
@@ -552,7 +565,7 @@
 
                 <div id="metroLineWholeFilterWrap" class="metro-line-whole-filter-wrap" style="display:none;">
                     <button id="metroLineWholeFilterBtn" class="metro-line-whole-filter-btn" onclick="selectEntireMetroLine()">
-                        🚇 Показать всю ветку
+                        🚇 Показать локации ветки
                     </button>
                 </div>
 
@@ -782,11 +795,30 @@
         function getAllCategoryNames() {
             const hasHiddenAccess = canUserAccessHiddenLocations(currentUser);
             const visibleLocations = hasHiddenAccess ? allLocations : allLocations.filter(l => !isLocationHidden(l));
-            const cats = Array.from(new Set([...DEFAULT_CATEGORIES, ...visibleLocations.map(l => l.category || '📍 Другое')])).filter(Boolean);
+            const rawCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...visibleLocations.map(l => normalizeCategoryName(l.category || '📍 Другое'))])).filter(Boolean);
+            let cats = rawCats;
             if (!hasHiddenAccess) {
-                return cats.filter(c => c !== "🔒 Скрытые" && c !== "🔒 Скрытые (Lifetime)" && !c.includes("Скрытые"));
+                cats = cats.filter(c => c !== "🔒 Скрытые" && c !== "🔒 Скрытые (Lifetime)" && !c.includes("Скрытые"));
             }
-            return cats;
+            // Скрытые категории всегда держим строго внизу
+            return cats.sort((a, b) => {
+                const aIsHidden = a.includes("Скрытые");
+                const bIsHidden = b.includes("Скрытые");
+                if (aIsHidden && !bIsHidden) return 1;
+                if (!aIsHidden && bIsHidden) return -1;
+                
+                const aIsOther = a === "📍 Другое";
+                const bIsOther = b === "📍 Другое";
+                if (aIsOther && !bIsOther) return 1;
+                if (!aIsOther && bIsOther) return -1;
+
+                const idxA = DEFAULT_CATEGORIES.indexOf(a);
+                const idxB = DEFAULT_CATEGORIES.indexOf(b);
+                if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                if (idxA !== -1) return -1;
+                if (idxB !== -1) return 1;
+                return a.localeCompare(b);
+            });
         }
 
         const safeStorage = {
@@ -1796,7 +1828,7 @@
             if (wholeLineWrap && wholeLineBtn) {
                 if (selectedLineName) {
                     wholeLineWrap.style.display = 'block';
-                    wholeLineBtn.innerHTML = `🚇 Показать всю ветку «${selectedLineName}»`;
+                    wholeLineBtn.innerHTML = `🚇 Показать локации ветки`;
                 } else {
                     wholeLineWrap.style.display = 'none';
                 }
@@ -2300,7 +2332,24 @@
             }
 
             const placemarksToAdd = [];
-            const activeCategoriesList = Object.keys(grouped);
+            const activeCategoriesList = Object.keys(grouped).sort((a, b) => {
+                const aIsHidden = a.includes("Скрытые");
+                const bIsHidden = b.includes("Скрытые");
+                if (aIsHidden && !bIsHidden) return 1;
+                if (!aIsHidden && bIsHidden) return -1;
+                
+                const aIsOther = a === "📍 Другое";
+                const bIsOther = b === "📍 Другое";
+                if (aIsOther && !bIsOther) return 1;
+                if (!aIsOther && bIsOther) return -1;
+
+                const idxA = DEFAULT_CATEGORIES.indexOf(a);
+                const idxB = DEFAULT_CATEGORIES.indexOf(b);
+                if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                if (idxA !== -1) return -1;
+                if (idxB !== -1) return 1;
+                return a.localeCompare(b);
+            });
 
             activeCategoriesList.forEach(catName => {
                 if (categoryVisibility[catName] === undefined) categoryVisibility[catName] = true;
@@ -2628,11 +2677,11 @@
                 if (btn) {
                     if (isAllActive) {
                         btn.classList.remove('off');
-                        btn.innerText = '👁️ Все';
+                        btn.innerText = '👁️';
                         btn.title = 'Скрыть все точки';
                     } else {
                         btn.classList.add('off');
-                        btn.innerText = '🙈 Все';
+                        btn.innerText = '🙈';
                         btn.title = 'Показать все точки';
                     }
                 }

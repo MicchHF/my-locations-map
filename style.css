@@ -992,16 +992,16 @@ body.dark-mode .fav-btn.is-active {
     top: calc(env(safe-area-inset-top, 0px) + 10px);
     left: 50%;
     transform: translateX(-50%);
-    width: calc(100% - 24px);
-    max-width: 640px;
-    height: 44px;
+    width: calc(100% - 16px);
+    max-width: 680px;
+    height: 48px;
     box-sizing: border-box;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
     align-items: center;
     gap: 6px;
-    padding: 4px 6px;
+    padding: 5px 8px;
     background: var(--glass-bg);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
@@ -1023,8 +1023,8 @@ body.dark-mode .fav-btn.is-active {
     max-width: 100% !important;
     margin-top: 8px !important;
     margin-bottom: 2px !important;
-    height: 44px !important;
-    padding: 4px 6px !important;
+    height: 48px !important;
+    padding: 5px 8px !important;
     background: var(--glass-bg) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
@@ -1058,12 +1058,15 @@ body.dark-mode .list-mode-cat-bar {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
-    padding: 7px 15px;
-    border-radius: 9999px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    padding: 0;
+    border-radius: 50%;
     background: #0f172a;
     color: #ffffff;
-    font-size: 0.78rem;
+    font-size: 1.05rem;
+    line-height: 1;
     font-weight: 700;
     border: 1px solid rgba(255, 255, 255, 0.15);
     cursor: pointer;
@@ -2380,20 +2383,23 @@ body.dark-mode .vertical-toggle-all-btn.off:hover,
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
     border-radius: 50%;
     background: var(--card-sub-bg);
     color: var(--text-main);
     border: 1px solid var(--border-color);
     cursor: pointer;
-    font-size: 0.95rem;
     line-height: 1;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     flex-shrink: 0;
     padding: 0;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.top-hamburger-btn svg {
+    display: block;
+    margin: auto;
 }
 .top-hamburger-btn:hover {
     background: var(--bg-card);
@@ -2409,13 +2415,13 @@ body.dark-mode .vertical-toggle-all-btn.off:hover,
     align-items: center;
     justify-content: center;
     gap: 4px;
-    height: 32px;
-    padding: 0 9px;
+    height: 36px;
+    padding: 0 11px;
     border-radius: 9999px;
     background: rgba(244, 63, 94, 0.09);
     border: 1px solid rgba(244, 63, 94, 0.25);
     color: #f43f5e;
-    font-size: 0.74rem;
+    font-size: 0.8rem;
     font-weight: 700;
     cursor: pointer;
     white-space: nowrap;
