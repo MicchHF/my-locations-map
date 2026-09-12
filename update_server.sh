@@ -74,6 +74,14 @@ if command -v nginx >/dev/null 2>&1; then
     nginx -t 2>/dev/null && systemctl reload nginx 2>/dev/null || true
 fi
 
+# Регистрация ультра-короткой команды на сервере: update-map
+cat << 'EOF' > /usr/local/bin/update-map
+#!/bin/bash
+curl -sSL https://raw.githubusercontent.com/MicchHF/my-locations-map/main/update_server.sh | bash
+EOF
+chmod +x /usr/local/bin/update-map 2>/dev/null || true
+
 echo "=== ✅ Все обновления успешно применены! ==="
-echo "ℹ️ Если на iPhone / Safari отображается ошибка 'не удалось установить безопасное соединение':"
-echo "👉 Запустите: sudo bash fix_ssl_and_nginx.sh"
+echo "💡 Теперь доступна сверхкороткая команда для будущих обновлений:"
+echo "👉 sudo update-map"
+
