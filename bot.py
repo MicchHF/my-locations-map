@@ -766,12 +766,9 @@ async def start_handler(message: types.Message):
         return
 
     # 3. Активный пользователь
-    exp_display = "Бессрочно ♾️" if sub_info['date_str'] == 'Бессрочно' else f"до {sub_info['date_str']}"
     text = (
         f"Привет, <b>{first_name}</b>! ✨\n\n"
         f"Добро пожаловать в гид по лучшим локациям Москвы от <b>@{CHANNEL_USERNAME}</b> 📍\n\n"
-        f"Статус: <b>{sub_info['badge']}</b>\n"
-        f"Доступ активен: <b>{exp_display}</b>\n\n"
         f"Нажмите кнопку <b>«🗺️ Открыть карту в Telegram»</b> ниже, чтобы перейти к интерактивной карте и подборкам мест!"
     )
     kb = build_main_keyboard(user, sub_info)
@@ -1120,12 +1117,9 @@ async def back_to_start_handler(callback: types.CallbackQuery):
             [InlineKeyboardButton(text=f"📢 Канал @{CHANNEL_USERNAME}", url=CHANNEL_URL)]
         ])
     else:
-        exp_display = "Бессрочно ♾️" if sub_info['date_str'] == 'Бессрочно' else f"до {sub_info['date_str']}"
         text = (
             f"Привет, <b>{first_name}</b>! ✨\n\n"
             f"Добро пожаловать в гид по лучшим локациям Москвы от <b>@{CHANNEL_USERNAME}</b> 📍\n\n"
-            f"Статус: <b>{sub_info['badge']}</b>\n"
-            f"Доступ активен: <b>{exp_display}</b>\n\n"
             f"Вы можете открыть карту внутри Telegram, установить её как веб-приложение на смартфон или открыть в браузере на ПК."
         )
         kb = build_main_keyboard(user, sub_info)

@@ -648,7 +648,12 @@ function getLocationDetailsUrl(loc) {
     return 'https://yandex.ru/maps/';
 }
 
-// 6. Каталог локаций по умолчанию (пустой, загрузка из базы данных)
-const CURATED_MOSCOW_LOCATIONS = [];
+// 6. Каталог локаций по умолчанию (сначала из кэша INITIAL_MOSCOW_LOCATIONS, затем обновляется из базы данных)
+const CURATED_MOSCOW_LOCATIONS = (typeof window !== 'undefined' && Array.isArray(window.INITIAL_MOSCOW_LOCATIONS) && window.INITIAL_MOSCOW_LOCATIONS.length > 0)
+    ? window.INITIAL_MOSCOW_LOCATIONS
+    : [];
+if (typeof window !== 'undefined') {
+    window.CURATED_MOSCOW_LOCATIONS = CURATED_MOSCOW_LOCATIONS;
+}
 
 

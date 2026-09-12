@@ -21,7 +21,7 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="apple-touch-icon-precomposed" href="apple-touch-icon.png">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2.7">
     
     <!-- Telegram WebApp SDK: немедленный ready() для мгновенного снятия серой заставки Telegram -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -62,10 +62,263 @@
         }
     </script>
     
+    <!-- Встроенный кэш локаций (289 мест) для мгновенного отображения без сетевой задержки -->
+    <script src="js/locations_data.js?v=2.7"></script>
     <!-- Единый модуль базы и утилит -->
-    <script src="js/shared.js"></script>
+    <script src="js/shared.js?v=2.7"></script>
 
     <style>
+        /* Критические стили для предотвращения наложения и съезжания верхнего меню и кнопок на мобильных */
+        .top-cat-filter-bar {
+            position: fixed;
+            top: calc(env(safe-area-inset-top, 0px) + 10px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 24px);
+            max-width: 640px;
+            height: 44px;
+            box-sizing: border-box;
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            gap: 6px !important;
+            padding: 4px 6px !important;
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 9999px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0,0,0,0.05);
+            z-index: 1000;
+            overflow: hidden !important;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .list-mode-cat-bar {
+            position: relative !important;
+            top: auto !important;
+            left: auto !important;
+            transform: none !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-top: 8px !important;
+            margin-bottom: 2px !important;
+            height: 44px !important;
+            box-sizing: border-box !important;
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            gap: 6px !important;
+            padding: 4px 6px !important;
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border-radius: 9999px !important;
+            border: 1px solid var(--glass-border) !important;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04) !important;
+            z-index: 10 !important;
+            overflow: hidden !important;
+        }
+
+        .cat-bar-pinned-group {
+            display: inline-flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            gap: 5px !important;
+            flex-shrink: 0 !important;
+            z-index: 2 !important;
+        }
+
+        .top-hamburger-btn {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            border-radius: 50% !important;
+            background: var(--card-sub-bg) !important;
+            color: var(--text-main) !important;
+            border: 1px solid var(--border-color) !important;
+            cursor: pointer !important;
+            font-size: 0.95rem !important;
+            line-height: 1 !important;
+            flex-shrink: 0 !important;
+            padding: 0 !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
+            transition: all 0.2s ease !important;
+        }
+        .top-hamburger-btn:hover {
+            background: var(--bg-card) !important;
+            border-color: var(--accent-btn) !important;
+            transform: scale(1.05) !important;
+        }
+        .top-hamburger-btn:active {
+            transform: scale(0.92) !important;
+        }
+
+        .toggle-all-btn {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 4px !important;
+            height: 32px !important;
+            padding: 0 9px !important;
+            border-radius: 9999px !important;
+            background: #0f172a !important;
+            color: #ffffff !important;
+            font-size: 0.74rem !important;
+            font-weight: 700 !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            cursor: pointer !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            transition: all 0.2s ease !important;
+        }
+        .toggle-all-btn.off {
+            background: #f1f5f9 !important;
+            color: #64748b !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: none !important;
+        }
+        body.dark-mode .toggle-all-btn {
+            background: #38bdf8 !important;
+            color: #0f172a !important;
+            border-color: rgba(56, 189, 248, 0.4) !important;
+        }
+        body.dark-mode .toggle-all-btn.off {
+            background: #1e293b !important;
+            color: #94a3b8 !important;
+            border-color: #334155 !important;
+        }
+
+        .top-pinned-fav-btn {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 4px !important;
+            height: 32px !important;
+            padding: 0 9px !important;
+            border-radius: 9999px !important;
+            background: rgba(244, 63, 94, 0.09) !important;
+            border: 1px solid rgba(244, 63, 94, 0.25) !important;
+            color: #f43f5e !important;
+            font-size: 0.74rem !important;
+            font-weight: 700 !important;
+            cursor: pointer !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            transition: all 0.2s ease !important;
+        }
+        .top-pinned-fav-btn.active {
+            background: #f43f5e !important;
+            color: #ffffff !important;
+            border-color: #f43f5e !important;
+        }
+
+        .cat-chips-scroll {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            gap: 5px !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            scrollbar-width: none !important;
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            padding: 0 4px !important;
+            mask-image: linear-gradient(to right, black calc(100% - 20px), transparent 100%) !important;
+            -webkit-mask-image: linear-gradient(to right, black calc(100% - 20px), transparent 100%) !important;
+        }
+        .cat-chips-scroll::-webkit-scrollbar {
+            display: none !important;
+        }
+
+        .cat-chip {
+            height: 32px !important;
+            padding: 0 10px !important;
+            border-radius: 9999px !important;
+            font-size: 0.74rem !important;
+            font-weight: 600 !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        /* Поисковая строка и компактная кнопка возврата на карту */
+        .sidebar-search-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            width: 100% !important;
+            margin-bottom: 4px !important;
+        }
+        .list-back-to-map-btn {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .list-back-to-map-btn {
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: 42px !important;
+                height: 42px !important;
+                min-width: 42px !important;
+                background: var(--card-sub-bg) !important;
+                border: 1px solid var(--border-color) !important;
+                border-radius: 12px !important;
+                color: var(--text-main) !important;
+                font-size: 1.15rem !important;
+                font-weight: 700 !important;
+                cursor: pointer !important;
+                flex-shrink: 0 !important;
+                padding: 0 !important;
+                transition: all 0.2s ease !important;
+            }
+            .list-back-to-map-btn:hover {
+                background: var(--border-color) !important;
+                transform: scale(1.04) !important;
+            }
+            .list-back-to-map-btn:active {
+                transform: scale(0.94) !important;
+            }
+        }
+
+        .desktop-metro-btn {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 5px !important;
+            background: var(--card-sub-bg) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 12px !important;
+            padding: 0 12px !important;
+            height: 42px !important;
+            font-size: 0.82rem !important;
+            font-weight: 600 !important;
+            color: var(--text-main) !important;
+            cursor: pointer !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+        .desktop-metro-btn:hover {
+            border-color: var(--accent-btn) !important;
+            background: var(--bg-card) !important;
+        }
+        .desktop-metro-btn.active {
+            background: var(--accent-btn) !important;
+            color: var(--accent-btn-text) !important;
+            border-color: var(--accent-btn) !important;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2) !important;
+        }
+
         /* Кнопка лайка: заметный, премиальный бейдж */
         .fav-btn {
             background: rgba(244, 63, 94, 0.08) !important;
@@ -202,6 +455,9 @@
                 </div>
 
                 <div class="sidebar-search-row">
+                    <button id="listBackToMapBtn" class="list-back-to-map-btn" onclick="switchMobileView('map')" title="Вернуться на карту">
+                        <span>←</span>
+                    </button>
                     <div class="search-container">
                         <span class="search-icon">🔍</span>
                         <input type="text" id="searchInput" class="search-input" placeholder="Поиск локаций, метро..." oninput="handleSearch()" onfocus="showSearchSuggestions(this.value, 'searchSuggestionsDropdown')" onblur="hideSearchSuggestionsWithDelay('searchSuggestionsDropdown')">
@@ -212,11 +468,6 @@
                         <span id="desktopMetroText">Метро</span>
                     </button>
                 </div>
-
-                <button id="listBackToMapBtn" class="list-back-to-map-btn" onclick="switchMobileView('map')">
-                    <span>←</span>
-                    <span>Вернуться на карту</span>
-                </button>
 
                 <!-- Полоса сортировки и фильтрации по категориям в режиме списка -->
                 <div id="listCatFilterBar" class="top-cat-filter-bar list-mode-cat-bar">
@@ -1414,12 +1665,47 @@
         }
 
         async function loadLocations() {
-            // Мгновенная отрисовка базового каталога
-            allLocations = (Array.isArray(CURATED_MOSCOW_LOCATIONS) ? CURATED_MOSCOW_LOCATIONS : []).map(loc => parseLocationData(loc));
-            ensureCategoryVisibilityInitialized();
-            initMetroDrawer();
-            renderInterface(allLocations);
+            // 1. Мгновенная инициализация из встроенного каталога (289 локаций без ожидания сети)
+            const fallbackLocs = (typeof window !== 'undefined' && Array.isArray(window.INITIAL_MOSCOW_LOCATIONS) && window.INITIAL_MOSCOW_LOCATIONS.length > 0)
+                ? window.INITIAL_MOSCOW_LOCATIONS
+                : (Array.isArray(CURATED_MOSCOW_LOCATIONS) && CURATED_MOSCOW_LOCATIONS.length > 0 ? CURATED_MOSCOW_LOCATIONS : []);
 
+            if (fallbackLocs.length > 0) {
+                allLocations = fallbackLocs.map(loc => parseLocationData(loc));
+                ensureCategoryVisibilityInitialized();
+                initMetroDrawer();
+                renderInterface(allLocations);
+            }
+
+            // 2. Быстрое прямое обновление через REST API к Supabase с таймаутом 4 секунды
+            try {
+                const url = window.SUPABASE_CONFIG?.url || (typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : 'https://cwkgylbtcjfmweoldhyb.supabase.co');
+                const key = window.SUPABASE_CONFIG?.key || (typeof SUPABASE_KEY !== 'undefined' ? SUPABASE_KEY : 'sb_publishable_KnWO20wlfuWd0NYKMNKRvw_l1rttjaT');
+                const headers = {
+                    'apikey': key,
+                    'Authorization': `Bearer ${key}`
+                };
+
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
+                const res = await fetch(`${url}/rest/v1/Location?select=*`, { headers, signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        allLocations = data.map(loc => parseLocationData(loc));
+                        ensureCategoryVisibilityInitialized();
+                        initMetroDrawer();
+                        applyCombinedFilters();
+                        return;
+                    }
+                }
+            } catch (restErr) {
+                console.warn("Direct REST locations fetch fallback:", restErr);
+            }
+
+            // 3. Дополнительная попытка через клиент Supabase JS
             const client = window.supabaseClient || (window.getSupabaseClient ? window.getSupabaseClient() : (typeof supabaseClient !== 'undefined' ? supabaseClient : null));
             if (client) {
                 try {
