@@ -187,15 +187,19 @@
             border: 1px solid #cbd5e1 !important;
             box-shadow: none !important;
         }
-        body.dark-mode .toggle-all-btn {
-            background: #38bdf8 !important;
-            color: #0f172a !important;
-            border-color: rgba(56, 189, 248, 0.4) !important;
+        body.dark-mode .toggle-all-btn,
+        [data-theme="dark"] .toggle-all-btn {
+            background: #e2b774 !important;
+            color: #0a0c10 !important;
+            border-color: rgba(226, 183, 116, 0.45) !important;
+            box-shadow: 0 2px 10px rgba(226, 183, 116, 0.25) !important;
         }
-        body.dark-mode .toggle-all-btn.off {
-            background: #1e293b !important;
+        body.dark-mode .toggle-all-btn.off,
+        [data-theme="dark"] .toggle-all-btn.off {
+            background: #1c212e !important;
             color: #94a3b8 !important;
-            border-color: #334155 !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            box-shadow: none !important;
         }
 
         .top-pinned-fav-btn {
@@ -222,23 +226,62 @@
             border-color: #f43f5e !important;
         }
 
+        .cat-chips-scroll-wrapper {
+            position: relative !important;
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            overflow: hidden !important;
+        }
+
         .cat-chips-scroll {
             display: flex !important;
             flex-direction: row !important;
             flex-wrap: nowrap !important;
             align-items: center !important;
-            gap: 5px !important;
+            gap: 6px !important;
             overflow-x: auto !important;
             -webkit-overflow-scrolling: touch !important;
             scrollbar-width: none !important;
-            flex: 1 1 auto !important;
-            min-width: 0 !important;
-            padding: 0 4px !important;
-            mask-image: linear-gradient(to right, black calc(100% - 20px), transparent 100%) !important;
-            -webkit-mask-image: linear-gradient(to right, black calc(100% - 20px), transparent 100%) !important;
+            width: 100% !important;
+            padding: 0 6px !important;
+            mask-image: none !important;
+            -webkit-mask-image: none !important;
+            scroll-behavior: smooth !important;
         }
         .cat-chips-scroll::-webkit-scrollbar {
             display: none !important;
+        }
+
+        /* Премиальное мягкое рассеивание по краям для горизонтального скролла */
+        .cat-chips-fade {
+            position: absolute !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            width: 22px !important;
+            pointer-events: none !important;
+            z-index: 5 !important;
+            transition: opacity 0.22s ease !important;
+        }
+        .cat-chips-fade-start {
+            left: 0 !important;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.5) 45%, rgba(255, 255, 255, 0) 100%) !important;
+            opacity: 0;
+        }
+        .cat-chips-fade-end {
+            right: 0 !important;
+            background: linear-gradient(to left, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.5) 45%, rgba(255, 255, 255, 0) 100%) !important;
+            opacity: 1;
+        }
+        body.dark-mode .cat-chips-fade-start,
+        [data-theme="dark"] .cat-chips-fade-start {
+            background: linear-gradient(to right, rgba(18, 22, 32, 0.96) 0%, rgba(18, 22, 32, 0.5) 45%, rgba(18, 22, 32, 0) 100%) !important;
+        }
+        body.dark-mode .cat-chips-fade-end,
+        [data-theme="dark"] .cat-chips-fade-end {
+            background: linear-gradient(to left, rgba(18, 22, 32, 0.96) 0%, rgba(18, 22, 32, 0.5) 45%, rgba(18, 22, 32, 0) 100%) !important;
         }
         .cat-chips-scroll .cat-chip {
             height: 36px !important;
@@ -491,7 +534,11 @@
                             ❤️ <span id="listTopPinnedFavCount">0</span>
                         </button>
                     </div>
-                    <div id="listCatChipsScroll" class="cat-chips-scroll"></div>
+                    <div class="cat-chips-scroll-wrapper">
+                        <div class="cat-chips-fade cat-chips-fade-start" id="listCatChipsFadeStart"></div>
+                        <div id="listCatChipsScroll" class="cat-chips-scroll"></div>
+                        <div class="cat-chips-fade cat-chips-fade-end" id="listCatChipsFadeEnd"></div>
+                    </div>
                 </div>
             </div>
             
@@ -514,7 +561,11 @@
                         ❤️ <span id="topPinnedFavCount">0</span>
                     </button>
                 </div>
-                <div id="catChipsScroll" class="cat-chips-scroll"></div>
+                <div class="cat-chips-scroll-wrapper">
+                    <div class="cat-chips-fade cat-chips-fade-start" id="catChipsFadeStart"></div>
+                    <div id="catChipsScroll" class="cat-chips-scroll"></div>
+                    <div class="cat-chips-fade cat-chips-fade-end" id="catChipsFadeEnd"></div>
+                </div>
             </div>
 
             <!-- Вертикальное боковое меню категорий для десктопа (справа на карте: иконки с раскрытием) -->
@@ -916,6 +967,9 @@
         function applyTheme(dark) {
             isDarkMode = dark;
             const bgThemeColor = dark ? '#090d16' : '#f4f3f0';
+            const themeStr = dark ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', themeStr);
+            document.body.setAttribute('data-theme', themeStr);
             if (dark) {
                 document.body.classList.add('dark-mode');
                 const btn = document.getElementById('themeToggleBtn');
@@ -933,6 +987,31 @@
                     window.Telegram.WebApp.setBackgroundColor?.(bgThemeColor);
                 } catch(e) {}
             }
+        }
+        applyTheme(isDarkMode);
+
+        // Индикатор мягкого затухания краев горизонтального скролла категорий
+        function setupCatScrollFades(scrollId, startFadeId, endFadeId) {
+            const scrollEl = document.getElementById(scrollId);
+            const startFade = document.getElementById(startFadeId);
+            const endFade = document.getElementById(endFadeId);
+            if (!scrollEl || !startFade || !endFade) return;
+
+            const updateFades = () => {
+                const sl = scrollEl.scrollLeft;
+                const maxScroll = scrollEl.scrollWidth - scrollEl.clientWidth;
+                startFade.style.opacity = sl > 6 ? '1' : '0';
+                endFade.style.opacity = (maxScroll - sl) > 6 ? '1' : '0';
+            };
+
+            scrollEl.removeEventListener('scroll', updateFades);
+            scrollEl.addEventListener('scroll', updateFades, { passive: true });
+            setTimeout(updateFades, 60);
+        }
+
+        function initAllCatScrollFades() {
+            setupCatScrollFades('catChipsScroll', 'catChipsFadeStart', 'catChipsFadeEnd');
+            setupCatScrollFades('listCatChipsScroll', 'listCatChipsFadeStart', 'listCatChipsFadeEnd');
         }
 
         function toggleTheme() {
@@ -1598,11 +1677,20 @@
                 myMap = new ymaps.Map("map", {
                     center: [55.751574, 37.573856],
                     zoom: 12,
-                    controls: ['zoomControl']
+                    controls: []
                 }, {
                     autoFitToViewport: 'always',
                     suppressMapOpenBlock: true
                 });
+                
+                // Компактный и современный контрол зума
+                const modernZoomControl = new ymaps.control.ZoomControl({
+                    options: {
+                        size: 'small',
+                        position: { left: 14, top: 110 }
+                    }
+                });
+                myMap.controls.add(modernZoomControl);
                 window.myMap = myMap;
 
                 myMap.events.add('click', function () {
@@ -2286,11 +2374,10 @@
             if (myMap) {
                 if (!clusterer) {
                     const customClusterLayout = ymaps.templateLayoutFactory.createClass(`
-                        <div class="custom-cluster-pin">
+                        <div class="custom-cluster-pin" data-count="{{ properties.geoObjects.length }}" data-count-tier="{{ properties.geoObjects.length >= 50 ? 'large' : (properties.geoObjects.length >= 10 ? 'medium' : 'small') }}">
                             <div class="custom-cluster-core">
-                                <span class="custom-cluster-dot"></span>
+                                <span class="custom-cluster-count">{{ properties.geoObjects.length }}</span>
                             </div>
-                            <span class="custom-cluster-mini-badge">{{ properties.geoObjects.length }}</span>
                         </div>
                     `);
 
@@ -2298,18 +2385,79 @@
                         clusterIconLayout: customClusterLayout,
                         clusterIconShape: {
                             type: 'Circle',
-                            coordinates: [17, 17],
-                            radius: 17
+                            coordinates: [19, 19],
+                            radius: 24
                         },
                         groupByCoordinates: false,
-                        clusterDisableClickZoom: false,
+                        clusterDisableClickZoom: true,
                         clusterHideIconOnBalloonOpen: false,
                         geoObjectHideIconOnBalloonOpen: false,
                         clusterOpenBalloonOnClick: false,
                         maxZoom: 16,
-                        gridSize: 56,
-                        margin: 10
+                        gridSize: 36,
+                        margin: 8
                     });
+
+                    // Плавный зум с центрированием точки без смещения к краю экрана
+                    clusterer.events.add('click', function (e) {
+                        const target = e.get('target');
+                        if (!target) return;
+                        
+                        let geoObjects = null;
+                        let coords = null;
+                        
+                        if (typeof target.getGeoObjects === 'function') {
+                            geoObjects = target.getGeoObjects();
+                            coords = target.geometry ? target.geometry.getCoordinates() : null;
+                        } else if (target.properties && typeof target.properties.get === 'function') {
+                            geoObjects = target.properties.get('geoObjects');
+                            if (target.geometry) coords = target.geometry.getCoordinates();
+                        }
+                        
+                        if (!coords && geoObjects && geoObjects.length > 0) {
+                            coords = geoObjects[0].geometry.getCoordinates();
+                        }
+                        if (!coords) return;
+                        
+                        const currentZoom = myMap.getZoom();
+                        const maxZoomCap = 17;
+                        
+                        let allSamePoint = true;
+                        if (geoObjects && geoObjects.length > 1) {
+                            const first = geoObjects[0].geometry.getCoordinates();
+                            for (let i = 1; i < geoObjects.length; i++) {
+                                const cur = geoObjects[i].geometry.getCoordinates();
+                                if (Math.abs(cur[0] - first[0]) > 0.0003 || Math.abs(cur[1] - first[1]) > 0.0003) {
+                                    allSamePoint = false;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (allSamePoint || currentZoom >= 16) {
+                            myMap.setCenter(coords, Math.min(currentZoom + 1, maxZoomCap), {
+                                duration: 250,
+                                timingFunction: 'ease-in-out',
+                                checkZoomRange: true
+                            });
+                            if (geoObjects && geoObjects.length > 0) {
+                                setTimeout(() => {
+                                    if (geoObjects[0] && geoObjects[0].events) {
+                                        geoObjects[0].events.fire('click');
+                                    }
+                                }, 260);
+                            }
+                            return;
+                        }
+                        
+                        const nextZoom = Math.min(currentZoom + 2, maxZoomCap);
+                        myMap.setCenter(coords, nextZoom, {
+                            duration: 280,
+                            timingFunction: 'ease-in-out',
+                            checkZoomRange: true
+                        });
+                    });
+
                     myMap.geoObjects.add(clusterer);
                 } else {
                     clusterer.removeAll();
@@ -2573,6 +2721,7 @@
 
             updateToggleAllBtnState();
             updatePinnedFavButtons();
+            initAllCatScrollFades();
         }
 
         function createFavChip(count) {
