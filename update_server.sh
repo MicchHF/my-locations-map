@@ -8,7 +8,7 @@ git config --global --add safe.directory '*' 2>/dev/null || true
 
 REPO="https://github.com/MicchHF/my-locations-map.git"
 
-DIRS=("/var/www/map.dalazareva.ru" "/var/www/dalazareva.ru")
+DIRS=("/var/www/map.dalazareva.ru" "/var/www/dalazareva.ru" "/var/www/dalazareva-prod" "/root/dalazareva-prod" "/root/my-locations-map")
 
 for DIR in "${DIRS[@]}"; do
     if [ -d "$DIR" ]; then
