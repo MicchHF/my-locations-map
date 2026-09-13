@@ -1,5 +1,5 @@
 // Service Worker for @dalazareva locations PWA
-const CACHE_NAME = 'dalazareva-cache-v11-live';
+const CACHE_NAME = 'dalazareva-cache-v12-live';
 const PRECACHE_URLS = [
   './',
   './index.html',

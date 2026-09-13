@@ -591,14 +591,14 @@ body.dark-mode .details-btn:hover,
     cursor: pointer; 
     user-select: none; 
     -webkit-user-select: none;
-    touch-action: none !important;
+    touch-action: pan-x pan-y pinch-zoom !important;
     color: #ffffff; 
     transition: transform 0.2s;
 }
 .custom-map-pin:hover { transform: scale(1.1); }
 .custom-map-pin *,
 .custom-cluster-pin * {
-    touch-action: none !important;
+    touch-action: pan-x pan-y pinch-zoom !important;
 }
 
 /* Премиальная картографическая метка кластера */
@@ -611,7 +611,7 @@ body.dark-mode .details-btn:hover,
     transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
     user-select: none;
     -webkit-user-select: none;
-    touch-action: none !important;
+    touch-action: pan-x pan-y pinch-zoom !important;
     pointer-events: auto;
 }
 .custom-cluster-pin:hover {
@@ -713,13 +713,13 @@ body.dark-mode .custom-cluster-mini-badge,
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
-    touch-action: none !important;
+    touch-action: pan-x pan-y pinch-zoom !important;
     transform: translate(-13px, -13px);
-    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
     z-index: 5000;
 }
 .metro-map-pin * {
-    touch-action: none !important;
+    touch-action: pan-x pan-y pinch-zoom !important;
 }
 .metro-map-pin:hover {
     transform: translate(-13px, -13px) scale(1.2);
@@ -735,14 +735,37 @@ body.dark-mode .custom-cluster-mini-badge,
     align-items: center;
     justify-content: center;
     border: 2px solid #ffffff;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.15), 0 0 12px var(--line-color, #ef4444);
+    box-shadow: 0 0 0 2px #ffffff, 0 0 16px var(--line-color, #ef4444), 0 4px 12px rgba(0, 0, 0, 0.45);
     flex-shrink: 0;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 body.dark-mode .metro-map-letter,
 [data-theme="dark"] .metro-map-letter {
     border-color: #141a27;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.2), 0 0 14px var(--line-color, #ef4444);
+    box-shadow: 0 0 0 2px #141a27, 0 0 20px var(--line-color, #ef4444), 0 0 8px #ffffff;
+}
+
+/* Компактное и яркое масштабирование на общем плане (сильная подсветка на любом отдалении) */
+.metro-zoom-far .metro-map-pin {
+    transform: translate(-9px, -9px);
+}
+.metro-zoom-far .metro-map-pin:hover {
+    transform: translate(-9px, -9px) scale(1.3);
+}
+.metro-zoom-far .metro-map-letter {
+    width: 18px;
+    height: 18px;
+    border-width: 1.5px;
+    box-shadow: 0 0 0 1.5px #ffffff, 0 0 14px var(--line-color, #ef4444), 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+body.dark-mode .metro-zoom-far .metro-map-letter,
+[data-theme="dark"] .metro-zoom-far .metro-map-letter {
+    border-color: #141a27;
+    box-shadow: 0 0 0 1.5px #141a27, 0 0 16px var(--line-color, #ef4444), 0 0 6px #ffffff;
+}
+.metro-zoom-far .metro-map-m-svg {
+    width: 10px;
+    height: 8px;
 }
 .metro-map-m-svg {
     width: 14px;
@@ -1477,24 +1500,44 @@ body.dark-mode .toggle-all-btn.off:hover,
 .custom-geoloc-btn.locating { animation: spin 1s linear infinite; }
 .custom-geoloc-btn.active-loc { color: #0284c7; }
 .metro-layer-toggle-btn {
-    color: #EF161E;
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .metro-layer-toggle-btn .metro-btn-m-icon {
     width: 20px;
     height: 15px;
-    fill: #EF161E;
+    fill: #94a3b8;
+    transition: fill 0.2s ease, transform 0.2s ease;
 }
+body.dark-mode .metro-layer-toggle-btn .metro-btn-m-icon,
+[data-theme="dark"] .metro-layer-toggle-btn .metro-btn-m-icon {
+    fill: #64748b;
+}
+/* Активное состояние — подсветка включена */
+.metro-layer-toggle-btn.active {
+    background: var(--bg-card) !important;
+    border-color: #EF161E !important;
+    color: #EF161E !important;
+    box-shadow: 0 4px 16px rgba(239, 22, 30, 0.28), 0 0 0 2px rgba(239, 22, 30, 0.15) !important;
+}
+.metro-layer-toggle-btn.active .metro-btn-m-icon {
+    fill: #EF161E !important;
+    transform: scale(1.08);
+}
+/* Состояние, когда дополнительно выбран конкретный фильтр по станции */
 .metro-layer-toggle-btn.has-filter {
     background: #EF161E !important;
     color: #FFFFFF !important;
     border-color: #EF161E !important;
-    box-shadow: 0 4px 14px rgba(239, 22, 30, 0.45) !important;
+    box-shadow: 0 4px 16px rgba(239, 22, 30, 0.45) !important;
 }
 .metro-layer-toggle-btn.has-filter .metro-btn-m-icon {
     fill: #FFFFFF !important;
 }
 .metro-layer-toggle-btn.is-muted {
-    opacity: 0.45;
+    opacity: 0.55;
 }
 
 @keyframes spin {

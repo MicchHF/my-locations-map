@@ -21,7 +21,7 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="apple-touch-icon-precomposed" href="apple-touch-icon.png">
-    <link rel="stylesheet" href="style.css?v=3.0">
+    <link rel="stylesheet" href="style.css?v=3.2">
     
     <!-- Telegram WebApp SDK: немедленный ready() для мгновенного снятия серой заставки Telegram -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -601,7 +601,7 @@
 
             <!-- Правый нижний блок контролов (геолокация и метро) -->
             <div class="map-bottom-right-controls">
-                <button id="mapMetroToggleBtn" class="custom-geoloc-btn metro-layer-toggle-btn active" onclick="toggleMetroLayer()" title="Подсветка станций метро">
+                <button id="mapMetroToggleBtn" class="custom-geoloc-btn metro-layer-toggle-btn" onclick="toggleMetroLayer()" title="Включить подсветку станций метро">
                     <svg class="metro-btn-m-icon" viewBox="0 0 24 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                         <path d="M0 18L7.5 0L12 9.5L16.5 0L24 18H19L15 8L12 14.5L9 8L5 18H0Z"/>
                     </svg>
@@ -2093,7 +2093,7 @@
             }
         }
 
-        let isMetroLayerActive = true;
+        let isMetroLayerActive = false;
         let metroCollection = null;
         let metroPlacemarksMap = {};
 
@@ -2166,19 +2166,34 @@
             const currentZoom = myMap.getZoom();
             const mapEl = document.getElementById('map');
             if (mapEl) {
-                if (currentZoom >= 14.2) {
+                if (currentZoom < 12.5) {
+                    mapEl.classList.add('metro-zoom-far');
+                    mapEl.classList.remove('show-metro-labels');
+                } else if (currentZoom >= 14.0) {
+                    mapEl.classList.remove('metro-zoom-far');
                     mapEl.classList.add('show-metro-labels');
                 } else {
+                    mapEl.classList.remove('metro-zoom-far');
                     mapEl.classList.remove('show-metro-labels');
                 }
             }
 
             if (metroCollection) {
                 if (isMetroLayerActive) {
-                    const shouldShow = currentZoom >= 12.0 || !!selectedMetroFilter;
-                    metroCollection.options.set('visible', shouldShow);
+                    // При средне-ближнем приближении (zoom >= 15.85), когда уже видны выходы из метро (циферки выходов),
+                    // автоматически скрываем оверлей станций, чтобы не мешать просмотру выходов.
+                    // На любом другом отдалении (zoom < 15.85) станции ярко видны на карте.
+                    const isExitsLevel = currentZoom >= 15.85;
+                    metroCollection.options.set('visible', !isExitsLevel);
                 } else {
-                    metroCollection.options.set('visible', false);
+                    // Если подсветка выключена, но активен конкретный фильтр метро,
+                    // подсвечиваем эту конкретную станцию, пока зум не приблизился вплотную к выходам
+                    if (selectedMetroFilter && metroPlacemarksMap[selectedMetroFilter]) {
+                        const isExitsLevel = currentZoom >= 16.2;
+                        metroCollection.options.set('visible', !isExitsLevel);
+                    } else {
+                        metroCollection.options.set('visible', false);
+                    }
                 }
             }
         }
@@ -2188,8 +2203,7 @@
             const btn = document.getElementById('mapMetroToggleBtn');
             if (btn) {
                 btn.classList.toggle('active', isMetroLayerActive);
-                btn.classList.toggle('is-muted', !isMetroLayerActive);
-                btn.title = isMetroLayerActive ? 'Подсветка метро включена' : 'Включить подсветку метро';
+                btn.title = isMetroLayerActive ? 'Выключить подсветку станций метро' : 'Включить подсветку станций метро';
             }
             handleMetroMapZoomVisibility();
         }
