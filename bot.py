@@ -26,12 +26,15 @@ CHANNEL_URL = (os.getenv("CHANNEL_URL") or f"https://t.me/{CHANNEL_USERNAME}").s
 # ПОДДЕРЖКА И АДМИНИСТРАТОРЫ
 # -------------------------------------------------------------
 # -5571470296 — группа закрытого чата поддержки dalazareva_help
+# -5245526279 — группа отзывов и предложений локаций (feedback)
 # 160737288 — Макс (@maksshlyapin)
 # 723659507 — Даша (@dalazareva)
 DEFAULT_SUPPORT_CHAT_ID = "-5571470296"
-DEFAULT_ADMIN_IDS = [160737288, 723659507, -5571470296]
+DEFAULT_FEEDBACK_CHAT_ID = "-5245526279"
+DEFAULT_ADMIN_IDS = [160737288, 723659507, -5571470296, -5245526279]
 
 SUPPORT_CHAT_ID = os.getenv("SUPPORT_CHAT_ID", "").strip() or DEFAULT_SUPPORT_CHAT_ID
+FEEDBACK_CHAT_ID = os.getenv("FEEDBACK_CHAT_ID", "").strip() or DEFAULT_FEEDBACK_CHAT_ID
 ADMIN_ID_ENV = os.getenv("ADMIN_ID", "").strip()
 
 ADMIN_IDS = list(DEFAULT_ADMIN_IDS)
@@ -48,6 +51,14 @@ if SUPPORT_CHAT_ID and SUPPORT_CHAT_ID.lstrip('-').isdigit():
         s_int = int(SUPPORT_CHAT_ID)
         if s_int not in ADMIN_IDS:
             ADMIN_IDS.append(s_int)
+    except Exception:
+        pass
+
+if FEEDBACK_CHAT_ID and FEEDBACK_CHAT_ID.lstrip('-').isdigit():
+    try:
+        f_int = int(FEEDBACK_CHAT_ID)
+        if f_int not in ADMIN_IDS:
+            ADMIN_IDS.append(f_int)
     except Exception:
         pass
 
@@ -1690,7 +1701,7 @@ async def admin_reply_handler(message: types.Message):
     admin_id = message.from_user.id if message.from_user else 0
     chat_id = message.chat.id
 
-    is_admin = (admin_id in ADMIN_IDS) or (chat_id in ADMIN_IDS) or (str(chat_id) == str(SUPPORT_CHAT_ID))
+    is_admin = (admin_id in ADMIN_IDS) or (chat_id in ADMIN_IDS) or (str(chat_id) in (str(SUPPORT_CHAT_ID), str(FEEDBACK_CHAT_ID), str(DEFAULT_SUPPORT_CHAT_ID), str(DEFAULT_FEEDBACK_CHAT_ID)))
     if not is_admin:
         return
 
@@ -1822,7 +1833,7 @@ def build_ticket_keyboard(target_user_id: int, ticket_msg_id: int = 0, username:
 @dp.callback_query(F.data.startswith("support_ban_"))
 async def callback_support_ban_prompt(callback: types.CallbackQuery):
     admin_id = callback.from_user.id
-    is_admin = (admin_id in ADMIN_IDS) or (callback.message.chat.id in ADMIN_IDS) or (str(callback.message.chat.id) == str(SUPPORT_CHAT_ID))
+    is_admin = (admin_id in ADMIN_IDS) or (callback.message.chat.id in ADMIN_IDS) or (str(callback.message.chat.id) in (str(SUPPORT_CHAT_ID), str(FEEDBACK_CHAT_ID), str(DEFAULT_SUPPORT_CHAT_ID), str(DEFAULT_FEEDBACK_CHAT_ID)))
     if not is_admin:
         await callback.answer("Только для администраторов", show_alert=True)
         return
@@ -1847,7 +1858,7 @@ async def callback_support_ban_prompt(callback: types.CallbackQuery):
 @dp.callback_query(F.data.startswith("conf_ban_"))
 async def callback_conf_ban(callback: types.CallbackQuery):
     admin_id = callback.from_user.id
-    is_admin = (admin_id in ADMIN_IDS) or (callback.message.chat.id in ADMIN_IDS) or (str(callback.message.chat.id) == str(SUPPORT_CHAT_ID))
+    is_admin = (admin_id in ADMIN_IDS) or (callback.message.chat.id in ADMIN_IDS) or (str(callback.message.chat.id) in (str(SUPPORT_CHAT_ID), str(FEEDBACK_CHAT_ID), str(DEFAULT_SUPPORT_CHAT_ID), str(DEFAULT_FEEDBACK_CHAT_ID)))
     if not is_admin:
         await callback.answer("Только для администраторов", show_alert=True)
         return
@@ -1871,7 +1882,7 @@ async def callback_conf_ban(callback: types.CallbackQuery):
 @dp.callback_query(F.data.startswith("support_unban_"))
 async def callback_support_unban(callback: types.CallbackQuery):
     admin_id = callback.from_user.id
-    is_admin = (admin_id in ADMIN_IDS) or (callback.message.chat.id in ADMIN_IDS) or (str(callback.message.chat.id) == str(SUPPORT_CHAT_ID))
+    is_admin = (admin_id in ADMIN_IDS) or (callback.message.chat.id in ADMIN_IDS) or (str(callback.message.chat.id) in (str(SUPPORT_CHAT_ID), str(FEEDBACK_CHAT_ID), str(DEFAULT_SUPPORT_CHAT_ID), str(DEFAULT_FEEDBACK_CHAT_ID)))
     if not is_admin:
         await callback.answer("Только для администраторов", show_alert=True)
         return
@@ -1963,8 +1974,9 @@ async def admin_unban_command(message: types.Message):
 
 async def send_ticket_to_support(message: types.Message, tg_user: types.User, is_addition: bool = False, is_review: bool = False, is_repeat_review: bool = False, is_suggestion: bool = False):
     """
-    Отправка тикета в закрытую группу поддержки (SUPPORT_CHAT_ID).
-    Поддерживает обычные вопросы, дополнения, предложения локаций и отзывы о гиде с защитой от повторной выдачи бонусов.
+    Отправка обращения в закрытую группу поддержки (SUPPORT_CHAT_ID) или группу отзывов/предложений (FEEDBACK_CHAT_ID).
+    Отзывы о гиде и предложения новых локаций направляются в чат FEEDBACK_CHAT_ID.
+    Вопросы и дополнения в техподдержку направляются в SUPPORT_CHAT_ID.
     """
     user_id = tg_user.id
     user = get_or_create_user(tg_user)
@@ -1974,9 +1986,14 @@ async def send_ticket_to_support(message: types.Message, tg_user: types.User, is
     user_name = tg_user.first_name or "Пользователь"
     username_str = f"@{tg_user.username}" if tg_user.username else "нет username"
 
-    target_admin = int(SUPPORT_CHAT_ID) if (SUPPORT_CHAT_ID and SUPPORT_CHAT_ID.lstrip('-').isdigit()) else int(DEFAULT_SUPPORT_CHAT_ID)
+    support_chat = int(SUPPORT_CHAT_ID) if (SUPPORT_CHAT_ID and SUPPORT_CHAT_ID.lstrip('-').isdigit()) else int(DEFAULT_SUPPORT_CHAT_ID)
+    feedback_chat = int(FEEDBACK_CHAT_ID) if (FEEDBACK_CHAT_ID and FEEDBACK_CHAT_ID.lstrip('-').isdigit()) else int(DEFAULT_FEEDBACK_CHAT_ID)
+
+    is_feedback_target = bool(is_review or is_suggestion)
+    target_admin = feedback_chat if is_feedback_target else support_chat
+    chat_label = "Feedback" if is_feedback_target else "Поддержка"
     ticket_type_label = 'предложение' if is_suggestion else ('повторный отзыв' if is_repeat_review else ('отзыв' if is_review else ('дополнение' if is_addition else 'новый')))
-    print(f"📩 [Поддержка] Отправка тикета ({ticket_type_label}) в чат ID: {target_admin} (SUPPORT_CHAT_ID={SUPPORT_CHAT_ID})")
+    print(f"📩 [{chat_label}] Отправка тикета ({ticket_type_label}) в чат ID: {target_admin} (SUPPORT={support_chat}, FEEDBACK={feedback_chat})")
 
     bonus_summary = get_user_bonus_summary(user_id)
     already_awarded = bonus_summary['has_review_bonus']
@@ -1986,18 +2003,18 @@ async def send_ticket_to_support(message: types.Message, tg_user: types.User, is
     extra_bonus_text = f"<b>{extra_days} дн.</b> (начислено {extra_count} раз)" if extra_days > 0 else "0 дн."
 
     if is_suggestion:
-        header_title = "📍 <b>Предложение новой локации для гида!</b> #предложение_локации"
+        header_title = "📍 <b>Предложение новой локации для гида!</b> #предложение_локации #feedback"
         bonus_status_line = "⚪ Предложение локации"
         content_label = "🗺️ <b>Описание места / адрес / ссылки:</b>\n"
         unanswered_badge = "Предложение локации ✨"
     elif is_review:
         if is_repeat_review:
-            header_title = "💌 <b>Повторный отзыв о гиде</b>"
+            header_title = "💌 <b>Повторный отзыв о гиде</b> #отзыв #feedback"
             bonus_status_line = "❌ <b>ПОВТОРНЫЙ (бонус +7 уже учтен/выдан)</b>"
             content_label = "💬 <b>Текст повторного отзыва:</b>\n"
             unanswered_badge = "1/1 (лимит повторных отзывов ⛔️)"
         else:
-            header_title = "🌟 <b>Первый отзыв о гиде (ПРЕТЕНДУЕТ НА +7 ДНЕЙ)</b>"
+            header_title = "🌟 <b>Первый отзыв о гиде (ПРЕТЕНДУЕТ НА +7 ДНЕЙ)</b> #отзыв #feedback"
             bonus_status_line = "🟢 <b>ПЕРВЫЙ ОТЗЫВ (+7 дней доступно к начислению!)</b>"
             content_label = "💬 <b>Текст первого отзыва:</b>\n"
             unanswered_badge = "1/1 (первый отзыв)"
@@ -2025,9 +2042,10 @@ async def send_ticket_to_support(message: types.Message, tg_user: types.User, is
         f"📱 <b>Сессии:</b> {cur_sessions}/{max_dev}\n\n"
         f"{content_label}"
     )
+    feedback_tag = " #feedback" if is_feedback_target else ""
     ticket_footer = (
         f"\n\n<i>ℹ️ Нажмите «Ответить» (Reply) или кнопку ниже, чтобы отправить ответ пользователю.</i>\n"
-        f"#ticket_{user_id}"
+        f"#ticket_{user_id}{feedback_tag}"
     )
 
     user_content = message.text or message.caption or "<i>[Вложение без текста]</i>"
