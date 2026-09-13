@@ -21,7 +21,7 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="apple-touch-icon-precomposed" href="apple-touch-icon.png">
-    <link rel="stylesheet" href="style.css?v=3.3">
+    <link rel="stylesheet" href="style.css?v=3.4">
     
     <!-- Telegram WebApp SDK: немедленный ready() для мгновенного снятия серой заставки Telegram -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -65,7 +65,7 @@
     <!-- Встроенный кэш локаций (289 мест) для мгновенного отображения без сетевой задержки -->
     <script src="js/locations_data.js?v=2.9"></script>
     <!-- Единый модуль базы и утилит -->
-    <script src="js/shared.js?v=2.9"></script>
+    <script src="js/shared.js?v=3.0"></script>
 
     <style>
         /* Критические стили для предотвращения наложения и съезжания верхнего меню и кнопок на мобильных */
@@ -1922,7 +1922,8 @@
                 </div>
             `;
 
-            MOSCOW_METRO_DATA.forEach(line => {
+            const metroData = getMetroData();
+            metroData.forEach(line => {
                 const item = document.createElement('div');
                 item.className = `metro-line-item ${selectedLineName === line.name ? 'selected' : ''}`;
                 const dotClass = line.isRing ? 'metro-line-color-dot mck-ring' : 'metro-line-color-dot';
@@ -1960,6 +1961,7 @@
             showFavoritesOnly = false;
             
             updateMetroButtonUI();
+            updateHighlightedMetroStationOnMap();
             renderBothCatFilterBars(allCats);
             applyCombinedFilters(true);
             closeMetroDrawer();
@@ -1981,15 +1983,16 @@
                 }
             }
 
+            const metroData = getMetroData();
             let stations = [];
             if (selectedLineName) {
-                const found = MOSCOW_METRO_DATA.find(l => l.name === selectedLineName);
+                const found = metroData.find(l => l.name === selectedLineName);
                 if (found && found.stations) {
                     stations = found.stations.map(s => typeof s === 'string' ? s : s.name);
                 }
             } else {
                 const set = new Set();
-                MOSCOW_METRO_DATA.forEach(l => {
+                metroData.forEach(l => {
                     if (l.stations) {
                         l.stations.forEach(s => {
                             const name = typeof s === 'string' ? s : s.name;
@@ -2119,37 +2122,53 @@
         let metroCollection = null;
         let metroPlacemarksMap = {};
 
+        function getMetroData() {
+            if (typeof MOSCOW_METRO_DATA !== 'undefined' && Array.isArray(MOSCOW_METRO_DATA)) {
+                return MOSCOW_METRO_DATA;
+            }
+            if (typeof window !== 'undefined' && Array.isArray(window.MOSCOW_METRO_DATA)) {
+                return window.MOSCOW_METRO_DATA;
+            }
+            return [];
+        }
+
         function initMetroMapLayer() {
-            if (!myMap || !window.MOSCOW_METRO_DATA) return;
+            if (!myMap) return;
+            const metroData = getMetroData();
+            if (!metroData || metroData.length === 0) {
+                setTimeout(initMetroMapLayer, 250);
+                return;
+            }
             if (metroCollection) return;
 
-            // Размещаем слой станций метро в pane: 'overlaps' с высоким z-index, чтобы они всегда были поверх меток заведений
+            // Размещаем слой станций метро в pane: 'places' с высоким z-index (поверх меток заведений)
             metroCollection = new ymaps.GeoObjectCollection({}, { 
-                pane: 'overlaps',
-                zIndex: 5000,
-                zIndexHover: 6000
+                pane: 'places',
+                zIndex: 4000,
+                zIndexHover: 5000
             });
 
-            const metroPlacemarkLayout = ymaps.templateLayoutFactory.createClass(`
-                <div class="metro-map-pin{% if properties.isHighlighted %} is-highlighted{% endif %}" style="--line-color: {{ properties.lineColor }};" title="м. {{ properties.stationName }}">
-                    <span class="metro-map-letter">
-                        <svg class="metro-map-m-svg" viewBox="0 0 24 18" fill="#ffffff" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M0 18L7.5 0L12 9.5L16.5 0L24 18H19L15 8L12 14.5L9 8L5 18H0Z"/>
-                        </svg>
-                    </span>
-                    <span class="metro-map-name">{{ properties.stationName }}</span>
-                </div>
-            `);
+            const metroPlacemarkLayout = ymaps.templateLayoutFactory.createClass(
+                '<div class="metro-map-pin $[properties.isHighlightedClass]" style="--line-color: $[properties.lineColor];" title="м. $[properties.stationName]">' +
+                    '<span class="metro-map-letter">' +
+                        '<svg class="metro-map-m-svg" viewBox="0 0 24 18" fill="#ffffff" xmlns="http://www.w3.org/2000/svg">' +
+                            '<path d="M0 18L7.5 0L12 9.5L16.5 0L24 18H19L15 8L12 14.5L9 8L5 18H0Z"/>' +
+                        '</svg>' +
+                    '</span>' +
+                    '<span class="metro-map-name">$[properties.stationName]</span>' +
+                '</div>'
+            );
 
-            MOSCOW_METRO_DATA.forEach(line => {
+            metroData.forEach(line => {
                 if (!line.stations) return;
                 const col = line.color || '#ef4444';
                 line.stations.forEach(st => {
                     if (!st || !st.lat || !st.lng || !st.name) return;
+                    const isTarget = selectedMetroFilter === st.name;
                     const pm = new ymaps.Placemark([st.lat, st.lng], {
                         stationName: st.name,
                         lineColor: col,
-                        isHighlighted: selectedMetroFilter === st.name
+                        isHighlightedClass: isTarget ? 'is-highlighted' : ''
                     }, {
                         iconLayout: metroPlacemarkLayout,
                         iconShape: {
@@ -2157,9 +2176,9 @@
                             coordinates: [0, 0],
                             radius: 14
                         },
-                        pane: 'overlaps',
-                        zIndex: 5000,
-                        zIndexHover: 6000,
+                        pane: 'places',
+                        zIndex: 4000,
+                        zIndexHover: 5000,
                         interactivityModel: 'default#geoObject',
                         openBalloonOnClick: false
                     });
@@ -2200,27 +2219,60 @@
                 }
             }
 
-            if (metroCollection) {
-                if (isMetroLayerActive) {
-                    // При средне-ближнем приближении (zoom >= 15.85), когда уже видны выходы из метро (циферки выходов),
-                    // автоматически скрываем оверлей станций, чтобы не мешать просмотру выходов.
-                    // На любом другом отдалении (zoom < 15.85) станции ярко видны на карте.
-                    const isExitsLevel = currentZoom >= 15.85;
-                    metroCollection.options.set('visible', !isExitsLevel);
-                } else {
-                    // Если подсветка выключена, но активен конкретный фильтр метро,
-                    // подсвечиваем эту конкретную станцию, пока зум не приблизился вплотную к выходам
-                    if (selectedMetroFilter && metroPlacemarksMap[selectedMetroFilter]) {
-                        const isExitsLevel = currentZoom >= 16.2;
-                        metroCollection.options.set('visible', !isExitsLevel);
-                    } else {
-                        metroCollection.options.set('visible', false);
-                    }
+            if (!metroCollection) return;
+
+            // Станции выбранной ветки
+            let lineStationNames = [];
+            if (selectedLineFilter) {
+                const metroData = getMetroData();
+                const lineObj = metroData.find(l => l.name === selectedLineFilter);
+                if (lineObj && lineObj.stations) {
+                    lineStationNames = lineObj.stations.map(s => typeof s === 'string' ? s : s.name);
                 }
             }
+
+            const hasSpecificFilter = Boolean(selectedMetroFilter || lineStationNames.length > 0);
+
+            // Если слой выключен и нет активного фильтра метро — скрываем всю коллекцию
+            if (!isMetroLayerActive && !hasSpecificFilter) {
+                metroCollection.options.set('visible', false);
+                return;
+            }
+
+            // На сверхдетальном зуме (zoom >= 17.2), когда уже видны цифры выходов, скрываем станции, чтобы не перекрывать выходы
+            if (currentZoom >= 17.2) {
+                metroCollection.options.set('visible', false);
+                return;
+            }
+
+            metroCollection.options.set('visible', true);
+
+            // Управляем видимостью и подсветкой каждой станции
+            Object.keys(metroPlacemarksMap).forEach(name => {
+                const pm = metroPlacemarksMap[name];
+                if (!pm) return;
+
+                const isTargetStation = selectedMetroFilter === name;
+                const isTargetLineStation = lineStationNames.includes(name);
+
+                // Если включен общий оверлей станций метро (кнопка справа внизу) — видны все станции!
+                // Если общий оверлей выключен, но включен фильтр — видна именно выбранная станция (или ветка)!
+                const shouldBeVisible = isMetroLayerActive || isTargetStation || isTargetLineStation;
+                pm.options.set('visible', shouldBeVisible);
+
+                // Подсветка (акцентный неоновый ореол, увеличенный размер и открытая плашка названия):
+                const shouldHighlight = isTargetStation || (isTargetLineStation && !selectedMetroFilter);
+                const expectedClass = shouldHighlight ? 'is-highlighted' : '';
+                if (pm.properties.get('isHighlightedClass') !== expectedClass) {
+                    pm.properties.set('isHighlightedClass', expectedClass);
+                }
+            });
         }
 
         function toggleMetroLayer() {
+            if (!metroCollection) {
+                initMetroMapLayer();
+            }
             isMetroLayerActive = !isMetroLayerActive;
             const btn = document.getElementById('mapMetroToggleBtn');
             if (btn) {
@@ -2231,20 +2283,10 @@
         }
 
         function updateHighlightedMetroStationOnMap() {
-            if (!metroPlacemarksMap) return;
-            Object.keys(metroPlacemarksMap).forEach(name => {
-                const pm = metroPlacemarksMap[name];
-                if (pm && pm.properties) {
-                    const shouldHighlight = selectedMetroFilter === name;
-                    if (pm.properties.get('isHighlighted') !== shouldHighlight) {
-                        pm.properties.set('isHighlighted', shouldHighlight);
-                    }
-                }
-            });
-
-            if (selectedMetroFilter && metroPlacemarksMap[selectedMetroFilter]) {
-                if (metroCollection) metroCollection.options.set('visible', true);
+            if (!metroCollection) {
+                initMetroMapLayer();
             }
+            handleMetroMapZoomVisibility();
         }
 
         function handleBottomSearchClick(e) {
@@ -2403,8 +2445,9 @@
 
             // Подготавливаем список станций выбранной ветки (если активна ветка целиком)
             let lineStations = [];
+            const metroData = getMetroData();
             if (selectedLineFilter) {
-                const lineObj = MOSCOW_METRO_DATA.find(l => l.name === selectedLineFilter);
+                const lineObj = metroData.find(l => l.name === selectedLineFilter);
                 if (lineObj && lineObj.stations) {
                     lineStations = lineObj.stations.map(s => typeof s === 'string' ? s : s.name);
                 }
@@ -2449,23 +2492,55 @@
             renderInterface(filtered);
             updatePinnedFavButtons();
 
-            if ((selectedMetroFilter || selectedLineFilter || autoPanMetro) && filtered.length > 0 && myMap) {
-                const coordsList = filtered.map(l => [l.lat, l.lng]).filter(c => c[0] && c[1]);
-                if (coordsList.length === 1) {
-                    myMap.setCenter(coordsList[0], 15, { duration: 350 });
-                } else if (coordsList.length > 1) {
-                    let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
-                    coordsList.forEach(c => {
-                        if (c[0] < minLat) minLat = c[0];
-                        if (c[0] > maxLat) maxLat = c[0];
-                        if (c[1] < minLng) minLng = c[1];
-                        if (c[1] > maxLng) maxLng = c[1];
-                    });
-                    myMap.setBounds([[minLat, minLng], [maxLat, maxLng]], {
-                        checkZoomRange: true,
-                        duration: 350,
-                        zoomMargin: [40, 40, 40, 40]
-                    });
+            if (myMap) {
+                // Если выбран фильтр метро или ветки, центрируем карту
+                if (selectedMetroFilter) {
+                    let stCoord = null;
+                    for (const line of metroData) {
+                        const found = (line.stations || []).find(s => (typeof s === 'string' ? s : s.name) === selectedMetroFilter);
+                        if (found && found.lat && found.lng) {
+                            stCoord = [found.lat, found.lng];
+                            break;
+                        }
+                    }
+
+                    const coordsList = filtered.map(l => [l.lat, l.lng]).filter(c => c[0] && c[1]);
+                    if (stCoord) coordsList.push(stCoord);
+
+                    if (coordsList.length === 1) {
+                        myMap.setCenter(coordsList[0], 15, { duration: 350 });
+                    } else if (coordsList.length > 1) {
+                        let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+                        coordsList.forEach(c => {
+                            if (c[0] < minLat) minLat = c[0];
+                            if (c[0] > maxLat) maxLat = c[0];
+                            if (c[1] < minLng) minLng = c[1];
+                            if (c[1] > maxLng) maxLng = c[1];
+                        });
+                        myMap.setBounds([[minLat, minLng], [maxLat, maxLng]], {
+                            checkZoomRange: true,
+                            duration: 350,
+                            zoomMargin: [40, 40, 40, 40]
+                        });
+                    }
+                } else if ((selectedLineFilter || autoPanMetro) && filtered.length > 0) {
+                    const coordsList = filtered.map(l => [l.lat, l.lng]).filter(c => c[0] && c[1]);
+                    if (coordsList.length === 1) {
+                        myMap.setCenter(coordsList[0], 15, { duration: 350 });
+                    } else if (coordsList.length > 1) {
+                        let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+                        coordsList.forEach(c => {
+                            if (c[0] < minLat) minLat = c[0];
+                            if (c[0] > maxLat) maxLat = c[0];
+                            if (c[1] < minLng) minLng = c[1];
+                            if (c[1] > maxLng) maxLng = c[1];
+                        });
+                        myMap.setBounds([[minLat, minLng], [maxLat, maxLng]], {
+                            checkZoomRange: true,
+                            duration: 350,
+                            zoomMargin: [40, 40, 40, 40]
+                        });
+                    }
                 }
             }
         }

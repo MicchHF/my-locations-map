@@ -832,18 +832,27 @@ body.dark-mode .metro-map-name,
     transform: translate(-13px, -13px) scale(1.35);
     z-index: 10000;
 }
+.metro-zoom-far .metro-map-pin.is-highlighted {
+    transform: translate(-9px, -9px) scale(1.4) !important;
+    z-index: 10000;
+}
 .metro-map-pin.is-highlighted .metro-map-letter {
-    box-shadow: 0 0 0 3px #ffffff, 0 0 18px var(--line-color, #ef4444);
+    box-shadow: 0 0 0 3px #ffffff, 0 0 24px var(--line-color, #ef4444), 0 0 40px var(--line-color, #ef4444) !important;
     animation: metroPulse 1.2s infinite alternate ease-in-out;
+}
+body.dark-mode .metro-map-pin.is-highlighted .metro-map-letter,
+[data-theme="dark"] .metro-map-pin.is-highlighted .metro-map-letter {
+    box-shadow: 0 0 0 3px #141a27, 0 0 28px var(--line-color, #ef4444), 0 0 44px var(--line-color, #ef4444) !important;
 }
 .metro-map-pin.is-highlighted .metro-map-name {
     display: inline-block !important;
     font-weight: 800;
     border-color: var(--line-color, #ef4444);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 @keyframes metroPulse {
     0% { transform: scale(1); }
-    100% { transform: scale(1.15); }
+    100% { transform: scale(1.18); }
 }
 
 .user-loc-pin-wrap {

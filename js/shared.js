@@ -515,6 +515,13 @@ const MOSCOW_METRO_DATA = [
     }
 ];
 
+if (typeof window !== 'undefined') {
+    window.MOSCOW_METRO_DATA = MOSCOW_METRO_DATA;
+}
+if (typeof globalThis !== 'undefined') {
+    globalThis.MOSCOW_METRO_DATA = MOSCOW_METRO_DATA;
+}
+
 // 4. Вспомогательные функции
 function getCategoryPinColor(category) {
     const norm = normalizeCategoryName(category);
