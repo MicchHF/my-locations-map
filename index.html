@@ -592,8 +592,11 @@
                 🌓
             </button>
 
-            <!-- Правый нижний блок контролов (геолокация) -->
+            <!-- Правый нижний блок контролов (геолокация и метро) -->
             <div class="map-bottom-right-controls">
+                <button id="mapMetroToggleBtn" class="custom-geoloc-btn metro-layer-toggle-btn active" onclick="toggleMetroLayer()" title="Подсветка станций метро">
+                    <span style="font-size: 16px; line-height: 1;">🚇</span>
+                </button>
                 <button id="customGeolocBtn" class="custom-geoloc-btn" onclick="locateUserPosition()" title="Мое местоположение">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" stroke="currentColor" stroke-width="0.5" stroke-linejoin="round" style="display: block; margin: auto;">
                         <path d="M12 3.2L4.5 20.8l7.5-3.6 7.5 3.6L12 3.2z"/>
@@ -846,8 +849,24 @@
         function getAllCategoryNames() {
             const hasHiddenAccess = canUserAccessHiddenLocations(currentUser);
             const visibleLocations = hasHiddenAccess ? allLocations : allLocations.filter(l => !isLocationHidden(l));
-            const rawCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...visibleLocations.map(l => normalizeCategoryName(l.category || '📎 Другое'))])).filter(Boolean);
-            let cats = rawCats;
+            
+            // Считаем доступные локации для каждой категории
+            const counts = {};
+            visibleLocations.forEach(l => {
+                const primary = normalizeCategoryName(l.category || '📎 Другое');
+                if (primary) counts[primary] = (counts[primary] || 0) + 1;
+                if (Array.isArray(l.extra_categories)) {
+                    l.extra_categories.forEach(ec => {
+                        const nec = normalizeCategoryName(ec);
+                        if (nec && nec !== primary) {
+                            counts[nec] = (counts[nec] || 0) + 1;
+                        }
+                    });
+                }
+            });
+
+            // Скрываем категории, где 0 локаций везде в клиентской версии
+            let cats = Object.keys(counts).filter(c => (counts[c] || 0) > 0);
             if (!hasHiddenAccess) {
                 cats = cats.filter(c => c !== "🔒 Скрытые" && c !== "🔒 Скрытые (Lifetime)" && !c.includes("Скрытые"));
             }
@@ -1683,6 +1702,9 @@
                     suppressMapOpenBlock: true
                 });
                 
+                // Поддержка плавного зума и двухпальцевого приближения
+                myMap.behaviors.enable(['drag', 'pinchZoom', 'multiTouch', 'dblClickZoom']);
+                
                 // Компактный и современный контрол зума
                 const modernZoomControl = new ymaps.control.ZoomControl({
                     options: {
@@ -1692,6 +1714,8 @@
                 });
                 myMap.controls.add(modernZoomControl);
                 window.myMap = myMap;
+
+                initMetroMapLayer();
 
                 myMap.events.add('click', function () {
                     if (activeBalloonPlacemark) {
@@ -1983,6 +2007,7 @@
             showFavoritesOnly = false;
             
             updateMetroButtonUI();
+            updateHighlightedMetroStationOnMap();
             renderBothCatFilterBars(allCats);
             applyCombinedFilters(true);
             renderMetroStationsList();
@@ -1997,6 +2022,7 @@
             if (searchInput) searchInput.value = '';
             initMetroDrawer();
             updateMetroButtonUI();
+            updateHighlightedMetroStationOnMap();
             applyCombinedFilters();
             closeMetroDrawer();
         }
@@ -2043,6 +2069,111 @@
                 if (desktopMetroBtn) desktopMetroBtn.classList.remove('active');
                 if (desktopMetroText) desktopMetroText.innerText = 'Метро';
                 if (chip) chip.classList.remove('active');
+            }
+        }
+
+        let isMetroLayerActive = true;
+        let metroCollection = null;
+        let metroPlacemarksMap = {};
+
+        function initMetroMapLayer() {
+            if (!myMap || !window.MOSCOW_METRO_DATA) return;
+            if (metroCollection) return;
+
+            metroCollection = new ymaps.GeoObjectCollection({}, { zIndex: 120 });
+
+            const metroPlacemarkLayout = ymaps.templateLayoutFactory.createClass(`
+                <div class="metro-map-pin{% if properties.isHighlighted %} is-highlighted{% endif %}" style="--line-color: {{ properties.lineColor }};" title="м. {{ properties.stationName }}">
+                    <span class="metro-map-letter">М</span>
+                    <span class="metro-map-name">{{ properties.stationName }}</span>
+                </div>
+            `);
+
+            MOSCOW_METRO_DATA.forEach(line => {
+                if (!line.stations) return;
+                const col = line.color || '#ef4444';
+                line.stations.forEach(st => {
+                    if (!st || !st.lat || !st.lng || !st.name) return;
+                    const pm = new ymaps.Placemark([st.lat, st.lng], {
+                        stationName: st.name,
+                        lineColor: col,
+                        isHighlighted: selectedMetroFilter === st.name
+                    }, {
+                        iconLayout: metroPlacemarkLayout,
+                        iconShape: {
+                            type: 'Circle',
+                            coordinates: [0, 0],
+                            radius: 12
+                        },
+                        interactivityModel: 'default#geoObject',
+                        openBalloonOnClick: false
+                    });
+
+                    pm.events.add('click', (e) => {
+                        e.stopPropagation();
+                        selectMetroStation(st.name);
+                    });
+
+                    metroPlacemarksMap[st.name] = pm;
+                    metroCollection.add(pm);
+                });
+            });
+
+            myMap.geoObjects.add(metroCollection);
+
+            myMap.events.add('boundschange', () => {
+                handleMetroMapZoomVisibility();
+            });
+
+            handleMetroMapZoomVisibility();
+        }
+
+        function handleMetroMapZoomVisibility() {
+            if (!myMap) return;
+            const currentZoom = myMap.getZoom();
+            const mapEl = document.getElementById('map');
+            if (mapEl) {
+                if (currentZoom >= 14.2) {
+                    mapEl.classList.add('show-metro-labels');
+                } else {
+                    mapEl.classList.remove('show-metro-labels');
+                }
+            }
+
+            if (metroCollection) {
+                if (isMetroLayerActive) {
+                    const shouldShow = currentZoom >= 12.0 || !!selectedMetroFilter;
+                    metroCollection.options.set('visible', shouldShow);
+                } else {
+                    metroCollection.options.set('visible', false);
+                }
+            }
+        }
+
+        function toggleMetroLayer() {
+            isMetroLayerActive = !isMetroLayerActive;
+            const btn = document.getElementById('mapMetroToggleBtn');
+            if (btn) {
+                btn.classList.toggle('active', isMetroLayerActive);
+                btn.title = isMetroLayerActive ? 'Подсветка метро включена' : 'Включить подсветку метро';
+            }
+            handleMetroMapZoomVisibility();
+        }
+
+        function updateHighlightedMetroStationOnMap() {
+            if (!metroPlacemarksMap) return;
+            Object.keys(metroPlacemarksMap).forEach(name => {
+                const pm = metroPlacemarksMap[name];
+                if (pm && pm.properties) {
+                    const shouldHighlight = selectedMetroFilter === name;
+                    if (pm.properties.get('isHighlighted') !== shouldHighlight) {
+                        pm.properties.set('isHighlighted', shouldHighlight);
+                    }
+                }
+            });
+
+            if (selectedMetroFilter && metroPlacemarksMap[selectedMetroFilter]) {
+                if (metroCollection) metroCollection.options.set('visible', true);
             }
         }
 
@@ -2374,10 +2505,11 @@
             if (myMap) {
                 if (!clusterer) {
                     const customClusterLayout = ymaps.templateLayoutFactory.createClass(`
-                        <div class="custom-cluster-pin{% if properties.geoObjects.length >= 50 %} is-large{% endif %}" data-count="{{ properties.geoObjects.length }}" data-count-tier="{% if properties.geoObjects.length >= 50 %}large{% else %}small{% endif %}">
+                        <div class="custom-cluster-pin" data-count="{{ properties.geoObjects.length }}">
                             <div class="custom-cluster-core">
-                                <span class="custom-cluster-count">{{ properties.geoObjects.length }}</span>
+                                <span class="custom-cluster-icon">📍</span>
                             </div>
+                            <span class="custom-cluster-mini-badge">{{ properties.geoObjects.length }}</span>
                         </div>
                     `);
 
@@ -2386,7 +2518,7 @@
                         clusterIconShape: {
                             type: 'Circle',
                             coordinates: [0, 0],
-                            radius: 24
+                            radius: 22
                         },
                         groupByCoordinates: false,
                         clusterDisableClickZoom: true,

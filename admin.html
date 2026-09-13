@@ -1993,10 +1993,11 @@
             if (myMap) {
                 if (!clusterer) {
                     const customClusterLayout = ymaps.templateLayoutFactory.createClass(`
-                        <div class="custom-cluster-pin{% if properties.geoObjects.length >= 50 %} is-large{% endif %}" data-count="{{ properties.geoObjects.length }}" data-count-tier="{% if properties.geoObjects.length >= 50 %}large{% else %}small{% endif %}">
+                        <div class="custom-cluster-pin" data-count="{{ properties.geoObjects.length }}">
                             <div class="custom-cluster-core">
-                                <span class="custom-cluster-count">{{ properties.geoObjects.length }}</span>
+                                <span class="custom-cluster-icon">📍</span>
                             </div>
+                            <span class="custom-cluster-mini-badge">{{ properties.geoObjects.length }}</span>
                         </div>
                     `);
 
@@ -2005,7 +2006,7 @@
                         clusterIconShape: {
                             type: 'Circle',
                             coordinates: [0, 0],
-                            radius: 24
+                            radius: 22
                         },
                         groupByCoordinates: false,
                         clusterDisableClickZoom: false,
