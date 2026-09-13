@@ -846,7 +846,7 @@
         function getAllCategoryNames() {
             const hasHiddenAccess = canUserAccessHiddenLocations(currentUser);
             const visibleLocations = hasHiddenAccess ? allLocations : allLocations.filter(l => !isLocationHidden(l));
-            const rawCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...visibleLocations.map(l => normalizeCategoryName(l.category || '📍 Другое'))])).filter(Boolean);
+            const rawCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...visibleLocations.map(l => normalizeCategoryName(l.category || '📎 Другое'))])).filter(Boolean);
             let cats = rawCats;
             if (!hasHiddenAccess) {
                 cats = cats.filter(c => c !== "🔒 Скрытые" && c !== "🔒 Скрытые (Lifetime)" && !c.includes("Скрытые"));
@@ -858,8 +858,8 @@
                 if (aIsHidden && !bIsHidden) return 1;
                 if (!aIsHidden && bIsHidden) return -1;
                 
-                const aIsOther = a === "📍 Другое";
-                const bIsOther = b === "📍 Другое";
+                const aIsOther = a.includes("Другое");
+                const bIsOther = b.includes("Другое");
                 if (aIsOther && !bIsOther) return 1;
                 if (!aIsOther && bIsOther) return -1;
 
@@ -2214,8 +2214,8 @@
                     return false;
                 }
 
-                const primaryCat = loc.category || '📍 Другое';
-                const extraCats = Array.isArray(loc.extra_categories) ? loc.extra_categories : [];
+                const primaryCat = normalizeCategoryName(loc.category);
+                const extraCats = Array.isArray(loc.extra_categories) ? loc.extra_categories.map(ec => normalizeCategoryName(ec)) : [];
                 const allLocCats = [primaryCat, ...extraCats];
 
                 const titleMatch = (loc.title || '').toLowerCase().includes(query);
@@ -2365,7 +2365,7 @@
             const favs = getFavorites().map(String);
             
             locationsToRender.forEach(loc => {
-                const cat = loc.category || '📍 Другое';
+                const cat = normalizeCategoryName(loc.category);
                 if (!grouped[cat]) grouped[cat] = [];
                 grouped[cat].push(loc);
             });
@@ -2374,7 +2374,7 @@
             if (myMap) {
                 if (!clusterer) {
                     const customClusterLayout = ymaps.templateLayoutFactory.createClass(`
-                        <div class="custom-cluster-pin" data-count="{{ properties.geoObjects.length }}" data-count-tier="{{ properties.geoObjects.length >= 50 ? 'large' : (properties.geoObjects.length >= 10 ? 'medium' : 'small') }}">
+                        <div class="custom-cluster-pin{% if properties.geoObjects.length >= 50 %} is-large{% endif %}" data-count="{{ properties.geoObjects.length }}" data-count-tier="{% if properties.geoObjects.length >= 50 %}large{% else %}small{% endif %}">
                             <div class="custom-cluster-core">
                                 <span class="custom-cluster-count">{{ properties.geoObjects.length }}</span>
                             </div>
@@ -2385,7 +2385,7 @@
                         clusterIconLayout: customClusterLayout,
                         clusterIconShape: {
                             type: 'Circle',
-                            coordinates: [19, 19],
+                            coordinates: [0, 0],
                             radius: 24
                         },
                         groupByCoordinates: false,
@@ -2486,8 +2486,8 @@
                 if (aIsHidden && !bIsHidden) return 1;
                 if (!aIsHidden && bIsHidden) return -1;
                 
-                const aIsOther = a === "📍 Другое";
-                const bIsOther = b === "📍 Другое";
+                const aIsOther = a.includes("Другое");
+                const bIsOther = b.includes("Другое");
                 if (aIsOther && !bIsOther) return 1;
                 if (!aIsOther && bIsOther) return -1;
 
@@ -2527,7 +2527,8 @@
                 grouped[catName].forEach(loc => {
                     if (!loc.lat || !loc.lng) return;
                     const isHidden = isLocationHidden(loc);
-                    let categoryIcon = loc.category ? loc.category.split(' ')[0] : '📍';
+                    const normCat = normalizeCategoryName(loc.category);
+                    let categoryIcon = normCat ? normCat.split(' ')[0] : '📎';
                     let pinColor = getCategoryPinColor(loc.category);
                     if (isHidden) {
                         categoryIcon = '🔒';
@@ -3031,11 +3032,12 @@
             allLocations.forEach(loc => {
                 const isHidden = isLocationHidden(loc);
                 if (isHidden && !canUserAccessHiddenLocations(currentUser)) return;
-                const cat = loc.category || '📍 Другое';
+                const cat = normalizeCategoryName(loc.category);
                 catCounts[cat] = (catCounts[cat] || 0) + 1;
                 if (Array.isArray(loc.extra_categories)) {
                     loc.extra_categories.forEach(ec => {
-                        catCounts[ec] = (catCounts[ec] || 0) + 1;
+                        const nec = normalizeCategoryName(ec);
+                        catCounts[nec] = (catCounts[nec] || 0) + 1;
                     });
                 }
             });

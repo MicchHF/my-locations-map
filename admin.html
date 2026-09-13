@@ -1985,7 +1985,7 @@
             const grouped = {};
             
             locationsToRender.forEach(loc => {
-                const cat = loc.category || '📍 Другое';
+                const cat = normalizeCategoryName(loc.category);
                 if (!grouped[cat]) grouped[cat] = [];
                 grouped[cat].push(loc);
             });
@@ -1993,11 +1993,10 @@
             if (myMap) {
                 if (!clusterer) {
                     const customClusterLayout = ymaps.templateLayoutFactory.createClass(`
-                        <div class="custom-cluster-pin">
+                        <div class="custom-cluster-pin{% if properties.geoObjects.length >= 50 %} is-large{% endif %}" data-count="{{ properties.geoObjects.length }}" data-count-tier="{% if properties.geoObjects.length >= 50 %}large{% else %}small{% endif %}">
                             <div class="custom-cluster-core">
-                                <span class="custom-cluster-dot"></span>
+                                <span class="custom-cluster-count">{{ properties.geoObjects.length }}</span>
                             </div>
-                            <span class="custom-cluster-mini-badge">{{ properties.geoObjects.length }}</span>
                         </div>
                     `);
 
@@ -2005,8 +2004,8 @@
                         clusterIconLayout: customClusterLayout,
                         clusterIconShape: {
                             type: 'Circle',
-                            coordinates: [17, 17],
-                            radius: 17
+                            coordinates: [0, 0],
+                            radius: 24
                         },
                         groupByCoordinates: false,
                         clusterDisableClickZoom: false,
@@ -2014,8 +2013,8 @@
                         geoObjectHideIconOnBalloonOpen: false,
                         clusterOpenBalloonOnClick: false,
                         maxZoom: 16,
-                        gridSize: 56,
-                        margin: 10
+                        gridSize: 48,
+                        margin: 8
                     });
                     myMap.geoObjects.add(clusterer);
                 } else {
@@ -2066,7 +2065,8 @@
 
                 grouped[catName].forEach(loc => {
                     const isHidden = isLocationHidden(loc);
-                    const categoryIcon = isHidden ? '🔒' : (loc.category ? loc.category.split(' ')[0] : '📍');
+                    const normCat = normalizeCategoryName(loc.category);
+                    const categoryIcon = isHidden ? '🔒' : (normCat ? normCat.split(' ')[0] : '📎');
                     const pinColor = isHidden ? '#E11D48' : getCategoryPinColor(loc.category);
                     
                     const layout = ymaps.templateLayoutFactory.createClass(

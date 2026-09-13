@@ -673,19 +673,23 @@ body.dark-mode .custom-cluster-count,
 }
 
 /* Увеличенный размер для крупных скоплений точек (50+) */
-.custom-cluster-pin[data-count-tier="large"] {
+.custom-cluster-pin[data-count-tier="large"],
+.custom-cluster-pin.is-large {
     width: 44px;
     height: 44px;
     transform: translate(-22px, -22px);
 }
-.custom-cluster-pin[data-count-tier="large"]:hover {
+.custom-cluster-pin[data-count-tier="large"]:hover,
+.custom-cluster-pin.is-large:hover {
     transform: translate(-22px, -22px) scale(1.1);
 }
-.custom-cluster-pin[data-count-tier="large"] .custom-cluster-core {
+.custom-cluster-pin[data-count-tier="large"] .custom-cluster-core,
+.custom-cluster-pin.is-large .custom-cluster-core {
     width: 44px;
     height: 44px;
 }
-.custom-cluster-pin[data-count-tier="large"] .custom-cluster-count {
+.custom-cluster-pin[data-count-tier="large"] .custom-cluster-count,
+.custom-cluster-pin.is-large .custom-cluster-count {
     font-size: 14px;
 }
 
