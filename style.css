@@ -321,23 +321,36 @@ body.dark-mode #map [class*="ground-pane"] {
 .tg-badge:active { transform: scale(0.98); }
 
 .channel-link-btn {
-    width: 50px;
-    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-    color: #ffffff;
-    border-radius: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    background: linear-gradient(135deg, #2AABEE 0%, #229ED9 100%) !important;
+    color: #ffffff !important;
+    border-radius: 15px !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     text-decoration: none;
-    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);
+    box-shadow: 0 4px 14px rgba(34, 158, 217, 0.35) !important;
     flex-shrink: 0;
+    cursor: pointer;
+    padding: 0 !important;
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
 }
-.channel-link-btn:hover { 
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(2, 132, 199, 0.35);
+.channel-link-btn svg {
+    width: 22px;
+    height: 22px;
+    fill: #ffffff !important;
+    display: block;
+    margin: auto;
 }
-.channel-link-btn:active { transform: scale(0.95); }
+.channel-link-btn:hover { 
+    transform: translateY(-1px) scale(1.04);
+    box-shadow: 0 6px 20px rgba(34, 158, 217, 0.45) !important;
+}
+.channel-link-btn:active { transform: scale(0.94); }
 
 .sidebar-search-row {
     display: flex;
@@ -1016,30 +1029,52 @@ body.dark-mode .balloon-desc,
 .balloon-photo-img { height: 68px; width: auto; border-radius: 8px; cursor: pointer; object-fit: cover; border: 1px solid rgba(0,0,0,0.08); flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.06); transition: transform 0.2s ease; }
 .balloon-photo-img:hover { transform: scale(1.03); }
 
-/* Современный зум-контрол карты */
-[class*="ymaps-2-1"][class*="-zoom"] {
-    border-radius: 12px !important;
-    overflow: hidden !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16) !important;
+/* Фирменный блок кнопок приближения/отдаления карты (+ / −) */
+.map-zoom-controls {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 82px);
+    left: max(calc(env(safe-area-inset-left) + 14px), 14px);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    transition: opacity 0.22s ease, transform 0.22s ease;
 }
-[class*="ymaps-2-1"][class*="-zoom__plus"],
-[class*="ymaps-2-1"][class*="-zoom__minus"],
-[class*="ymaps-2-1"][class*="-float-button"] {
-    background: rgba(255, 255, 255, 0.95) !important;
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
-    border: 1px solid rgba(0, 0, 0, 0.08) !important;
-    transition: all 0.18s ease !important;
+
+.custom-zoom-btn {
+    background: var(--glass-bg);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid var(--glass-border);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+    color: var(--text-main);
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: pan-x pan-y pinch-zoom !important;
 }
-body.dark-mode [class*="ymaps-2-1"][class*="-zoom__plus"],
-body.dark-mode [class*="ymaps-2-1"][class*="-zoom__minus"],
-body.dark-mode [class*="ymaps-2-1"][class*="-float-button"],
-[data-theme="dark"] [class*="ymaps-2-1"][class*="-zoom__plus"],
-[data-theme="dark"] [class*="ymaps-2-1"][class*="-zoom__minus"],
-[data-theme="dark"] [class*="ymaps-2-1"][class*="-float-button"] {
-    background: rgba(20, 26, 39, 0.92) !important;
-    border-color: rgba(255, 255, 255, 0.12) !important;
-    filter: invert(0.88) hue-rotate(180deg);
+
+.custom-zoom-btn:hover {
+    transform: scale(1.08);
+    border-color: var(--accent-btn);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.custom-zoom-btn:active {
+    transform: scale(0.92);
+}
+
+.custom-zoom-btn svg {
+    display: block;
+    pointer-events: none;
 }
 
 /* Выпадающий список поисковых подсказок */
@@ -1948,7 +1983,8 @@ body.dark-mode .mobile-search-cancel-btn {
         pointer-events: none;
         transform: scale(0.8);
     }
-    .show-list .map-bottom-right-controls { 
+    .show-list .map-bottom-right-controls,
+    .show-list .map-zoom-controls { 
         opacity: 0;
         pointer-events: none;
         transform: translateY(15px);
@@ -2675,6 +2711,12 @@ body.dark-mode .vertical-toggle-all-btn.off:hover,
         left: 18px !important;
         right: auto !important;
         transform: none !important;
+    }
+
+    .map-zoom-controls {
+        position: absolute !important;
+        top: 80px !important;
+        left: 18px !important;
     }
 }
 

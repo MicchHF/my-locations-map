@@ -21,7 +21,7 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="apple-touch-icon-precomposed" href="apple-touch-icon.png">
-    <link rel="stylesheet" href="style.css?v=3.2">
+    <link rel="stylesheet" href="style.css?v=3.3">
     
     <!-- Telegram WebApp SDK: немедленный ready() для мгновенного снятия серой заставки Telegram -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -499,8 +499,8 @@
                         </div>
                     </div>
                     
-                    <button onclick="openTelegramBotOrLink('https://t.me/dalazareva')" class="channel-link-btn" title="Перейти в Telegram-канал @dalazareva" style="background:transparent; border:none; cursor:pointer; padding:0; display:flex; align-items:center; justify-content:center;">
-                        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                    <button onclick="openTelegramBotOrLink('https://t.me/dalazareva')" class="channel-link-btn" title="Перейти в Telegram-канал @dalazareva" aria-label="Перейти в Telegram-канал @dalazareva">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="#ffffff" aria-hidden="true">
                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
                         </svg>
                     </button>
@@ -598,6 +598,21 @@
             <button id="themeToggleBtn" class="theme-toggle-floating-btn" onclick="toggleTheme()" title="Переключить тему">
                 🌓
             </button>
+
+            <!-- Фирменные круглые кнопки приближения и отдаления карты (+ / −) -->
+            <div class="map-zoom-controls">
+                <button class="custom-zoom-btn" onclick="zoomInMap()" title="Приблизить карту" aria-label="Приблизить карту">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </button>
+                <button class="custom-zoom-btn" onclick="zoomOutMap()" title="Отдалить карту" aria-label="Отдалить карту">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </button>
+            </div>
 
             <!-- Правый нижний блок контролов (геолокация и метро) -->
             <div class="map-bottom-right-controls">
@@ -1718,15 +1733,22 @@
                 // Поддержка плавного зума и двухпальцевого приближения
                 myMap.behaviors.enable(['drag', 'pinchZoom', 'multiTouch', 'dblClickZoom']);
                 
-                // Компактный и современный контрол зума
-                const modernZoomControl = new ymaps.control.ZoomControl({
-                    options: {
-                        size: 'small',
-                        position: { left: 14, top: 110 }
-                    }
-                });
-                myMap.controls.add(modernZoomControl);
                 window.myMap = myMap;
+
+                // Функции управления плавным зумом через фирменные круглые кнопки (+ / −)
+                window.zoomInMap = function() {
+                    if (window.myMap) {
+                        const currentZoom = window.myMap.getZoom();
+                        window.myMap.setZoom(Math.min(currentZoom + 1, 19), { duration: 240, checkZoomRange: true });
+                    }
+                };
+
+                window.zoomOutMap = function() {
+                    if (window.myMap) {
+                        const currentZoom = window.myMap.getZoom();
+                        window.myMap.setZoom(Math.max(currentZoom - 1, 8), { duration: 240, checkZoomRange: true });
+                    }
+                };
 
                 initMetroMapLayer();
 

@@ -1,5 +1,5 @@
 // Service Worker for @dalazareva locations PWA
-const CACHE_NAME = 'dalazareva-cache-v3';
+const CACHE_NAME = 'dalazareva-cache-v13-live';
 const PRECACHE_URLS = [
   './',
   './index.html',
@@ -8,8 +8,7 @@ const PRECACHE_URLS = [
   './icon-192.png',
   './icon-512.png',
   './apple-touch-icon.png',
-  './icon.svg',
-  './js/shared.js'
+  './icon.svg'
 ];
 
 self.addEventListener('install', (event) => {
@@ -39,20 +38,33 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   if (url.origin !== self.location.origin) return;
 
-  // Stale-while-revalidate for local photos and assets
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request).then((networkResponse) => {
+  const isCode = url.pathname.endsWith('.js') || url.pathname.endsWith('.css') || url.pathname.endsWith('.html') || url.pathname.endsWith('/') || url.pathname.includes('/admin') || url.pathname.includes('/users-admin');
+
+  if (isCode) {
+    // Network-First for code/html files so updates apply immediately
+    event.respondWith(
+      fetch(event.request).then((networkResponse) => {
         if (networkResponse && networkResponse.status === 200) {
           const responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
         }
         return networkResponse;
-      }).catch(() => cachedResponse);
+      }).catch(() => caches.match(event.request))
+    );
+  } else {
+    // Stale-while-revalidate for local photos and icons
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        const fetchPromise = fetch(event.request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+          }
+          return networkResponse;
+        }).catch(() => cachedResponse);
 
-      return cachedResponse || fetchPromise;
-    })
-  );
+        return cachedResponse || fetchPromise;
+      })
+    );
+  }
 });
