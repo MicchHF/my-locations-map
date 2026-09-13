@@ -113,7 +113,7 @@ function normalizeCategoryName(category) {
     if (trimmed === "Винтажное" || trimmed === "👗 Винтажное" || trimmed === "Винтаж") return "👗 Винтажное";
     if (trimmed === "Коворкинг" || trimmed === "💻 Коворкинг" || trimmed === "Коворкинги" || trimmed === "💻 Коворкинги") return "💻 Коворкинг";
     if (trimmed === "Бесплатные парковки" || trimmed === "🅿️ Бесплатные парковки" || trimmed === "Парковки") return "🅿️ Бесплатные парковки";
-    if (trimmed === "Другое" || trimmed === "📍 Другое" || trimmed === "📎 Другое") return "📎 Другое";
+    if (trimmed.toLowerCase().includes("другое") || trimmed.toLowerCase().includes("другие")) return "📎 Другое";
     if (trimmed === "Скрытые" || trimmed === "🔒 Скрытые" || trimmed === "🔒 Скрытые (Lifetime)") return "🔒 Скрытые";
     return trimmed;
 }

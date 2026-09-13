@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Скрипт импорта меток из Google My Maps (KML) в таблицу Supabase `Location`.
-Категория: '📍 Другое'
+Категория: '📎 Другое'
 Поддерживает работу через сессию Supabase (email + password) или прямой токен доступа.
 """
 
@@ -146,7 +146,7 @@ def main():
 
         to_insert.append({
             "title": p["title"],
-            "category": "📍 Другое",
+            "category": "📎 Другое",
             "extra_categories": p.get("extra_categories", []),
             "address": p.get("address", "Москва"),
             "lat": p["lat"],
@@ -176,7 +176,7 @@ def main():
             total_inserted += len(batch)
             print(f"  Прогресс: {total_inserted} / {len(to_insert)}")
 
-    print(f"\n✅ Импорт завершен! Успешно добавлено {total_inserted} меток в категорию '📍 Другое'.")
+    print(f"\n✅ Импорт завершен! Успешно добавлено {total_inserted} меток в категорию '📎 Другое'.")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 // Service Worker for @dalazareva locations PWA
-const CACHE_NAME = 'dalazareva-cache-v10-live';
+const CACHE_NAME = 'dalazareva-cache-v11-live';
 const PRECACHE_URLS = [
   './',
   './index.html',
@@ -38,7 +38,7 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   if (url.origin !== self.location.origin) return;
 
-  const isCode = url.pathname.endsWith('.js') || url.pathname.endsWith('.html') || url.pathname.endsWith('/') || url.pathname.includes('/admin') || url.pathname.includes('/users-admin');
+  const isCode = url.pathname.endsWith('.js') || url.pathname.endsWith('.css') || url.pathname.endsWith('.html') || url.pathname.endsWith('/') || url.pathname.includes('/admin') || url.pathname.includes('/users-admin');
 
   if (isCode) {
     // Network-First for code/html files so updates apply immediately

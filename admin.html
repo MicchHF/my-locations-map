@@ -11,7 +11,7 @@
     
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=3.0">
     
     <script src="https://api-maps.yandex.ru/2.1/?apikey=7370bad5-a627-4414-a1e8-b2023bda7a61&lang=ru_RU"></script>
     <script src="js/supabase.js"></script>
@@ -384,7 +384,7 @@
                             <div>
                                 <label style="display: block; font-size: 0.78rem; font-weight: 600; color: #334155; margin-bottom: 4px;">Куда импортировать (категория):</label>
                                 <select id="importCategorySelect" class="form-input" style="font-size: 0.82rem; padding: 7px 10px;">
-                                    <option value="📍 Другое">📍 Другое (рекомендуется, затем распределить)</option>
+                                    <option value="📎 Другое">📎 Другое (рекомендуется, затем распределить)</option>
                                 </select>
                             </div>
 
@@ -758,7 +758,7 @@
 
             let cat = loc.category;
             if (!shouldHide && (cat === "🔒 Скрытые" || cat.includes("Скрытые"))) {
-                cat = "📍 Другое";
+                cat = "📎 Другое";
             }
 
             let { error } = await supabaseClient.from('Location').update({
@@ -791,7 +791,7 @@
         }
 
         function getAllAdminCategoryNames() {
-            return Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')])).filter(Boolean);
+            return Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📎 Другое')])).filter(Boolean);
         }
 
         function ensureAdminCategoryVisibilityInitialized() {
@@ -950,7 +950,7 @@
                         progressContainer.style.display = 'none';
                         return;
                     }
-                    const targetCat = document.getElementById('importCategorySelect')?.value || "📍 Другое";
+                    const targetCat = document.getElementById('importCategorySelect')?.value || "📎 Другое";
                     const asHidden = document.getElementById('importAsHidden')?.checked ?? true;
                     const { data: { session } } = await supabaseClient.auth.getSession();
                     if (!session) { alert("Сначала выполните вход!"); return; }
@@ -999,7 +999,7 @@
                     throw new Error("В карте/файле не обнаружено точек для импорта.");
                 }
 
-                const targetCat = document.getElementById('importCategorySelect')?.value || "📍 Другое";
+                const targetCat = document.getElementById('importCategorySelect')?.value || "📎 Другое";
                 if (confirm(`Найдено ${parsedPlaces.length} меток! Начать импорт в категорию «${targetCat}»?`)) {
                     const skipDuplicates = document.getElementById('importSkipDuplicates')?.checked ?? true;
                     await processImportLocations(parsedPlaces, skipDuplicates, targetCat);
@@ -1012,7 +1012,7 @@
             }
         }
 
-        async function processImportLocations(locationsList, skipDuplicates = true, targetCategory = '📍 Другое') {
+        async function processImportLocations(locationsList, skipDuplicates = true, targetCategory = '📎 Другое') {
             const progressContainer = document.getElementById('importProgressContainer');
             const progressBar = document.getElementById('importProgressBar');
             const progressStatus = document.getElementById('importProgressStatus');
@@ -1073,7 +1073,7 @@
                     }
                     return {
                         title: item.title || "Без названия",
-                        category: targetCategory || "📍 Другое",
+                        category: targetCategory || "📎 Другое",
                         extra_categories: extraCats,
                         address: item.address || "Москва",
                         lat: item.lat,
@@ -1145,7 +1145,7 @@
                         alert("В файле не найдено точек для импорта!");
                         return;
                     }
-                    const targetCat = document.getElementById('importCategorySelect')?.value || "📍 Другое";
+                    const targetCat = document.getElementById('importCategorySelect')?.value || "📎 Другое";
                     if (confirm(`Найдено ${parsedPlaces.length} меток в файле ${file.name}. Начать импорт в категорию «${targetCat}»?`)) {
                         const skipDuplicates = document.getElementById('importSkipDuplicates')?.checked ?? true;
                         await processImportLocations(parsedPlaces, skipDuplicates, targetCat);
@@ -1213,7 +1213,7 @@
 
                 places.push({
                     title: name,
-                    category: "📍 Другое",
+                    category: "📎 Другое",
                     extra_categories: [],
                     address: "Москва",
                     lat,
@@ -1714,13 +1714,13 @@
             const total = allLocations.length;
             if (totalBadge) totalBadge.innerText = `${total} ${total === 1 ? 'локация' : (total >= 2 && total <= 4 ? 'локации' : 'локаций')}`;
 
-            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
+            const allCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📎 Другое')]));
             
             const counts = {};
             allCats.forEach(c => { counts[c] = { primary: 0, extra: 0, total: 0 }; });
 
             allLocations.forEach(loc => {
-                const cat = loc.category || '📍 Другое';
+                const cat = loc.category || '📎 Другое';
                 if (!counts[cat]) counts[cat] = { primary: 0, extra: 0, total: 0 };
                 counts[cat].primary += 1;
                 counts[cat].total += 1;
@@ -1760,7 +1760,7 @@
             mergedCategories.forEach(cat => {
                 const opt = document.createElement('option');
                 opt.value = cat; opt.innerText = cat;
-                if (cat === "📸 Локации для фото" || cat === "📍 Другое") opt.selected = true;
+                if (cat === "📸 Локации для фото" || cat === "📎 Другое") opt.selected = true;
                 select.appendChild(opt);
             });
 
@@ -1775,7 +1775,7 @@
                 mergedCategories.forEach(cat => {
                     const opt = document.createElement('option');
                     opt.value = cat; opt.innerText = cat;
-                    if (cat === "📍 Другое") opt.selected = true;
+                    if (cat === "📎 Другое") opt.selected = true;
                     importSelect.appendChild(opt);
                 });
                 if (prevVal && mergedCategories.includes(prevVal)) {
@@ -1854,7 +1854,7 @@
             const selectCat = document.getElementById('addCategorySelect').value;
             const customCat = document.getElementById('addCustomCategory').value.trim();
             const rawCategory = selectCat === '__NEW__' ? customCat : selectCat;
-            const category = normalizeCategoryName(rawCategory) || "📍 Другое";
+            const category = normalizeCategoryName(rawCategory) || "📎 Другое";
             const address = document.getElementById('addAddress').value.trim();
             const coordsStr = document.getElementById('addCoords').value.trim();
             const description = document.getElementById('addDesc').value.trim();
@@ -1943,7 +1943,7 @@
                 if (adminVisibilityFilter === 'hidden' && !isHidden) return false;
                 if (adminVisibilityFilter === 'public' && isHidden) return false;
 
-                const primaryCat = loc.category || '📍 Другое';
+                const primaryCat = loc.category || '📎 Другое';
                 const extraCats = Array.isArray(loc.extra_categories) ? loc.extra_categories : [];
                 const allLocCats = [primaryCat, ...extraCats];
 
@@ -2024,7 +2024,7 @@
             }
             locationPlacemarksMap = {};
 
-            const allCatsToDisplay = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📍 Другое')]));
+            const allCatsToDisplay = Array.from(new Set([...DEFAULT_CATEGORIES, ...allLocations.map(l => l.category || '📎 Другое')]));
             renderTopCatFilter(allCatsToDisplay);
 
             if (locationsToRender.length === 0) {
@@ -2067,7 +2067,7 @@
                 grouped[catName].forEach(loc => {
                     const isHidden = isLocationHidden(loc);
                     const normCat = normalizeCategoryName(loc.category);
-                    const categoryIcon = isHidden ? '🔒' : (normCat ? normCat.split(' ')[0] : '📎');
+                    const categoryIcon = isHidden ? '🔒' : (normCat && normCat.includes('Другое') ? '📎' : (normCat ? normCat.split(' ')[0] : '📎'));
                     const pinColor = isHidden ? '#E11D48' : getCategoryPinColor(loc.category);
                     
                     const layout = ymaps.templateLayoutFactory.createClass(
@@ -2122,7 +2122,7 @@
                         <div class="card-title">${loc.title}</div>
                         <div class="card-cat-badges">
                             ${visBadgeHtml}
-                            <span class="cat-pill-primary">${loc.category || '📍 Другое'}</span>
+                            <span class="cat-pill-primary">${normalizeCategoryName(loc.category) || '📎 Другое'}</span>
                             ${extraCatsHtml}
                         </div>
                         ${loc.address ? `<div class="card-address">📍 ${loc.address}</div>` : ''}
@@ -2182,7 +2182,7 @@
                     <div class="balloon-title">${loc.title}</div>
                     <div class="card-cat-badges" style="margin-bottom: 6px;">
                         ${visBadgeHtml}
-                        <span class="cat-pill-primary">${loc.category || '📍 Другое'}</span>
+                        <span class="cat-pill-primary">${normalizeCategoryName(loc.category) || '📎 Другое'}</span>
                         ${extraCatsHtml}
                     </div>
                     ${loc.address ? `<div class="balloon-address">📍 ${loc.address}</div>` : ''}
@@ -2400,7 +2400,7 @@
 
             let finalCategory = category;
             if (!isHidden && (finalCategory === "🔒 Скрытые" || finalCategory.includes("Скрытые"))) {
-                finalCategory = "📍 Другое";
+                finalCategory = "📎 Другое";
             }
 
             let { error } = await supabaseClient.from('Location').update({

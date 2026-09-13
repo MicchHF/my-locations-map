@@ -21,7 +21,7 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="apple-touch-icon-precomposed" href="apple-touch-icon.png">
-    <link rel="stylesheet" href="style.css?v=2.7">
+    <link rel="stylesheet" href="style.css?v=3.0">
     
     <!-- Telegram WebApp SDK: немедленный ready() для мгновенного снятия серой заставки Telegram -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -63,9 +63,9 @@
     </script>
     
     <!-- Встроенный кэш локаций (289 мест) для мгновенного отображения без сетевой задержки -->
-    <script src="js/locations_data.js?v=2.7"></script>
+    <script src="js/locations_data.js?v=2.9"></script>
     <!-- Единый модуль базы и утилит -->
-    <script src="js/shared.js?v=2.7"></script>
+    <script src="js/shared.js?v=2.9"></script>
 
     <style>
         /* Критические стили для предотвращения наложения и съезжания верхнего меню и кнопок на мобильных */
@@ -516,7 +516,9 @@
                         <div id="searchSuggestionsDropdown" class="search-suggestions-dropdown"></div>
                     </div>
                     <button id="desktopMetroBtn" class="desktop-metro-btn" onclick="openMetroDrawer()" title="Фильтр по веткам и станциям метро">
-                        <span>🚇</span>
+                        <svg class="metro-btn-m-icon" viewBox="0 0 24 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M0 18L7.5 0L12 9.5L16.5 0L24 18H19L15 8L12 14.5L9 8L5 18H0Z"/>
+                        </svg>
                         <span id="desktopMetroText">Метро</span>
                     </button>
                 </div>
@@ -584,7 +586,12 @@
 
             <!-- Плавающий чип активного фильтра метро со сбросом -->
             <div id="metroActiveChip" class="metro-active-chip">
-                <span id="metroActiveChipLabel">🚇 Метро</span>
+                <span id="metroActiveChipLabel">
+                    <svg class="metro-btn-m-icon" viewBox="0 0 24 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="width: 14px; height: 11px; margin-right: 4px; vertical-align: middle;">
+                        <path d="M0 18L7.5 0L12 9.5L16.5 0L24 18H19L15 8L12 14.5L9 8L5 18H0Z"/>
+                    </svg>
+                    Метро
+                </span>
                 <button class="metro-reset-chip-btn" onclick="resetMetroFilter()" title="Сбросить фильтр метро">✕</button>
             </div>
 
@@ -595,7 +602,9 @@
             <!-- Правый нижний блок контролов (геолокация и метро) -->
             <div class="map-bottom-right-controls">
                 <button id="mapMetroToggleBtn" class="custom-geoloc-btn metro-layer-toggle-btn active" onclick="toggleMetroLayer()" title="Подсветка станций метро">
-                    <span style="font-size: 16px; line-height: 1;">🚇</span>
+                    <svg class="metro-btn-m-icon" viewBox="0 0 24 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0 18L7.5 0L12 9.5L16.5 0L24 18H19L15 8L12 14.5L9 8L5 18H0Z"/>
+                    </svg>
                 </button>
                 <button id="customGeolocBtn" class="custom-geoloc-btn" onclick="locateUserPosition()" title="Мое местоположение">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" stroke="currentColor" stroke-width="0.5" stroke-linejoin="round" style="display: block; margin: auto;">
@@ -701,7 +710,11 @@
         <button id="btn-map-view" class="toggle-btn active" onclick="switchMobileView('map')">🗺️ Карта</button>
         <button id="btn-list-view" class="toggle-btn" onclick="switchMobileView('list')">📋 Список</button>
         <button id="btn-metro-toggle" class="toggle-btn metro-toggle-btn" title="Фильтр по метро" onclick="handleBottomMetroClick(event)">
-            <span id="bottomMetroIcon">🚇</span>
+            <span id="bottomMetroIcon" style="display:inline-flex; align-items:center;">
+                <svg class="metro-btn-m-icon" viewBox="0 0 24 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0 18L7.5 0L12 9.5L16.5 0L24 18H19L15 8L12 14.5L9 8L5 18H0Z"/>
+                </svg>
+            </span>
             <span id="bottomMetroText" class="bottom-metro-text">Метро</span>
             <span id="bottomMetroReset" class="bottom-filter-reset bottom-metro-reset" onclick="handleBottomMetroReset(event)" title="Сбросить фильтр" style="display:none;">✕</span>
         </button>
@@ -1070,7 +1083,7 @@
                 }
             });
 
-            renderBothCatFilterBars(allLocations.map(l => l.category || '📍 Другое'));
+            renderBothCatFilterBars(getAllCategoryNames());
             if (showFavoritesOnly) applyCombinedFilters();
 
             const client = window.supabaseClient || (window.getSupabaseClient ? window.getSupabaseClient() : (typeof supabaseClient !== 'undefined' ? supabaseClient : null));
@@ -2046,6 +2059,7 @@
             const bottomMetroReset = document.getElementById('bottomMetroReset');
             const desktopMetroBtn = document.getElementById('desktopMetroBtn');
             const desktopMetroText = document.getElementById('desktopMetroText');
+            const mapMetroBtn = document.getElementById('mapMetroToggleBtn');
             const chip = document.getElementById('metroActiveChip');
             const chipLabel = document.getElementById('metroActiveChipLabel');
 
@@ -2057,9 +2071,15 @@
                 if (bottomMetroReset) bottomMetroReset.style.display = 'inline-flex';
                 if (desktopMetroBtn) desktopMetroBtn.classList.add('active');
                 if (desktopMetroText) desktopMetroText.innerText = activeText.length > 12 ? activeText.slice(0, 11) + '…' : activeText;
+                if (mapMetroBtn) mapMetroBtn.classList.add('has-filter');
                 
                 if (chip && chipLabel) {
-                    chipLabel.innerText = `🚇 ${activeText}`;
+                    chipLabel.innerHTML = `
+                        <svg class="metro-btn-m-icon" viewBox="0 0 24 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="width: 14px; height: 11px; margin-right: 4px; vertical-align: middle;">
+                            <path d="M0 18L7.5 0L12 9.5L16.5 0L24 18H19L15 8L12 14.5L9 8L5 18H0Z"/>
+                        </svg>
+                        ${activeText}
+                    `;
                     chip.classList.add('active');
                 }
             } else {
@@ -2068,6 +2088,7 @@
                 if (bottomMetroReset) bottomMetroReset.style.display = 'none';
                 if (desktopMetroBtn) desktopMetroBtn.classList.remove('active');
                 if (desktopMetroText) desktopMetroText.innerText = 'Метро';
+                if (mapMetroBtn) mapMetroBtn.classList.remove('has-filter');
                 if (chip) chip.classList.remove('active');
             }
         }
@@ -2080,11 +2101,20 @@
             if (!myMap || !window.MOSCOW_METRO_DATA) return;
             if (metroCollection) return;
 
-            metroCollection = new ymaps.GeoObjectCollection({}, { zIndex: 120 });
+            // Размещаем слой станций метро в pane: 'overlaps' с высоким z-index, чтобы они всегда были поверх меток заведений
+            metroCollection = new ymaps.GeoObjectCollection({}, { 
+                pane: 'overlaps',
+                zIndex: 5000,
+                zIndexHover: 6000
+            });
 
             const metroPlacemarkLayout = ymaps.templateLayoutFactory.createClass(`
                 <div class="metro-map-pin{% if properties.isHighlighted %} is-highlighted{% endif %}" style="--line-color: {{ properties.lineColor }};" title="м. {{ properties.stationName }}">
-                    <span class="metro-map-letter">М</span>
+                    <span class="metro-map-letter">
+                        <svg class="metro-map-m-svg" viewBox="0 0 24 18" fill="#ffffff" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M0 18L7.5 0L12 9.5L16.5 0L24 18H19L15 8L12 14.5L9 8L5 18H0Z"/>
+                        </svg>
+                    </span>
                     <span class="metro-map-name">{{ properties.stationName }}</span>
                 </div>
             `);
@@ -2103,8 +2133,11 @@
                         iconShape: {
                             type: 'Circle',
                             coordinates: [0, 0],
-                            radius: 12
+                            radius: 14
                         },
+                        pane: 'overlaps',
+                        zIndex: 5000,
+                        zIndexHover: 6000,
                         interactivityModel: 'default#geoObject',
                         openBalloonOnClick: false
                     });
@@ -2155,6 +2188,7 @@
             const btn = document.getElementById('mapMetroToggleBtn');
             if (btn) {
                 btn.classList.toggle('active', isMetroLayerActive);
+                btn.classList.toggle('is-muted', !isMetroLayerActive);
                 btn.title = isMetroLayerActive ? 'Подсветка метро включена' : 'Включить подсветку метро';
             }
             handleMetroMapZoomVisibility();
@@ -2257,7 +2291,8 @@
                 html += `<div style="padding:14px; font-size:0.82rem; color:var(--text-muted); text-align:center;">Локации не найдены 🔍</div>`;
             } else {
                 matchingLocs.forEach(loc => {
-                    const icon = loc.category ? loc.category.split(' ')[0] : '📍';
+                    const normCat = normalizeCategoryName(loc.category);
+                    const icon = normCat && normCat.includes('Другое') ? '📎' : (normCat ? normCat.split(' ')[0] : '📎');
                     const metroStr = loc.metro && loc.metro.length > 0 ? `🚇 ${loc.metro[0].name || loc.metro[0].stationName}` : (loc.address || '');
                     html += `
                         <div class="search-suggestion-item" onmousedown="selectSuggestionLocation('${loc.id}')">
@@ -2660,7 +2695,7 @@
                     if (!loc.lat || !loc.lng) return;
                     const isHidden = isLocationHidden(loc);
                     const normCat = normalizeCategoryName(loc.category);
-                    let categoryIcon = normCat ? normCat.split(' ')[0] : '📎';
+                    let categoryIcon = (normCat && normCat.includes('Другое')) ? '📎' : (normCat ? normCat.split(' ')[0] : '📎');
                     let pinColor = getCategoryPinColor(loc.category);
                     if (isHidden) {
                         categoryIcon = '🔒';
@@ -2733,7 +2768,7 @@
                         </div>
                         <div class="card-cat-badges">
                             ${hiddenBadgeHtml}
-                            <span class="cat-pill-primary">${loc.category || '📍 Другое'}</span>
+                            <span class="cat-pill-primary">${normalizeCategoryName(loc.category) || '📎 Другое'}</span>
                             ${extraCatsHtml}
                         </div>
                         <div class="card-address-block">
@@ -2797,7 +2832,7 @@
                     </div>
                     <div class="card-cat-badges" style="margin-bottom: 6px;">
                         ${hiddenBadgeHtml}
-                        <span class="cat-pill-primary">${loc.category || '📍 Другое'}</span>
+                        <span class="cat-pill-primary">${normalizeCategoryName(loc.category) || '📎 Другое'}</span>
                         ${extraCatsHtml}
                     </div>
                     <div class="balloon-address-block">
